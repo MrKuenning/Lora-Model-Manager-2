@@ -1,0 +1,378 @@
+{
+  "defaultView": "grid",
+  "defaultSort": "date-desc",
+  "filterFoldersWithBaseModel": true,
+  "safeModeDefault": true,
+  "safeModeOnReload": false,
+  "nsfwBlurOverlay": false,
+  "modelsDirectory": "",
+  "checkpointsDirectory": "",
+  "defaultDownloadDirectory": "",
+  "defaultSortingDirectory": "",
+  "visibleColumns": {
+    "authorName": false,
+    "authorsWords": false,
+    "baseModel": true,
+    "category": true,
+    "civitaiName": false,
+    "creator": false,
+    "date": true,
+    "description": false,
+    "examplePrompt": false,
+    "filename": true,
+    "folder": false,
+    "highLow": false,
+    "modelName": true,
+    "modelVersion": true,
+    "negativeWords": false,
+    "notes": false,
+    "nsfw": false,
+    "path": false,
+    "positiveWords": false,
+    "sdVersion": true,
+    "size": true,
+    "subcategory": true,
+    "tags": false,
+    "thumbnail": true,
+    "url": false
+  },
+  "columnOrder": [
+    "thumbnail",
+    "filename",
+    "modelName",
+    "civitaiName",
+    "modelVersion",
+    "highLow",
+    "baseModel",
+    "category",
+    "subcategory",
+    "folder",
+    "path",
+    "creator",
+    "tags",
+    "size",
+    "date",
+    "sdVersion",
+    "url",
+    "nsfw",
+    "positiveWords",
+    "authorName",
+    "negativeWords",
+    "examplePrompt",
+    "authorsWords",
+    "description",
+    "notes"
+  ],
+  "gridCard": {
+    "cardSize": "small",
+    "showActions": false,
+    "showBaseModel": true,
+    "showCategory": true,
+    "showCivitaiLink": true,
+    "showCopyTriggerWords": false,
+    "showFolder": true,
+    "showHighLow": true,
+    "showInfoButton": true,
+    "showNsfwBadge": true,
+    "showUrlButton": false,
+    "titleDisplay": "fileName"
+  },
+  "filenameFormats": [
+    {
+      "baseModel": "Default",
+      "format": "{modelname} {version}"
+    },
+    {
+      "baseModel": "Anima",
+      "format": "[A] {modelname} {version}"
+    },
+    {
+      "baseModel": "Ernie",
+      "format": "[E] {modelname} {version}"
+    },
+    {
+      "baseModel": "Flux.1 D",
+      "format": "[F1d] {modelname} {version}"
+    },
+    {
+      "baseModel": "Flux.1 S",
+      "format": "[F1s] {modelname} {version}"
+    },
+    {
+      "baseModel": "Flux.2 Klein 9B",
+      "format": "[K] {modelname} {version}"
+    },
+    {
+      "baseModel": "Flux.2 Klein 9B-base",
+      "format": "[Kb] {modelname} {version}"
+    },
+    {
+      "baseModel": "Illustrious",
+      "format": "[I] {modelname} {version}"
+    },
+    {
+      "baseModel": "Krea 2",
+      "format": "[Kr2] {modelname} {version}"
+    },
+    {
+      "baseModel": "LTXV",
+      "format": "[LTX1.0] {modelname} {version}"
+    },
+    {
+      "baseModel": "LTXV 2.3",
+      "format": "[LTX2.3] {modelname} {version}"
+    },
+    {
+      "baseModel": "LTXV2",
+      "format": "[LTX2.0] {modelname} {version}"
+    },
+    {
+      "baseModel": "Pony",
+      "format": "[P] {modelname} {version}"
+    },
+    {
+      "baseModel": "Qwen",
+      "format": "[Q] {modelname} {version}"
+    },
+    {
+      "baseModel": "Qwen 2",
+      "format": "[Q2] {modelname} {version}"
+    },
+    {
+      "baseModel": "SDXL 1.0",
+      "format": "[X] {modelname} {version}"
+    },
+    {
+      "baseModel": "Wan Video",
+      "format": "{modelname} {version} - Wan21 14B"
+    },
+    {
+      "baseModel": "Wan Video 14B i2v 720p",
+      "format": "{modelname} {version} - I2v 720p - Wan21 14b"
+    },
+    {
+      "baseModel": "Wan Video 14B t2v",
+      "format": "{modelname} {version} - T2V - Wan21 14B"
+    },
+    {
+      "baseModel": "Wan Video 2.2 I2V-A14B",
+      "format": "{modelname} {version} - {highlow} I2v - Wan22 14b"
+    },
+    {
+      "baseModel": "Wan Video 2.2 T2V-A14B",
+      "format": "{modelname} {version} - {highlow} T2v - Wan22 14b"
+    },
+    {
+      "baseModel": "ZImageTurbo",
+      "format": "[Z] {modelname} {version}"
+    }
+  ],
+  "modelTypeRoots": [
+    {
+      "baseModel": "Flux.1 D",
+      "rootFolder": "Comfy/Flux"
+    },
+    {
+      "baseModel": "Flux.1 S",
+      "rootFolder": "Comfy/Flux"
+    },
+    {
+      "baseModel": "Flux.2 Klein 9B",
+      "rootFolder": "Forge/Klein"
+    },
+    {
+      "baseModel": "Flux.2 Klein 9B-base",
+      "rootFolder": "Forge/Klein"
+    },
+    {
+      "baseModel": "Illustrious",
+      "rootFolder": "Forge/XL"
+    },
+    {
+      "baseModel": "Krea 2",
+      "rootFolder": "Forge/Krea2"
+    },
+    {
+      "baseModel": "LTXV",
+      "rootFolder": "Comfy/LTX"
+    },
+    {
+      "baseModel": "LTXV 2.3",
+      "rootFolder": "Comfy/LTX"
+    },
+    {
+      "baseModel": "LTXV2",
+      "rootFolder": "Comfy/LTX"
+    },
+    {
+      "baseModel": "Pony",
+      "rootFolder": "Forge/XL"
+    },
+    {
+      "baseModel": "Qwen",
+      "rootFolder": "Comfy/QWEN"
+    },
+    {
+      "baseModel": "SDXL 1.0",
+      "rootFolder": "Forge/XL"
+    },
+    {
+      "baseModel": "Wan Video",
+      "rootFolder": "Comfy/WAN"
+    },
+    {
+      "baseModel": "Wan Video 14B i2v 720p",
+      "rootFolder": "Comfy/WAN"
+    },
+    {
+      "baseModel": "Wan Video 14B t2v",
+      "rootFolder": "Comfy/WAN"
+    },
+    {
+      "baseModel": "Wan Video 2.2 I2V-A14B",
+      "rootFolder": "Comfy/WAN"
+    },
+    {
+      "baseModel": "Wan Video 2.2 T2V-A14B",
+      "rootFolder": "Comfy/WAN"
+    },
+    {
+      "baseModel": "Wan Video 2.2 TI2V-5B",
+      "rootFolder": "Comfy/WAN"
+    },
+    {
+      "baseModel": "ZImageBase",
+      "rootFolder": "Comfy/Z-Image"
+    },
+    {
+      "baseModel": "ZImageTurbo",
+      "rootFolder": "Comfy/Z-Image"
+    }
+  ],
+  "scanSettings": {
+    "delayBetweenRequests": 0.5,
+    "downloadMaxSize": false,
+    "fetchCreatorInfo": true,
+    "skipExistingData": true,
+    "skipNsfwPreviews": false
+  },
+  "trimNames": [
+    "1080p",
+    "14B",
+    "4K",
+    "720p",
+    "Anima",
+    "[Anima]",
+    "Anima Pencil",
+    "Checkpoint",
+    "ckpt",
+    "Cog",
+    "[Cog]",
+    "CogVideo",
+    "[CogVideo]",
+    "CogVideoX",
+    "DALL-E",
+    "DALLE",
+    "Embedding",
+    "Ernie",
+    "[Ernie]",
+    "Ernie Bot",
+    "[F]",
+    "Flux",
+    "[Flux]",
+    "Flux.1",
+    "Flux 1",
+    "for",
+    "[H]",
+    "Haiper",
+    "High",
+    "Hunyuan",
+    "[Hunyuan]",
+    "HunyuanVideo",
+    "Hunyuan Video",
+    "Hyper",
+    "[I]",
+    "I2V",
+    "Ideogram 4",
+    "Ill",
+    "[Ill]",
+    "[ILL/ANI/KREA2]",
+    "Illustrious",
+    "[Illustrious]",
+    "Klein",
+    "Klein9b",
+    "Kling",
+    "Krea",
+    "[Krea]",
+    "Krea 2",
+    "Krea2",
+    "(Krea2 + ZIT)",
+    "[L]",
+    "LCM",
+    "Lightning",
+    "LoRA",
+    "Low",
+    "LTX",
+    "[LTX]",
+    "LTX Video",
+    "LTXVideo",
+    "Luma",
+    "[M]",
+    "Midjourney",
+    "Minimax",
+    "Mochi",
+    "[Mochi]",
+    "[N]",
+    "Noob",
+    "[Noob]",
+    "NoobAI",
+    "Noob AI",
+    "[P]",
+    "Pony",
+    "[Pony]",
+    "PXL",
+    "[PXL]",
+    "SD",
+    "[SD]",
+    "SD1",
+    "SD 1.4",
+    "SD1.4",
+    "SD 1.5",
+    "SD1.5",
+    "SD2",
+    "SD 2.0",
+    "SD2.0",
+    "SD 2.1",
+    "SD2.1",
+    "SDXL",
+    "[SDXL]",
+    "SDXL 1.0",
+    "SDXL1.0",
+    "Sora",
+    "T2V",
+    "Textual Inversion",
+    "Turbo",
+    "[W]",
+    "Wan",
+    "[Wan]",
+    "Wan21",
+    "Wan 2.1",
+    "Wan2.1",
+    "Wan22",
+    "Wan 2.2",
+    "Wan2.2",
+    "[WAN 2.2 I2V]",
+    "Wan Video",
+    "WanVideo",
+    "Wan Video 14B",
+    "[X]",
+    "XL",
+    "[Z]",
+    "Z-Image",
+    "ZImage",
+    "ZImageTurbo",
+    "Zit",
+    "[Zit]",
+    "Z Turbo"
+  ]
+}
