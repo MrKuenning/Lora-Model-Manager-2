@@ -8,6 +8,15 @@
           {{ form.name || 'Unknown' }} 
           <span class="base-model-light">{{ form.baseModel || form.sdVersion || '' }}</span>
         </h2>
+        <div style="display: flex; gap: 10px; margin-right: 20px; align-items: center; margin-left: auto;">
+          <button class="btn btn-micro" :class="form.nsfw ? 'btn-danger' : 'btn-secondary'" @click="form.nsfw = !form.nsfw; debouncedSave()" style="font-weight: bold;" title="Toggle NSFW Status">
+            NSFW: {{ form.nsfw ? 'Yes' : 'No' }}
+          </button>
+          <button class="btn btn-micro" :class="form.tested ? 'btn-success' : 'btn-secondary'" @click="form.tested = !form.tested; debouncedSave()" style="font-weight: bold;" title="Mark as Tested">
+            Tested: {{ form.tested ? 'Yes' : 'No' }}
+          </button>
+        </div>
+
         <div class="header-actions">
           <button class="btn btn-icon" @click="navigatePrevious" title="Previous"><i class="fas fa-chevron-left"></i></button>
           <button class="btn btn-icon" @click="navigateNext" title="Next"><i class="fas fa-chevron-right"></i></button>
@@ -150,14 +159,6 @@
               </div>
               
 
-              <div class="info-row stacked mt-10">
-                <label>Preferred Weight:</label>
-                <div class="weight-control">
-                  <input type="range" min="-2" max="2" step="0.1" v-model="form.preferredWeight" class="weight-slider">
-                  <input type="number" v-model="form.preferredWeight" class="weight-input" step="0.1">
-                </div>
-              </div>
-
             </div>
           </div>
 
@@ -268,6 +269,9 @@
                       </button>
                     </div>
 
+                    <button class="btn" :class="form.highLow === 'High' ? 'btn-primary' : (form.highLow === 'Low' ? 'btn-success' : 'btn-secondary')" @click="toggleHighLow" style="font-weight: bold; margin-left: auto;" title="Toggle High/Low Priority">
+                      H/L: {{ form.highLow || 'None' }}
+                    </button>
                   </div>
                   <div class="identity-buttons" v-else-if="editingFilename">
                     <button class="btn btn-success" @click="saveRename" style="flex: 2;" :disabled="isRenaming">
@@ -280,20 +284,8 @@
                 </div>
 
                 <div class="form-group" style="grid-column: 2; margin-top: 5px;">
-                  <label>Flags / Actions:</label>
-                  <div style="display: flex; gap: 10px; align-items: stretch; height: 100%;">
-                    <button class="btn" :class="form.nsfw ? 'btn-danger' : 'btn-secondary'" @click="form.nsfw = !form.nsfw; debouncedSave()" style="flex: 1; font-weight: bold;">
-                      NSFW: {{ form.nsfw ? 'Yes' : 'No' }}
-                    </button>
-                    
-                    <button class="btn" :class="form.highLow === 'High' ? 'btn-primary' : (form.highLow === 'Low' ? 'btn-success' : 'btn-secondary')" @click="toggleHighLow" style="flex: 1; font-weight: bold;">
-                      H/L: {{ form.highLow || 'None' }}
-                    </button>
-                    
-                    <button class="btn" :class="form.tested ? 'btn-success' : 'btn-secondary'" @click="form.tested = !form.tested; debouncedSave()" style="flex: 1; font-weight: bold;">
-                      Tested: {{ form.tested ? 'Yes' : 'No' }}
-                    </button>
-                  </div>
+                  <label>Description:</label>
+                  <textarea v-model="form.description" class="form-control" style="height: 100%; min-height: 120px; resize: vertical;" placeholder="(empty)" @change="debouncedSave"></textarea>
                 </div>
               </div>
             </div>
@@ -302,39 +294,57 @@
             <div class="form-section">
               <div class="section-title">Categorization</div>
               <div class="form-grid-category">
-                <div class="form-group">
-                  <label>Category:</label>
-                  <div style="position: relative; width: 100%; display: flex; align-items: center;">
-                    <input type="text" v-model="form.category" class="form-control" placeholder="(empty)" @change="debouncedSave" list="categoriesList" style="padding-right: 30px;">
-                    <i class="fas fa-times" 
-                       style="position: absolute; right: 10px; cursor: pointer; color: #888; font-size: 0.9em;"
-                       @mousedown.prevent="form.category = ''; debouncedSave()"
-                       title="Clear"
-                    ></i>
+                <div style="display: flex; flex-direction: row; gap: 15px;">
+                  <div class="form-group" style="flex: 1;">
+                    <label>Category:</label>
+                    <div style="position: relative; width: 100%; display: flex; align-items: center;">
+                      <input type="text" v-model="form.category" class="form-control" placeholder="(empty)" @change="debouncedSave" list="categoriesList" style="flex: 1; padding-right: 30px;">
+                      <i class="fas fa-times" 
+                         style="position: absolute; right: 10px; cursor: pointer; color: #888; font-size: 0.9em;"
+                         @mousedown.prevent="form.category = ''; debouncedSave()"
+                         title="Clear"
+                      ></i>
+                    </div>
+                    <datalist id="categoriesList">
+                      <option v-for="opt in uniqueCategories" :key="opt" :value="opt"></option>
+                    </datalist>
                   </div>
-                  <datalist id="categoriesList">
-                    <option v-for="opt in uniqueCategories" :key="opt" :value="opt"></option>
-                  </datalist>
+                  
+                  <div class="form-group" style="flex: 1;">
+                    <label>Subcategory:</label>
+                    <div style="position: relative; width: 100%; display: flex; align-items: center;">
+                      <input type="text" v-model="form.subcategory" class="form-control" placeholder="(empty)" @change="debouncedSave" list="subcategoriesList" style="flex: 1; padding-right: 30px;">
+                      <i class="fas fa-times" 
+                         style="position: absolute; right: 10px; cursor: pointer; color: #888; font-size: 0.9em;"
+                         @mousedown.prevent="form.subcategory = ''; debouncedSave()"
+                         title="Clear"
+                      ></i>
+                    </div>
+                    <datalist id="subcategoriesList">
+                      <option v-for="opt in uniqueSubcategories" :key="opt" :value="opt"></option>
+                    </datalist>
+                  </div>
                 </div>
                 
-                <div class="form-group" style="grid-row: span 2;">
+                <div class="form-group">
                   <label>Tags:</label>
-                  <textarea v-model="form.tags" class="form-control tags-textarea" placeholder="Type and press Enter to add tag..." @change="debouncedSave"></textarea>
-                </div>
-                
-                <div class="form-group">
-                  <label>Subcategory:</label>
-                  <div style="position: relative; width: 100%; display: flex; align-items: center;">
-                    <input type="text" v-model="form.subcategory" class="form-control" placeholder="(empty)" @change="debouncedSave" list="subcategoriesList" style="padding-right: 30px;">
-                    <i class="fas fa-times" 
-                       style="position: absolute; right: 10px; cursor: pointer; color: #888; font-size: 0.9em;"
-                       @mousedown.prevent="form.subcategory = ''; debouncedSave()"
-                       title="Clear"
-                    ></i>
+                  <div class="tag-cloud-container" @click="focusTagInput">
+                    <span class="tag-pill" v-for="(tag, index) in parsedTags" :key="index">
+                      {{ tag }}
+                      <i class="fas fa-times remove-tag" @click.stop="removeTag(index)"></i>
+                    </span>
+                    <input 
+                      type="text" 
+                      ref="tagInputRef"
+                      v-model="newTag" 
+                      @keydown.enter.prevent="addTag" 
+                      @keydown.tab="addTagIfNotEmpty"
+                      @keydown.delete="handleTagDelete"
+                      @blur="addTag"
+                      placeholder="Type and press Enter or Tab..." 
+                      class="tag-input"
+                    />
                   </div>
-                  <datalist id="subcategoriesList">
-                    <option v-for="opt in uniqueSubcategories" :key="opt" :value="opt"></option>
-                  </datalist>
                 </div>
               </div>
             </div>
@@ -344,73 +354,74 @@
               <div class="section-title">Keywords & Prompts</div>
               <div class="form-grid-keywords">
                 
-                <div class="form-group">
+                <!-- ROW 1 -->
+                <div class="form-group" style="grid-column: 1;">
                   <div class="label-with-actions">
                     <label>Trigger Words (Viewed in WebUI):</label>
                     <div class="actions">
                       <i class="fas fa-copy" @click="copyToClipboard(form.activationText)" title="Copy"></i>
                     </div>
                   </div>
-                  <textarea v-model="form.activationText" class="form-control" @change="debouncedSave"></textarea>
+                  <textarea v-model="form.activationText" class="form-control" style="height: 60px; resize: vertical;" @change="debouncedSave"></textarea>
                 </div>
                 
-                <div class="form-group">
-                  <div class="label-with-actions">
-                    <label>Example Prompt 1:</label>
-                    <div class="actions">
-                      <i class="fas fa-copy" @click="copyToClipboard(form.examplePrompt)" title="Copy"></i>
-                    </div>
+                <div class="form-group" style="grid-column: 2;">
+                  <label>Preferred Weight:</label>
+                  <div class="weight-control" style="max-width: 100%;">
+                    <input type="range" min="-2" max="2" step="0.1" v-model="form.preferredWeight" class="weight-slider">
+                    <input type="number" v-model="form.preferredWeight" class="weight-input" step="0.1">
                   </div>
-                  <textarea v-model="form.examplePrompt" class="form-control" @change="debouncedSave"></textarea>
                 </div>
 
-                <div class="form-group">
+                <!-- ROW 2 -->
+                <div class="form-group" style="grid-column: 1;">
                   <div class="label-with-actions">
                     <label>Negative Trigger Words (Viewed in WebUI):</label>
                     <div class="actions">
                       <i class="fas fa-copy" @click="copyToClipboard(form.negativeTriggerWords)" title="Copy"></i>
                     </div>
                   </div>
-                  <textarea v-model="form.negativeTriggerWords" class="form-control" @change="debouncedSave"></textarea>
+                  <textarea v-model="form.negativeTriggerWords" class="form-control" style="height: 60px; resize: vertical;" @change="debouncedSave"></textarea>
                 </div>
                 
-                <div class="form-group">
+                <div class="form-group" style="grid-column: 2;">
                   <div class="label-with-actions">
-                    <label>Example Prompt 2:</label>
+                    <label>Example Prompt 1:</label>
                     <div class="actions">
-                      <i class="fas fa-copy" @click="copyToClipboard(form.examplePrompt2)" title="Copy"></i>
+                      <i class="fas fa-copy" @click="copyToClipboard(form.examplePrompt)" title="Copy"></i>
                     </div>
                   </div>
-                  <textarea v-model="form.examplePrompt2" class="form-control" @change="debouncedSave"></textarea>
+                  <textarea v-model="form.examplePrompt" class="form-control" style="height: 60px; resize: vertical;" @change="debouncedSave"></textarea>
                 </div>
 
-                <div class="form-group">
+                <!-- ROW 3 -->
+                <div class="form-group" style="grid-column: 1;">
                   <div class="label-with-actions">
                     <label>All Trigger Words:</label>
                     <div class="actions">
                       <i class="fas fa-copy" @click="copyToClipboard(form.allTriggerWords)" title="Copy"></i>
                     </div>
                   </div>
-                  <textarea v-model="form.allTriggerWords" class="form-control" @change="debouncedSave"></textarea>
+                  <textarea v-model="form.allTriggerWords" class="form-control" style="height: 60px; resize: vertical;" @change="debouncedSave"></textarea>
+                </div>
+                
+                <div class="form-group" style="grid-column: 2;">
+                  <div class="label-with-actions">
+                    <label>Example Prompt 2:</label>
+                    <div class="actions">
+                      <i class="fas fa-copy" @click="copyToClipboard(form.examplePrompt2)" title="Copy"></i>
+                    </div>
+                  </div>
+                  <textarea v-model="form.examplePrompt2" class="form-control" style="height: 60px; resize: vertical;" @change="debouncedSave"></textarea>
                 </div>
                 
               </div>
             </div>
 
-            <!-- Description -->
+            <!-- Notes Section -->
             <div class="form-section">
-              <div class="section-title">Description</div>
-              <div class="form-grid-description">
-                <div class="form-group">
-                  <label>Notes:</label>
-                  <textarea v-model="form.notes" class="form-control" @change="debouncedSave"></textarea>
-                </div>
-                
-                <div class="form-group">
-                  <label><i class="fas fa-edit"></i> Description:</label>
-                  <textarea v-model="form.description" class="form-control" placeholder="(empty)" @change="debouncedSave"></textarea>
-                </div>
-              </div>
+              <div class="section-title">Notes</div>
+              <textarea v-model="form.notes" class="form-control" style="min-height: 60px; resize: vertical;" placeholder="(empty)" @change="debouncedSave"></textarea>
             </div>
           </div>
 
@@ -683,6 +694,54 @@ const movingFile = ref(false);
 const targetMoveFolder = ref('');
 const isRenaming = ref(false);
 const isMoving = ref(false);
+
+const tagInputRef = ref(null);
+const newTag = ref('');
+
+const parsedTags = computed(() => {
+  if (!form.tags) return [];
+  return form.tags.split(',').map(s => s.trim()).filter(s => s);
+});
+
+const addTag = () => {
+  const t = newTag.value.trim();
+  if (!t) return;
+  const currentTags = [...parsedTags.value];
+  if (!currentTags.includes(t)) {
+    currentTags.push(t);
+    form.tags = currentTags.join(', ');
+    debouncedSave();
+  }
+  newTag.value = '';
+};
+
+const addTagIfNotEmpty = (e) => {
+  if (newTag.value.trim()) {
+    e.preventDefault();
+    addTag();
+  }
+};
+
+const handleTagDelete = (e) => {
+  if (newTag.value === '' && parsedTags.value.length > 0) {
+    e.preventDefault();
+    removeTag(parsedTags.value.length - 1);
+  }
+};
+
+const removeTag = (index) => {
+  const currentTags = [...parsedTags.value];
+  currentTags.splice(index, 1);
+  form.tags = currentTags.join(', ');
+  debouncedSave();
+};
+
+const focusTagInput = () => {
+  if (tagInputRef.value) {
+    tagInputRef.value.focus();
+  }
+};
+
 
 const filenameNoExt = computed(() => {
   if (!model.value || !model.value.filename) return '';
@@ -1783,6 +1842,49 @@ textarea.form-control {
   resize: vertical; 
 }
 
+.tag-cloud-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  background-color: #222;
+  border: 1px solid #444;
+  padding: 5px;
+  border-radius: 4px;
+  height: 60px;
+  overflow-y: auto;
+  align-items: flex-start;
+  cursor: text;
+}
+.tag-pill {
+  background: #3498db;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.85em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.tag-pill .remove-tag {
+  cursor: pointer;
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+.tag-pill .remove-tag:hover {
+  opacity: 1;
+}
+.tag-input {
+  flex: 1;
+  min-width: 120px;
+  background: transparent;
+  border: none;
+  color: #eee;
+  outline: none;
+  font-family: inherit;
+  font-size: 0.9em;
+  padding: 2px 5px;
+}
+
 .form-grid-identity, .form-grid-category, .form-grid-keywords, .form-grid-description {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1822,6 +1924,24 @@ textarea.form-control {
   background-color: var(--color-btn-primary);
   color: #fff;
   border-color: var(--color-btn-primary);
+}
+
+.btn-micro.btn-danger {
+  background-color: #e74c3c;
+  color: white;
+  border-color: #c0392b;
+}
+.btn-micro.btn-danger:hover {
+  background-color: #c0392b;
+}
+
+.btn-micro.btn-success {
+  background-color: var(--color-btn-success);
+  color: white;
+  border-color: var(--color-btn-success-hover);
+}
+.btn-micro.btn-success:hover {
+  background-color: var(--color-btn-success-hover);
 }
 
 .label-with-actions { display: flex; justify-content: space-between; align-items: center; }

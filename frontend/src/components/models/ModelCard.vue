@@ -26,8 +26,11 @@
       >
       </div>
       
-      <!-- SafeMode Badge -->
-      <div v-if="isNsfw && settings.gridCard.showNsfwBadge" class="card-badge badge-nsfw">NSFW</div>
+      <!-- Badges -->
+      <div class="card-badges">
+        <div v-if="isNsfw && settings.gridCard.showNsfwBadge" class="card-badge badge-nsfw">NSFW</div>
+        <div v-if="isTested" class="icon-badge badge-tested" title="Tested"><i class="fas fa-check"></i></div>
+      </div>
 
       <!-- Bulk Select Checkbox -->
       <div 
@@ -123,6 +126,7 @@ const nsfwRevealed = ref(false);
 const isNsfw = computed(() => {
   return String(props.model.nsfw).toLowerCase() === 'true';
 });
+const isTested = computed(() => props.model.tested === true);
 
 const toggleNsfwReveal = () => {
   nsfwRevealed.value = !nsfwRevealed.value;
@@ -241,19 +245,41 @@ const copyExamplePrompt = () => {
   background-color: rgba(0, 0, 0, 0.6);
 }
 
-.card-badge {
+.card-badges {
   position: absolute;
   top: 10px;
   right: 10px;
+  display: flex;
+  gap: 5px;
+  z-index: 3;
+  align-items: center;
+}
+
+.card-badge {
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 0.75em;
   font-weight: bold;
-  z-index: 3;
+}
+
+.icon-badge {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
 }
 
 .badge-nsfw {
   background-color: rgba(231, 76, 60, 0.9);
+  color: white;
+}
+
+.badge-tested {
+  background-color: rgba(46, 204, 113, 0.9);
   color: white;
 }
 

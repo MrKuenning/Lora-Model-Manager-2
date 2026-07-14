@@ -57,7 +57,10 @@
                   @click.stop="toggleReveal(model.id)"
                   @error="handleImageError($event, model)"
                 >
-                <div v-if="isNsfw(model)" class="nsfw-badge" title="NSFW Content">!</div>
+                <div class="table-badges">
+                  <div v-if="isNsfw(model)" class="table-badge nsfw-badge" title="NSFW Content">!</div>
+                  <div v-if="isTested(model)" class="table-badge tested-badge" title="Tested">✓</div>
+                </div>
               </div>
             </td>
             
@@ -132,6 +135,7 @@ const formatColumnName = (key) => {
 };
 
 const isNsfw = (model) => String(model.nsfw).toLowerCase() === 'true';
+const isTested = (model) => model.tested === true;
 
 const toggleReveal = (id) => {
   if (revealed.value.has(id)) {
@@ -325,11 +329,15 @@ const handleImageError = (e, model) => {
   cursor: pointer;
 }
 
-.nsfw-badge {
+.table-badges {
   position: absolute;
   top: 2px;
   right: 2px;
-  background-color: #e74c3c;
+  display: flex;
+  gap: 2px;
+}
+
+.table-badge {
   color: white;
   width: 16px;
   height: 16px;
@@ -339,6 +347,14 @@ const handleImageError = (e, model) => {
   justify-content: center;
   font-size: 10px;
   font-weight: bold;
+}
+
+.nsfw-badge {
+  background-color: #e74c3c;
+}
+
+.tested-badge {
+  background-color: var(--color-btn-success, #2ecc71);
 }
 
 .col-name {

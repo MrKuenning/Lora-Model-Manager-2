@@ -3,7 +3,7 @@
     <div class="header-left">
       <div class="logo">
         <i class="fas fa-cube"></i>
-        <span>Lora Model Manager <small>v2.0.18</small></span>
+        <span>Lora Model Manager <small>v{{ appVersion }}</small></span>
       </div>
       <div class="view-toggles">
         <button 
@@ -89,6 +89,7 @@ import { useRouter } from 'vue-router';
 import { useSettingsStore } from '../../stores/settings';
 import { useModelsStore } from '../../stores/models';
 import { useBulkStore } from '../../stores/bulk';
+import { version as appVersion } from '../../../package.json';
 
 const emit = defineEmits(['open-settings', 'open-duplicates']);
 const router = useRouter();

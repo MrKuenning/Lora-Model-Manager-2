@@ -7,11 +7,15 @@
 - **Tested Toggle:** Added a new "Tested" toggle button next to the Filename to easily mark models as tested. This state natively saves directly to the model's `.json` configuration file and tracks within the SQLite database.
 - **Open File Location:** Added a clickable folder icon next to the "File Path" property in the Model Card that instantly launches your native OS file explorer directly to the model's containing directory.
 - **Datalist Dropdowns:** Converted the Base Model, SD Version, Category, and Subcategory text fields into hybrid `datalist` dropdowns. They now provide instant autocomplete suggestions based on all existing values in your database, while also featuring a convenient clear "X" button to quickly empty the field.
+- **Tag Cloud Input:** Upgraded the Tags field into an interactive tag cloud. Typing a word and pressing Tab or Enter instantly converts it into a distinct pill, complete with a removal button and Backspace support for quick clearing, while maintaining compatibility with the underlying comma-separated data structure.
+- **Balanced Keywords Grid:** Reorganized the Keywords & Prompts section into a perfectly balanced 3-row by 2-column grid. Trigger Words, Negative Trigger Words, and All Trigger Words sit logically on the left, paired symmetrically with Preferred Weight, Example Prompt 1, and Example Prompt 2 on the right.
+- **Tested Badges:** Added a visual "Tested" checkmark badge to both the Grid View model cards and the Table View thumbnails, aligning with the existing NSFW badge styling.
 
 **Changed**
 - **Manual Textbox Resizing:** Removed the automatic dynamic-expanding behavior from all multi-line text boxes (Trigger Words, Prompts, Tags, Notes, and Descriptions). They now load at a clean, consistent 2-line height but feature manual vertical drag-resizing, giving users full control over the modal's footprint.
 - **Consolidated Flag Buttons:** Relocated the "NSFW" and "High/Low" toggle buttons from their disparate locations in the Model Card and grouped them neatly into the new "Flags / Actions" box.
 - **Bulk Move Interface:** Upgraded the Bulk Move folder selection from a basic dropdown to a scrollable list view for better visibility of deep folder structures.
+- **Dynamic Versioning:** Refactored the UI header to dynamically pull the application version directly from `package.json`, ensuring the interface is always perfectly in sync with the codebase.
 
 **Fixed**
 - **Settings Persistence:** Fixed a bug where the "Filter folders with base model filter" setting would fail to visually check its box in the UI and wouldn't properly save to `config.json`. The backend JSON compiler now correctly orders and persists this setting.
