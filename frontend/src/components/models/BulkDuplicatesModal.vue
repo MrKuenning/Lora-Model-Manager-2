@@ -33,7 +33,7 @@
               <div class="group-header">Group {{ idx + 1 }} ({{ group.length }} identical files)</div>
               <div class="duplicate-cards-container">
                 <div v-for="file in group" :key="file" class="duplicate-card">
-                  <div class="duplicate-thumbnail" v-if="getModelInfo(file)">
+                  <div class="card-image" v-if="getModelInfo(file)">
                     <img :src="api.getAssetUrl(getModelInfo(file).previewUrl, modelsStore.getCacheBuster(file))" @error="$event.target.src = 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'><rect width=\'100%\' height=\'100%\' fill=\'%232a2a2a\'/><text x=\'50\' y=\'50\' font-family=\'Arial\' font-size=\'12\' fill=\'%23777\' text-anchor=\'middle\' dy=\'.3em\'>No Image</text></svg>'" />
                   </div>
                   
