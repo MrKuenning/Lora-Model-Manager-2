@@ -1,4 +1,5 @@
 @echo off
+title LMM Server
 echo Starting Lora Model Manager Backend (Flask + SQLite)...
 
 :: Check if Python is installed
