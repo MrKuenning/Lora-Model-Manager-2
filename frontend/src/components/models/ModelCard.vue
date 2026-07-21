@@ -30,6 +30,7 @@
       <div class="card-badges">
         <div v-if="isNsfw && settings.gridCard.showNsfwBadge" class="card-badge badge-nsfw">NSFW</div>
         <div v-if="isTested" class="icon-badge badge-tested" title="Tested"><i class="fas fa-check"></i></div>
+        <div v-if="isSlider" class="card-badge badge-slider" style="background: rgba(155, 89, 182, 0.85); color: #fff; font-weight: bold;" :title="'Slider Range: ' + sliderRangeText">Slider</div>
       </div>
 
       <!-- Bulk Select Checkbox -->
@@ -61,6 +62,9 @@
         </span>
         <span class="meta-tag" v-if="(model.highLow || model.high_low) && settings.gridCard.showHighLow" :title="'High/Low: ' + (model.highLow || model.high_low)">
           <i class="fas fa-layer-group"></i> {{ model.highLow || model.high_low }}
+        </span>
+        <span class="meta-tag" v-if="isSlider" :title="'Slider Range: ' + sliderRangeText">
+          <i class="fas fa-sliders-h"></i> {{ sliderRangeText }}
         </span>
         <span class="meta-tag" v-if="model.folder && settings.gridCard.showFolder" :title="'Folder: ' + model.folder">
           <i class="fas fa-folder-open"></i> {{ model.folder }}
@@ -127,6 +131,14 @@ const isNsfw = computed(() => {
   return String(props.model.nsfw).toLowerCase() === 'true';
 });
 const isTested = computed(() => props.model.tested === true);
+const isSlider = computed(() => props.model.isSlider === true || props.model.slider === true);
+const sliderRangeText = computed(() => {
+  const min = props.model.sliderMin !== undefined && props.model.sliderMin !== null ? props.model.sliderMin : -3;
+  const max = props.model.sliderMax !== undefined && props.model.sliderMax !== null ? props.model.sliderMax : 3;
+  const minDesc = props.model.sliderMinDesc ? ` (${props.model.sliderMinDesc})` : '';
+  const maxDesc = props.model.sliderMaxDesc ? ` (${props.model.sliderMaxDesc})` : '';
+  return `${min}${minDesc} to ${max}${maxDesc}`;
+});
 
 const toggleNsfwReveal = () => {
   nsfwRevealed.value = !nsfwRevealed.value;

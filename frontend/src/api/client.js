@@ -4,7 +4,7 @@ import axios from 'axios';
 // In production, the backend serves the frontend on the same port, so we can use relative paths
 // In development, we use Vite on 5173 and proxy to Flask on 8080 (or absolute URL if CORS)
 const apiClient = axios.create({
-  baseURL: import.meta.env.DEV ? 'http://localhost:8080/api' : '/api',
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -12,7 +12,7 @@ const apiClient = axios.create({
 
 // Helper for file uploads since they require multipart/form-data
 const fileUploadClient = axios.create({
-  baseURL: import.meta.env.DEV ? 'http://localhost:8080/api' : '/api',
+  baseURL: '/api',
   headers: {
     'Content-Type': 'multipart/form-data'
   }
@@ -76,11 +76,11 @@ export const api = {
     
     let url = '';
     if (path.startsWith('/assets/')) {
-      url = import.meta.env.DEV ? `http://localhost:8080${path}` : path;
+      url = path;
     } else {
       // Convert relative model paths to the static file server route
       const modelFilePath = path.startsWith('/') ? path.substring(1) : path;
-      url = import.meta.env.DEV ? `http://localhost:8080/model-file/${modelFilePath}` : `/model-file/${modelFilePath}`;
+      url = `/model-file/${modelFilePath}`;
     }
     
     if (cacheBuster) {

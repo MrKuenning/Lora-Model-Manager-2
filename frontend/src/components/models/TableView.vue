@@ -60,6 +60,7 @@
                 <div class="table-badges">
                   <div v-if="isNsfw(model)" class="table-badge nsfw-badge" title="NSFW Content">!</div>
                   <div v-if="isTested(model)" class="table-badge tested-badge" title="Tested">✓</div>
+                  <div v-if="model.isSlider || model.slider" class="table-badge slider-badge" style="background: #8e44ad; color: white;" title="Slider Model">S</div>
                 </div>
               </div>
             </td>

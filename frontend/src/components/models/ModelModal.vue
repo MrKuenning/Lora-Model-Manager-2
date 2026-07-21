@@ -216,6 +216,7 @@
                     <button class="btn btn-micro" @click="setNameFromCivitai" title="Use Civitai Name">Civitai Name</button>
                     <button class="btn btn-micro" @click="cleanName" title="Fix capitalization and formatting">Clean</button>
                     <button class="btn btn-micro" @click="trimName" title="Remove model keywords">Trim</button>
+                    <button class="btn btn-micro" @click="addSliderToName" title="Add slider tag [-5 Less ↔ More 5] to Model Name">Slider</button>
                   </div>
                 </div>
                 
@@ -283,9 +284,127 @@
                   </div>
                 </div>
 
+                <!-- Preferred Weight / Slider in Model Identity (grid-column: 2) -->
                 <div class="form-group" style="grid-column: 2; margin-top: 5px;">
-                  <label>Description:</label>
-                  <textarea v-model="form.description" class="form-control" style="height: 100%; min-height: 120px; resize: vertical;" placeholder="(empty)" @change="debouncedSave"></textarea>
+                  <div class="label-with-actions" style="margin-bottom: 4px;">
+                    <label>Preferred Weight:</label>
+                    <button 
+                      type="button" 
+                      class="btn btn-small"
+                      :class="form.isSlider ? 'btn-primary' : 'btn-secondary'" 
+                      @click="toggleSliderMode"
+                      title="Toggle Slider Mode"
+                      style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px;"
+                    >
+                      <i class="fas fa-sliders-h"></i> Slider: {{ form.isSlider ? 'ON' : 'OFF' }}
+                    </button>
+                  </div>
+
+                  <!-- Unified Proportional Fat Track Slider Bar (Both Slider & Non-Slider) -->
+                  <div style="display: flex; align-items: center; gap: 12px; max-width: 100%; margin-top: 28px;">
+                    <div class="custom-slider-wrapper" style="flex: 1; position: relative;">
+                      
+                      <!-- Dynamic Floating Value Pin -->
+                      <div 
+                        class="thumb-value-pin"
+                        :style="{
+                          position: 'absolute',
+                          left: `calc(${sliderThumbPct}% - 22px)`,
+                          top: '-24px',
+                          zIndex: 5,
+                          pointerEvents: 'none',
+                          transition: 'left 0.05s ease'
+                        }"
+                      >
+                        <div style="background: var(--color-primary, #4a90e2); color: #fff; font-weight: bold; font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.4); white-space: nowrap; position: relative;">
+                          <i class="fas fa-caret-down" style="position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); color: var(--color-primary, #4a90e2); font-size: 0.85rem;"></i>
+                          <span>{{ form.preferredWeight }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Fat Track Container -->
+                      <div class="fat-track" style="position: relative; height: 32px; background: linear-gradient(180deg, #1a1e28 0%, #252a37 100%); border-radius: 8px; border: 1px solid var(--color-border, #444); overflow: hidden; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.6);">
+                        
+                        <!-- Highlighted Range Fill Bar -->
+                        <div 
+                          class="track-fill-highlight" 
+                          :style="{
+                            position: 'absolute',
+                            top: 0,
+                            bottom: 0,
+                            left: Math.min(sliderZeroPct, sliderThumbPct) + '%',
+                            width: Math.abs(sliderThumbPct - sliderZeroPct) + '%',
+                            background: 'linear-gradient(90deg, #2980b9 0%, #8e44ad 100%)',
+                            opacity: 0.55,
+                            borderRadius: '4px',
+                            transition: 'all 0.05s ease'
+                          }"
+                        ></div>
+
+                        <!-- Neutral Zero Marker Line -->
+                        <div 
+                          v-if="sliderMinVal < 0 && sliderMaxVal > 0"
+                          class="zero-marker"
+                          :style="{
+                            position: 'absolute',
+                            left: sliderZeroPct + '%',
+                            top: 0,
+                            bottom: 0,
+                            width: '2px',
+                            background: 'rgba(255, 255, 255, 0.4)',
+                            zIndex: 2
+                          }"
+                          title="Neutral (0)"
+                        ></div>
+
+                        <!-- Left End Label (Min) -->
+                        <div class="track-endpoint left" style="position: relative; z-index: 3; display: flex; align-items: center; gap: 5px; max-width: 42%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,0.9);">
+                          <span class="badge" style="background: rgba(0,0,0,0.7); color: #5ad0ff; border: 1px solid rgba(90,208,255,0.4); padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; flex-shrink: 0;">{{ sliderMinVal }}</span>
+                          <span v-if="form.isSlider && form.sliderMinDesc" style="font-size: 0.75rem; font-weight: 600; color: #f0f0f0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ form.sliderMinDesc }}</span>
+                        </div>
+
+                        <!-- Right End Label (Max) -->
+                        <div class="track-endpoint right" style="position: relative; z-index: 3; display: flex; align-items: center; gap: 5px; max-width: 42%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,0.9); justify-content: flex-end;">
+                          <span v-if="form.isSlider && form.sliderMaxDesc" style="font-size: 0.75rem; font-weight: 600; color: #f0f0f0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ form.sliderMaxDesc }}</span>
+                          <span class="badge" style="background: rgba(0,0,0,0.7); color: #d67bff; border: 1px solid rgba(214,123,255,0.4); padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; flex-shrink: 0;">{{ sliderMaxVal }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Native Range Slider Input (Transparent Overlay for Interaction) -->
+                      <input 
+                        type="range" 
+                        :min="sliderMinVal" 
+                        :max="sliderMaxVal" 
+                        step="0.1" 
+                        v-model.number="form.preferredWeight" 
+                        class="fat-slider-input"
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 32px; opacity: 0; cursor: pointer; z-index: 10; margin: 0;"
+                      >
+                    </div>
+
+                    <!-- Number Input box alongside -->
+                    <input type="number" v-model.number="form.preferredWeight" class="weight-input" step="0.1" style="width: 65px; flex-shrink: 0;">
+                  </div>
+
+                  <!-- Slider Range Configuration Inputs -->
+                  <div v-if="form.isSlider" class="slider-config-grid" style="display: grid; grid-template-columns: minmax(45px, 55px) minmax(0, 1fr) minmax(45px, 55px) minmax(0, 1fr); gap: 6px; margin-top: 10px; background: rgba(0,0,0,0.15); padding: 8px; border-radius: 6px; border: 1px solid var(--color-border, #333);">
+                    <div style="min-width: 0;">
+                      <label style="font-size: 0.7rem; display: block; margin-bottom: 2px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Min Val</label>
+                      <input type="number" v-model.number="form.sliderMin" step="0.5" class="form-control form-control-sm" style="width: 100%; box-sizing: border-box; padding: 2px 4px; font-size: 0.8rem; text-align: center;" @change="debouncedSave">
+                    </div>
+                    <div style="min-width: 0;">
+                      <label style="font-size: 0.7rem; display: block; margin-bottom: 2px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Min Description</label>
+                      <input type="text" v-model="form.sliderMinDesc" placeholder="e.g. Dark" class="form-control form-control-sm" style="width: 100%; box-sizing: border-box; padding: 2px 6px; font-size: 0.8rem;" @change="debouncedSave">
+                    </div>
+                    <div style="min-width: 0;">
+                      <label style="font-size: 0.7rem; display: block; margin-bottom: 2px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Max Val</label>
+                      <input type="number" v-model.number="form.sliderMax" step="0.5" class="form-control form-control-sm" style="width: 100%; box-sizing: border-box; padding: 2px 4px; font-size: 0.8rem; text-align: center;" @change="debouncedSave">
+                    </div>
+                    <div style="min-width: 0;">
+                      <label style="font-size: 0.7rem; display: block; margin-bottom: 2px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Max Description</label>
+                      <input type="text" v-model="form.sliderMaxDesc" placeholder="e.g. Light" class="form-control form-control-sm" style="width: 100%; box-sizing: border-box; padding: 2px 6px; font-size: 0.8rem;" @change="debouncedSave">
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -366,11 +485,8 @@
                 </div>
                 
                 <div class="form-group" style="grid-column: 2;">
-                  <label>Preferred Weight:</label>
-                  <div class="weight-control" style="max-width: 100%;">
-                    <input type="range" min="-2" max="2" step="0.1" v-model="form.preferredWeight" class="weight-slider">
-                    <input type="number" v-model="form.preferredWeight" class="weight-input" step="0.1">
-                  </div>
+                  <label>Description:</label>
+                  <textarea v-model="form.description" class="form-control" style="height: 60px; resize: vertical;" placeholder="(empty)" @change="debouncedSave"></textarea>
                 </div>
 
                 <!-- ROW 2 -->
@@ -667,6 +783,11 @@ const form = reactive({
   civitaiUrl: '',
   nsfw: false,
   preferredWeight: 1.0,
+  isSlider: false,
+  sliderMin: -3.0,
+  sliderMax: 3.0,
+  sliderMinDesc: '',
+  sliderMaxDesc: '',
   version: '',
   highLow: '',
   tested: false,
@@ -793,7 +914,12 @@ const loadModel = async () => {
     form.civitaiName = data.civitaiName || '';
     form.civitaiUrl = data.civitaiUrl || data.civitai_url || '';
     form.nsfw = String(data.nsfw).toLowerCase() === 'true';
-    form.preferredWeight = data.preferredWeight || 1.0;
+    form.preferredWeight = data.preferredWeight !== undefined ? data.preferredWeight : 1.0;
+    form.isSlider = data.isSlider === true || data.slider === true;
+    form.sliderMin = data.sliderMin !== undefined && data.sliderMin !== null ? Number(data.sliderMin) : -3.0;
+    form.sliderMax = data.sliderMax !== undefined && data.sliderMax !== null ? Number(data.sliderMax) : 3.0;
+    form.sliderMinDesc = data.sliderMinDesc || '';
+    form.sliderMaxDesc = data.sliderMaxDesc || '';
     form.version = data.version || data.modelVersion || data.model_version || '';
     
     let hl = data.highLow || '';
@@ -858,6 +984,44 @@ watch(() => props.modelId, (newId, oldId) => {
   }
 });
 
+const toggleSliderMode = () => {
+  form.isSlider = !form.isSlider;
+  debouncedSave();
+};
+
+// Proportional Slider Track Computations
+const sliderMinVal = computed(() => {
+  if (form.isSlider) {
+    return Number(form.sliderMin ?? -3);
+  }
+  return -3.0;
+});
+
+const sliderMaxVal = computed(() => {
+  if (form.isSlider) {
+    return Number(form.sliderMax ?? 3);
+  }
+  return 3.0;
+});
+const sliderCurrentVal = computed(() => Number(form.preferredWeight ?? 1.0));
+
+const sliderThumbPct = computed(() => {
+  const min = sliderMinVal.value;
+  const max = sliderMaxVal.value;
+  if (max <= min) return 50;
+  const val = Math.min(Math.max(sliderCurrentVal.value, min), max);
+  return ((val - min) / (max - min)) * 100;
+});
+
+const sliderZeroPct = computed(() => {
+  const min = sliderMinVal.value;
+  const max = sliderMaxVal.value;
+  if (max <= min) return 50;
+  if (0 < min) return 0;
+  if (0 > max) return 100;
+  return ((0 - min) / (max - min)) * 100;
+});
+
 // Auto-save logic
 let saveTimeout = null;
 const debouncedSave = () => {
@@ -872,6 +1036,12 @@ const debouncedSave = () => {
       payload.negative_trigger_words = form.negativeTriggerWords;
       payload.all_trigger_words = form.allTriggerWords;
       payload.civitaiUrl = form.civitaiUrl;
+      payload.isSlider = form.isSlider;
+      payload.sliderMin = form.sliderMin;
+      payload.sliderMax = form.sliderMax;
+      payload.sliderMinDesc = form.sliderMinDesc;
+      payload.sliderMaxDesc = form.sliderMaxDesc;
+      payload.sliderRange = [form.sliderMin, form.sliderMax];
       
       await api.saveModel(props.modelId, payload);
       toast.showToast('Changes saved', 'success');
@@ -885,6 +1055,7 @@ const debouncedSave = () => {
 
 watch(() => form.nsfw, debouncedSave);
 watch(() => form.preferredWeight, debouncedSave);
+watch(() => form.isSlider, debouncedSave);
 
 const editingField = ref(null);
 
@@ -988,6 +1159,30 @@ const cleanName = () => {
   if (!form.name) return;
   form.name = cleanText(form.name);
   debouncedSave();
+};
+
+const addSliderToName = () => {
+  const minVal = form.isSlider ? (form.sliderMin ?? -3) : -3;
+  const maxVal = form.isSlider ? (form.sliderMax ?? 3) : 3;
+  const minDesc = (form.sliderMinDesc || '').trim();
+  const maxDesc = (form.sliderMaxDesc || '').trim();
+
+  let sliderTag = '';
+  if (minDesc || maxDesc) {
+    sliderTag = `[${minVal} ${minDesc} ↔ ${maxDesc} ${maxVal}]`.replace(/\s+/g, ' ');
+  } else {
+    sliderTag = `[${minVal} ↔ ${maxVal}]`;
+  }
+
+  let currentName = form.name || '';
+  const sliderRegex = /\[[^\]]*↔[^\]]*\]/;
+  if (sliderRegex.test(currentName)) {
+    form.name = currentName.replace(sliderRegex, sliderTag).trim();
+  } else {
+    form.name = currentName ? `${currentName} ${sliderTag}` : sliderTag;
+  }
+  debouncedSave();
+  toast.showToast('Slider tag added to Model Name', 'success');
 };
 
 const trimName = () => {

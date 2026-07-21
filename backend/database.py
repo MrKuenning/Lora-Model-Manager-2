@@ -85,6 +85,19 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_models_folder ON models(folder);
     """)
 
+    # Ensure slider columns exist if upgrading existing schema
+    existing_cols = [row[1] for row in cursor.execute("PRAGMA table_info(models)").fetchall()]
+    slider_cols = [
+        ('is_slider', 'INTEGER DEFAULT 0'),
+        ('slider_min', 'REAL DEFAULT -3.0'),
+        ('slider_max', 'REAL DEFAULT 3.0'),
+        ('slider_min_desc', 'TEXT DEFAULT ""'),
+        ('slider_max_desc', 'TEXT DEFAULT ""')
+    ]
+    for col_name, col_def in slider_cols:
+        if col_name not in existing_cols:
+            cursor.execute(f"ALTER TABLE models ADD COLUMN {col_name} {col_def}")
+
     conn.commit()
     conn.close()
     print("Database initialized successfully.")
@@ -202,6 +215,28 @@ def _parse_model_from_filesystem(model_name, root, file, models_dir):
     model_version = json_data.get('model version', json_data.get('name', ''))
     sha256 = json_data.get('sha256', '')
 
+    # Slider fields
+    raw_slider = json_data.get('slider', json_data.get('is_slider', False))
+    is_slider = 1 if (raw_slider is True or str(raw_slider).lower() == 'true') else 0
+    slider_range = json_data.get('slider range', json_data.get('slider_range', [-3.0, 3.0]))
+    if isinstance(slider_range, list) and len(slider_range) >= 2:
+        try:
+            slider_min = float(slider_range[0])
+            slider_max = float(slider_range[1])
+        except (ValueError, TypeError):
+            slider_min = -3.0
+            slider_max = 3.0
+    else:
+        try:
+            slider_min = float(json_data.get('slider min', -3.0))
+            slider_max = float(json_data.get('slider max', 3.0))
+        except (ValueError, TypeError):
+            slider_min = -3.0
+            slider_max = 3.0
+
+    slider_min_desc = str(json_data.get('slider min description', json_data.get('slider_min_desc', '')))
+    slider_max_desc = str(json_data.get('slider max description', json_data.get('slider_max_desc', '')))
+
     # Civitai-specific fields
     wcd = json_data.get('web_civitai_data', {})
     civitai_name = wcd.get('civitai name', json_data.get('civitai name', ''))
@@ -238,6 +273,11 @@ def _parse_model_from_filesystem(model_name, root, file, models_dir):
         'creator': creator,
         'sha256': sha256,
         'model_version': model_version,
+        'is_slider': is_slider,
+        'slider_min': slider_min,
+        'slider_max': slider_max,
+        'slider_min_desc': slider_min_desc,
+        'slider_max_desc': slider_max_desc,
         'preview_url': main_preview_url,
         'preview_images': preview_images,
         'json_data': json_data,
@@ -363,14 +403,16 @@ def _upsert_model(cursor, model_data, location):
             base_model, sd_version, category, subcategory, activation_text,
             preferred_weight, negative_text, nsfw, high_low, description,
             example_prompt, example_prompt_2, tags, civitai_name, civitai_url,
-            creator, sha256, model_version, preview_url, preview_images,
+            creator, sha256, model_version, is_slider, slider_min, slider_max,
+            slider_min_desc, slider_max_desc, preview_url, preview_images,
             json_data, civitai_data, associated_files, last_synced
         ) VALUES (
             ?, ?, ?, ?, ?, ?, ?, ?,
             ?, ?, ?, ?, ?,
             ?, ?, ?, ?, ?,
             ?, ?, ?, ?, ?,
-            ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?, ?,
+            ?, ?, ?, ?,
             ?, ?, ?, ?
         )
         ON CONFLICT(id) DO UPDATE SET
@@ -385,9 +427,12 @@ def _upsert_model(cursor, model_data, location):
             tags=excluded.tags, civitai_name=excluded.civitai_name,
             civitai_url=excluded.civitai_url, creator=excluded.creator,
             sha256=excluded.sha256, model_version=excluded.model_version,
-            preview_url=excluded.preview_url, preview_images=excluded.preview_images,
-            json_data=excluded.json_data, civitai_data=excluded.civitai_data,
-            associated_files=excluded.associated_files, last_synced=excluded.last_synced
+            is_slider=excluded.is_slider, slider_min=excluded.slider_min,
+            slider_max=excluded.slider_max, slider_min_desc=excluded.slider_min_desc,
+            slider_max_desc=excluded.slider_max_desc, preview_url=excluded.preview_url,
+            preview_images=excluded.preview_images, json_data=excluded.json_data,
+            civitai_data=excluded.civitai_data, associated_files=excluded.associated_files,
+            last_synced=excluded.last_synced
     """, (
         model_data['id'], model_data['name'], model_data['filename'],
         model_data['path'], location, model_data['folder'],
@@ -401,6 +446,11 @@ def _upsert_model(cursor, model_data, location):
         model_data['tags'], model_data['civitai_name'],
         model_data['civitai_url'], model_data['creator'],
         model_data['sha256'], model_data['model_version'],
+        model_data.get('is_slider', 0),
+        model_data.get('slider_min', -3.0),
+        model_data.get('slider_max', 3.0),
+        model_data.get('slider_min_desc', ''),
+        model_data.get('slider_max_desc', ''),
         model_data['preview_url'],
         json.dumps(model_data['preview_images']),
         json.dumps(model_data['json_data']),
@@ -458,7 +508,8 @@ def update_model_field(model_id, field, value):
         'tags', 'civitai_name', 'civitai_url', 'creator',
         'sha256', 'model_version', 'preview_url', 'preview_images',
         'json_data', 'civitai_data', 'associated_files', 'path',
-        'folder', 'name', 'filename', 'size', 'date_modified'
+        'folder', 'name', 'filename', 'size', 'date_modified',
+        'is_slider', 'slider_min', 'slider_max', 'slider_min_desc', 'slider_max_desc'
     }
     if field not in allowed_fields:
         conn.close()
@@ -546,6 +597,17 @@ def _row_to_api_dict(row):
         'creator': d.get('creator', ''),
         'modelVersion': d.get('model_version', ''),
         
+        # Slider fields
+        'isSlider': bool(d.get('is_slider', 0)) or bool(d.get('json_data', {}).get('slider', False)),
+        'sliderMin': d.get('slider_min') if d.get('slider_min') is not None else -3.0,
+        'sliderMax': d.get('slider_max') if d.get('slider_max') is not None else 3.0,
+        'sliderMinDesc': d.get('slider_min_desc', d.get('json_data', {}).get('slider min description', '')),
+        'sliderMaxDesc': d.get('slider_max_desc', d.get('json_data', {}).get('slider max description', '')),
+        'sliderRange': [
+            d.get('slider_min') if d.get('slider_min') is not None else -3.0,
+            d.get('slider_max') if d.get('slider_max') is not None else 3.0
+        ],
+
         # Pulling these from json_data since they aren't explicit columns
         'notes': d.get('json_data', {}).get('notes', ''),
         'tested': str(d.get('json_data', {}).get('tested', 'false')).lower() == 'true',

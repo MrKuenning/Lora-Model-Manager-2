@@ -137,6 +137,16 @@ def save_model(model_id):
         if 'tags' in data: json_data['tags'] = data['tags']
         if 'version' in data: json_data['model version'] = data['version']
         
+        # Slider fields
+        if 'isSlider' in data or 'slider' in data:
+            json_data['slider'] = bool(data.get('isSlider', data.get('slider', False)))
+        if 'sliderMin' in data or 'sliderMax' in data or 'sliderRange' in data:
+            min_val = float(data.get('sliderMin', -3.0)) if 'sliderMin' in data else (data.get('sliderRange', [-3.0, 3.0])[0] if isinstance(data.get('sliderRange'), list) and len(data.get('sliderRange')) >= 1 else -3.0)
+            max_val = float(data.get('sliderMax', 3.0)) if 'sliderMax' in data else (data.get('sliderRange', [-3.0, 3.0])[1] if isinstance(data.get('sliderRange'), list) and len(data.get('sliderRange')) >= 2 else 3.0)
+            json_data['slider range'] = [min_val, max_val]
+        if 'sliderMinDesc' in data: json_data['slider min description'] = data['sliderMinDesc']
+        if 'sliderMaxDesc' in data: json_data['slider max description'] = data['sliderMaxDesc']
+
         # Nested Civitai Data
         if 'creator' in data or 'civitaiName' in data or 'civitaiUrl' in data or 'all_trigger_words' in data:
             if 'web_civitai_data' not in json_data:
