@@ -138,13 +138,8 @@ const applyChanges = async () => {
 
   for (const id of targetIds) {
     try {
-      const model = modelsStore.models.find(m => m.id === id);
-      if (!model) continue;
-
-      const newMeta = { ...model, ...changes };
-
-      // Save metadata
-      await api.saveModelJson(id, newMeta);
+      // Save metadata changes only
+      await api.saveModel(id, changes);
 
       successCount++;
     } catch (err) {

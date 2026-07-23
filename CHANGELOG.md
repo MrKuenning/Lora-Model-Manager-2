@@ -1,5 +1,12 @@
 # Lora Model Manager - Changelog
 
+### 07/23/2026 - v2.0.23
+
+**Fixed**
+- **Bulk Edit Model Version Overwrite:** Fixed an issue where performing a bulk edit (e.g. toggling NSFW) would overwrite the `Model Version` field with the `Model Name` (e.g., changing version `"5"` to `"Green Trees"`). Bulk edits now send only explicit modified fields via `api.saveModel` rather than dumping full objects with unmapped key names into `.json` sidecars.
+- **Model Version Fallback Fix & Auto-Recovery:** Removed an invalid backend parser fallback that defaulted empty model versions to the model's name. Models without an explicit version now stay cleanly empty, while previously corrupted model versions are automatically restored from Civitai metadata.
+- **Model Modal Load Fix:** Restored a missing `sha256` reference in `_parse_model_from_filesystem` that was causing HTTP 500 errors when attempting to open model details.
+
 ### 07/21/2026 - v2.0.22
 
 **Added**
@@ -11,6 +18,9 @@
 **Changed**
 - **Model Modal Details Layout**: Swapped Preferred Weight / Slider into the **Model Identity** section (top right grid cell) and relocated **Description** to the **Keywords & Prompts** section (row 1 right grid cell) for improved layout symmetry.
 - **Compact Slider Config Controls**: Formatted min/max numerical value inputs into compact `55px` columns with centered text alignment and added `min-width: 0` / text clipping protections to prevent text overlap.
+
+**Fixed**
+- **Bulk Edit Model Version Overwrite:** Fixed an issue where performing a bulk edit (e.g. toggling NSFW) would overwrite the `Model Version` field with the `Model Name` (e.g., changing version `"5"` to `"Green Trees"`). The bulk edit modal now sends only the explicit modified fields via `api.saveModel` rather than dumping full model objects with unmapped key names into `.json` sidecars. Also added automatic self-healing to recover previously corrupted model versions from Civitai metadata during scanning.
 
 ### 07/17/2026 - v2.0.21
 

@@ -212,8 +212,8 @@ def _parse_model_from_filesystem(model_name, root, file, models_dir):
     example_prompt_2 = json_data.get('example prompt 2', '')
     tags = json_data.get('tags', '')
     parsed_name = json_data.get('name', model_name)
-    model_version = json_data.get('model version', json_data.get('name', ''))
     sha256 = json_data.get('sha256', '')
+    model_version = json_data.get('model version', json_data.get('modelVersion', json_data.get('model_version', '')))
 
     # Slider fields
     raw_slider = json_data.get('slider', json_data.get('is_slider', False))
@@ -242,6 +242,14 @@ def _parse_model_from_filesystem(model_name, root, file, models_dir):
     civitai_name = wcd.get('civitai name', json_data.get('civitai name', ''))
     civitai_url = wcd.get('url', json_data.get('url', ''))
     creator = wcd.get('creator', json_data.get('creator', ''))
+
+    # If model_version is missing or was set equal to model name, check web_civitai_data for version name or clear it
+    civitai_version_name = wcd.get('name', '')
+    if not model_version or model_version == parsed_name or model_version == civitai_name:
+        if civitai_version_name and civitai_version_name != parsed_name and civitai_version_name != civitai_name:
+            model_version = civitai_version_name
+        else:
+            model_version = ''
 
     # Also check civitai_data for URL
     if not civitai_url and civitai_data:

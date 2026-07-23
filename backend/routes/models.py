@@ -134,8 +134,10 @@ def save_model(model_id):
         if 'example_prompt_2' in data: json_data['example prompt 2'] = data['example_prompt_2']
         if 'description' in data: json_data['description'] = data['description']
         if 'notes' in data: json_data['notes'] = data['notes']
-        if 'tags' in data: json_data['tags'] = data['tags']
-        if 'version' in data: json_data['model version'] = data['version']
+        if 'version' in data or 'modelVersion' in data or 'model_version' in data:
+            v_val = data.get('version') if 'version' in data else (data.get('modelVersion') if 'modelVersion' in data else data.get('model_version'))
+            if v_val is not None:
+                json_data['model version'] = v_val
         
         # Slider fields
         if 'isSlider' in data or 'slider' in data:
