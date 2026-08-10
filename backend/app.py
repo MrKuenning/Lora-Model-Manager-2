@@ -25,7 +25,7 @@ def create_app():
     """Create and configure the Flask application."""
     app = Flask(__name__, static_folder=None)
 
-    # Enable CORS for Vue dev server (localhost:5173)
+    # Enable CORS for Vue dev server (localhost:3001)
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     # Register blueprints
@@ -111,11 +111,21 @@ def create_app():
 
 def main():
     """Run the Flask application."""
-    port = int(os.environ.get('PORT', 8080))
+    settings = _load_settings()
+    
+    # Determine port from environment or config settings
+    env_port = os.environ.get('PORT')
+    raw_port = env_port if env_port else settings.get('port', 8080)
+    try:
+        port = int(raw_port)
+        if port < 1 or port > 65535:
+            port = 8080
+    except (ValueError, TypeError):
+        port = 8080
+
     app = create_app()
 
     # Auto-sync models on startup
-    settings = _load_settings()
     models_dir = settings.get('modelsDirectory', '')
     checkpoints_dir = settings.get('checkpointsDirectory', '')
 

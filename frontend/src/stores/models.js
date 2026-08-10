@@ -7,6 +7,7 @@ export const useModelsStore = defineStore('models', {
     models: [],
     folders: [],
     loading: false,
+    refreshing: false,
     error: null,
     searchQuery: '',
     currentLocation: 'loras', // 'loras' or 'checkpoints'
@@ -233,6 +234,9 @@ export const useModelsStore = defineStore('models', {
       if (this.models.length === 0) {
         this.loading = true;
       }
+      if (refresh) {
+        this.refreshing = true;
+      }
       this.error = null;
       try {
         const fetchedModels = await api.getModels(this.currentLocation, refresh);
@@ -245,6 +249,7 @@ export const useModelsStore = defineStore('models', {
         this.error = err.response?.data?.error || err.message;
       } finally {
         this.loading = false;
+        this.refreshing = false;
       }
     },
 

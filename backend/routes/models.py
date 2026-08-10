@@ -35,8 +35,8 @@ def load_models():
     if not os.path.exists(models_path):
         return jsonify({'error': f'Directory does not exist: {models_path}'}), 400
 
-    # Sync from filesystem to SQLite (incremental unless refresh=true)
-    sync_models(models_path, location, force=refresh)
+    # Sync from filesystem to SQLite (incremental, relying on mtime)
+    sync_models(models_path, location, force=False)
 
     # Read from SQLite
     models = get_all_models(location)
@@ -114,7 +114,17 @@ def save_model(model_id):
         return jsonify({'status': 'error', 'message': 'Model file not found'}), 404
 
     try:
-        json_data = data.get('json', {})
+        json_data = {}
+        if json_path and os.path.exists(json_path):
+            try:
+                with open(json_path, 'r', encoding='utf-8-sig') as f:
+                    json_data = json.load(f)
+            except Exception:
+                pass
+                
+        payload_json = data.get('json', {})
+        if payload_json:
+            json_data = payload_json
 
         # Map flat payload fields to the standard JSON schema
         if 'name' in data: json_data['name'] = data['name']

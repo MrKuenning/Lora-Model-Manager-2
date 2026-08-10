@@ -87,6 +87,11 @@ def rename_model(base_dir, old_name, new_name):
     if not old_model_path:
         return {'status': 'error', 'message': f'Model file not found: {old_name}'}
 
+    # Verify that the new name doesn't already exist
+    new_model_path = find_model_file(base_dir, new_name)
+    if new_model_path:
+        return {'status': 'error', 'message': f'A model with the name "{new_name}" already exists. Please choose a different name.'}
+
     model_dir = os.path.dirname(old_model_path)
 
     try:

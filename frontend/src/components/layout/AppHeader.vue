@@ -66,7 +66,7 @@
       </button>
 
       <button class="btn btn-secondary" @click="models.fetchModels(true)" title="Force Refresh from Disk">
-        <i class="fas fa-sync-alt" :class="{ 'fa-spin': models.loading }"></i> Refresh
+        <i class="fas fa-sync-alt" :class="{ 'fa-spin': models.refreshing }"></i> Refresh
       </button>
 
       <div class="safemode-toggle">

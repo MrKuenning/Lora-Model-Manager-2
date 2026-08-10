@@ -22,8 +22,14 @@
         <div class="settings-content">
           <!-- General Tab -->
           <div v-if="activeTab === 'general'" class="settings-section">
-
-
+            <div class="setting-group">
+              <label>Server Port</label>
+              <input type="number" v-model.number="localSettings.port" class="form-control" placeholder="8080" min="1" max="65535" style="max-width: 200px;">
+              <small>Port used by the backend Flask server (requires server restart to take effect)</small>
+              <div v-if="isRestrictedPort(localSettings.port)" class="warning-text" style="margin-top: 5px; margin-bottom: 0;">
+                <i class="fas fa-exclamation-triangle"></i> Port {{ localSettings.port }} is blocked by web browsers for security (ERR_UNSAFE_PORT). Please use ports like 8080, 8000, 5000, 3000, or 8888.
+              </div>
+            </div>
             
             <div class="setting-group">
               <label>LoRA Models Directory</label>
@@ -336,8 +342,17 @@ const activeTab = ref('general');
 const saving = ref(false);
 const newTrimName = ref('');
 
+const RESTRICTED_PORTS = [
+  1, 7, 9, 11, 13, 15, 17, 19, 20, 21, 22, 23, 25, 37, 42, 43, 53, 69, 77, 79, 87, 95, 101, 102, 103, 104, 109, 110, 111, 113, 115, 117, 119, 123, 135, 137, 139, 143, 161, 179, 389, 427, 465, 512, 513, 514, 515, 526, 530, 531, 532, 540, 548, 554, 563, 587, 601, 636, 989, 990, 993, 995, 1719, 1720, 1723, 2049, 3659, 4045, 5060, 5061, 6000, 6566, 6665, 6666, 6667, 6668, 6669, 6697, 10080
+];
+
+const isRestrictedPort = (port) => {
+  return RESTRICTED_PORTS.includes(Number(port));
+};
+
 // Create a deep reactive copy of settings for editing
 const localSettings = reactive({
+  port: 8080,
   theme: 'dark',
   defaultView: 'grid',
   defaultSort: 'name-asc',
@@ -360,6 +375,7 @@ const localSettings = reactive({
 
 onMounted(() => {
   // Initialize local copy
+  localSettings.port = settings.port || 8080;
   localSettings.theme = settings.theme;
   localSettings.defaultView = settings.defaultView;
   localSettings.defaultSort = settings.defaultSort;

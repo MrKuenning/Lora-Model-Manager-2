@@ -326,10 +326,17 @@ def sync_models(models_dir, location='loras', force=False):
                 file_path = os.path.join(root, file)
                 file_mtime = os.path.getmtime(file_path)
 
-                # Check JSON mtime too (edits to metadata should trigger re-sync)
-                json_path = os.path.join(root, f"{model_name}.json")
-                json_mtime = os.path.getmtime(json_path) if os.path.exists(json_path) else 0
-                latest_mtime = max(file_mtime, json_mtime)
+                # Check mtime of ALL associated files (json, thumbnails, etc.)
+                associated_files = [f for f in files if f.startswith(model_name + ".")]
+                latest_mtime = file_mtime
+                for af in associated_files:
+                    af_path = os.path.join(root, af)
+                    try:
+                        af_mtime = os.path.getmtime(af_path)
+                        if af_mtime > latest_mtime:
+                            latest_mtime = af_mtime
+                    except Exception:
+                        pass
 
                 # Check if we need to sync this model
                 if not force:

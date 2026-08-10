@@ -18,6 +18,7 @@ def _load_settings():
             return json.load(f)
     except FileNotFoundError:
         default_settings = {
+            "port": 8080,
             "modelsDirectory": "",
             "checkpointsDirectory": "",
             "defaultDownloadDirectory": "",
@@ -55,6 +56,7 @@ def _save_settings(data):
     """Save settings to config.json with strict ordering."""
     try:
         preferred_order = [
+            "port",
             "theme",
             "defaultView",
             "defaultSort",

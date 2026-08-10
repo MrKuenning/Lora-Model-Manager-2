@@ -1410,7 +1410,13 @@ const saveRename = async () => {
   if (newFilenameTemp.value && newFilenameTemp.value !== filenameNoExt.value) {
     isRenaming.value = true;
     try {
-      await api.renameModel(props.modelId, newFilenameTemp.value);
+      const response = await api.renameModel(props.modelId, newFilenameTemp.value);
+      
+      if (response && response.status === 'error') {
+        toast.showToast(response.message || 'Failed to rename', 'error');
+        return;
+      }
+      
       toast.showToast('Renamed successfully', 'success');
       modelsStore.fetchModels();
       
@@ -1421,7 +1427,7 @@ const saveRename = async () => {
       emit('change-model', newModelId);
       editingFilename.value = false;
     } catch (err) {
-      toast.showToast('Failed to rename', 'error');
+      toast.showToast(err?.response?.data?.message || 'Failed to rename', 'error');
     } finally {
       isRenaming.value = false;
     }

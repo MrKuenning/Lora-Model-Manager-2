@@ -155,10 +155,13 @@ const executeRename = async () => {
   
   for (const item of itemsToProcess) {
     try {
-      await api.renameModel(item.model.id, item.newName);
+      const response = await api.renameModel(item.model.id, item.newName);
+      if (response && response.status === 'error') {
+        throw new Error(response.message || 'Failed to rename');
+      }
       successCount++;
     } catch (err) {
-      console.error(`Failed to rename ${item.model.name}`, err);
+      console.error(`Failed to rename ${item.model.name}:`, err);
     }
   }
   

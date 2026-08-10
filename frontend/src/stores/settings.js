@@ -3,6 +3,7 @@ import { api } from '../api/client';
 
 export const useSettingsStore = defineStore('settings', {
   state: () => ({
+    port: 8080,
     modelsDirectory: '',
     checkpointsDirectory: '',
     defaultDownloadDirectory: '',

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create an Axios instance with a base URL matching our Flask backend
 // In production, the backend serves the frontend on the same port, so we can use relative paths
-// In development, we use Vite on 5173 and proxy to Flask on 8080 (or absolute URL if CORS)
+// In development, we use Vite on 3001 and proxy to Flask on the configured server port (or default 8080)
 const apiClient = axios.create({
   baseURL: '/api',
   headers: {
