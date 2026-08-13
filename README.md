@@ -8,9 +8,10 @@ The AI Lora Model Manager is a powerful tool designed to help you organize, sear
 
 Go from this to this in seconds.
 <p>
-  <img src="https://github.com/user-attachments/assets/27656aab-5bd1-4d67-afda-c3ee2387938f" width="49%" alt="Description 1">
-  <img src="https://github.com/user-attachments/assets/97e09e27-f343-46f3-ad18-005f01d5e8f2" width="49%" alt="Description 2">
+  <img src="https://github.com/user-attachments/assets/53aa87d3-4dd5-434e-8dda-3c460075f78b" width="49%" alt="Description 1">
+  <img src="https://github.com/user-attachments/assets/15bcccae-6957-4ee8-9674-8f36a94541f8" width="49%" alt="Description 2">
 </p>
+
 
 ## Changelog
 
@@ -22,13 +23,13 @@ See the full changelog at [CHANGELOG.md](CHANGELOG.md)
 
 ### 📊 Multiple View Modes
 - **Grid View**: Visual card-based layout with thumbnails
-<img src="https://github.com/user-attachments/assets/302b81b3-6409-4079-8846-c5f7473e7abe" width="500" />
+<img src="https://github.com/user-attachments/assets/51202028-c057-44d2-8934-35c3136aeb93" width="500" />
 
 - **Table View**: Detailed spreadsheet-style view with sortable columns
-<img src="https://github.com/user-attachments/assets/c8732415-6fbb-48b5-a7e7-8e87b0671d64" width="500" />
+<img src="https://github.com/user-attachments/assets/c8228af8-f9da-4abe-94f4-93ba1732b81a" width="500" />
 
 - **Grouped View**: Organize models by category, folder, or base model
-<img src="https://github.com/user-attachments/assets/87ff8bba-4e2a-48ec-9f92-4a4085077e75" width="500" />
+<img src="https://github.com/user-attachments/assets/5b7a5d5e-8373-4480-8366-4aa06058568a" width="500" />
 
 - **Folder Tree & List View Sidebar**: Sidebar layout allowing toggleable Tree or List representations of directories. The sidebar's visibility and current view mode are persisted in your browser's local storage.
 
@@ -48,7 +49,8 @@ Manage both LoRA and Checkpoint models from separate directories:
 - Switch between locations with tab buttons in the header
 
 ### 🎨 Model Details Modal
-<img src="https://github.com/user-attachments/assets/a2d666ab-9eb3-422d-ad64-44cd67615b49" width="500" />
+<img src="https://github.com/user-attachments/assets/1d3d81d4-c21f-4bba-b566-bf712347e7f0" width="500" />
+
 
 - **Multiple preview images** with carousel navigation
 - **Drag-and-drop thumbnail upload** for custom previews
@@ -65,7 +67,7 @@ Manage both LoRA and Checkpoint models from separate directories:
 - **Model Deletion**: Safely delete the model file and all associated files (metadata JSON, preview images) directly from the details view
 
 ### 🛠️ Filename Helper Tools
-<img src="https://github.com/user-attachments/assets/212f2a7d-ca5a-43aa-a994-c83af99dbb70" width="500" />
+<img src="https://github.com/user-attachments/assets/c88e8af3-5059-465e-ae11-25c04505eb37" width="500" />
 
 Powerful buttons to help format and manage filenames:
 
@@ -78,9 +80,29 @@ Powerful buttons to help format and manage filenames:
 7. **High/Low**: Swap High/Low variants for WAN 2.2 models
 8. **Append Prefix**: Add base model prefix ([P], [X], [I], [Z])
 9. **Append Suffix**: Add WAN Video model suffixes
+10. **Slider**: Format and append/update slider min/max range tags (e.g., `[-3 Less ↔ More 3]`) in Model Name
+
+### 🎚️ Slider Naming & Controls
+<img src="https://github.com/user-attachments/assets/3953d7b5-e21b-45f9-9b4d-a0a6819ff214" width="500" />
+
+Easily manage and identify slider LoRAs with built-in Slider Mode and automated tag formatting:
+
+- **Slider Mode Toggle**: Enable Slider Mode to configure custom min/max weight boundaries (e.g., `-3.0` to `3.0`) and descriptive end-range labels (`Less` ↔ `More`).
+- **Interactive Proportional Track**: Dynamic fat-track slider bar for visualizing and adjusting preferred weight strength.
+- **Auto Slider Tagging**: Click the **Slider** helper button to automatically format and insert/update slider range tags (e.g., `[-3 Less ↔ More 3]`) directly into the Model Name.
+- **Visual Badging**: Displays a purple **S** badge on model cards and table rows for instant visual identification.
+
+### 🚚 Move from Download Folder
+<img src="https://github.com/user-attachments/assets/1ce66b27-ba59-4b74-8826-ca8a7b1f47af" width="500" />
+
+Streamline your model ingestion workflow with automated one-click folder transfers:
+
+- **Automated Import**: Instantly transfer newly downloaded model files from your configured **Download Directory** into your target **Sorting Directory**.
+- **Complete Sidecar Bundling**: Automatically detects and moves all associated sidecar files alongside the model (`.json` metadata, preview images `.png`, `.jpg`, `.webp`, `.mp4` video clips, and `.civitai.info`).
+- **Zero Manual File Dragging**: Eliminates tedious manual file management, keeping your incoming downloads organized and ready for Civitai scanning.
 
 ### 🌐 Civitai Integration
-<img src="https://github.com/user-attachments/assets/1f20344f-c124-49c2-9d08-9a2b7a0a4f25" width="500" />
+<img src="https://github.com/user-attachments/assets/595bb0fe-6229-4adc-bf4b-af2a7150e4eb" width="500" />
 
 Dedicated Civitai Scan page with powerful tools:
 
@@ -99,17 +121,19 @@ Action buttons in the model popup for single-model operations:
 - **Generate SHA256 Hash** for model integrity and duplicate scanning
 - **Delete Model** to clean up the model and its associated metadata/previews
 
-### 📦 Bulk Editing Mode
-<img src="https://github.com/user-attachments/assets/bc2b8b01-c59c-4989-b2da-141576cd8df5" width="500" />
+### 📦 Bulk Operations & Duplicate Finder
+<img src="https://github.com/user-attachments/assets/0bb48164-0bbd-4424-b682-cdb9d9c0c6f5" width="500" />
 
-Perform batch operations on multiple models at once:
-1. Click the **Bulk** button in the header to enter selection mode
-2. Click on model cards to select/deselect them
-3. Use the action buttons to perform operations:
-   - **Move**: Move all selected models to a different folder
-   - **Edit**: Update Category, Subcategory, Version, High/Low for all
-   - **Rename**: Preview and apply recommended filenames
-4. Click **Cancel** to exit bulk mode
+Perform batch operations on multiple models at once or clean up your collection:
+
+1. **Bulk Selection Mode**: Click **Bulk** in the header to select multiple cards:
+   - **Move**: Batch move selected models to a new subfolder or base model root folder
+   - **Edit**: Update Category, Subcategory, Version, or High/Low for all selected models
+   - **Rename**: Preview and apply recommended standardized filenames across selections
+2. **Duplicate Model Finder**: Click **Find Duplicates** in the header toolbar to scan your collection:
+   - Calculates SHA256 checksums across all models to locate exact duplicates
+   - Groups identical files side-by-side with preview cards, file sizes, and folder paths
+   - Offers one-click deletion of duplicate files and their associated sidecars
 
 ### 🎴 Grid Card Settings
 
@@ -236,22 +260,28 @@ The `model_name.json` file contains metadata in the following structure:
 
 Settings are stored in `config.json` and include:
 
-- **modelsDirectory**: Path to your Lora models folder
-- **checkpointsDirectory**: Path to your Checkpoints folder
-- **theme**: "dark" or "light"
-- **defaultView**: "grid" or "table"
-- **defaultSort**: Sorting preference
-- **hideNSFW**: Safe Mode toggle
-- **visibleColumns**: Which columns to show in table view
+- **modelsDirectory**: Path to your primary LoRA models folder (supports native folder picker)
+- **checkpointsDirectory**: Path to your primary Checkpoint models folder (supports native folder picker)
+- **defaultDownloadDirectory**: Path to your web browser download directory for file imports
+- **defaultSortingDirectory**: Path to your target unorganized models folder for processing
+- **theme**: UI color theme ("dark" or "light")
+- **defaultView**: Initial view mode ("grid" or "table")
+- **defaultSort**: Preferred sorting order (Name, Date, Size)
+- **hideNSFW**: Safe Mode toggle for filtering adult content
+- **visibleColumns**: Customizable column selection for Table View
+- **Model Type Roots**: Configure target destination directories per Base Model type
+- **Filename Formatting**: Customize "Recommended" filename format templates per Base Model
+- **Trim Names**: Configurable list of words and patterns to strip when trimming model names
 
 ## Civitai Scan Workflow
 
-1. Navigate to **Civitai Scan** page (button in header)
-2. Select **LoRAs** or **Checkpoints** tab
-3. Click **"Scan & Fetch Missing"** to fetch metadata directly into JSON
-4. For unmatched models: enter Civitai URL manually or create dummy JSON
-5. Click **"Download Preview Images"** to get thumbnails
-6. Click **"Fix Thumbnail Names"** to standardize filenames (optional)
+1. Open **Settings** and set your **Download Directory** and **Sorting Directory**
+2. Navigate to the **Civitai Scan** page via the header button
+3. Select the **LoRAs** tab
+4. Click **"Move Files"** (Import from Downloads) to transfer models into your Sorting Directory
+5. Click **"Scan & Fetch Missing"** to fetch metadata and SHA256 hashes directly into JSON
+6. For unmatched models: enter Civitai URL manually or generate dummy JSON marker files
+
 
 ### Rate Limiting
 - Smart delays (0.5s default) respect Civitai API limits

@@ -234,9 +234,14 @@ export const useModelsStore = defineStore('models', {
       if (this.models.length === 0) {
         this.loading = true;
       }
+      
+      let minDelayPromise = null;
       if (refresh) {
         this.refreshing = true;
+        // Enforce a minimum 600ms visual spin time so it doesn't flash instantly
+        minDelayPromise = new Promise(resolve => setTimeout(resolve, 600));
       }
+      
       this.error = null;
       try {
         const fetchedModels = await api.getModels(this.currentLocation, refresh);
@@ -249,6 +254,9 @@ export const useModelsStore = defineStore('models', {
         this.error = err.response?.data?.error || err.message;
       } finally {
         this.loading = false;
+        if (minDelayPromise) {
+          await minDelayPromise;
+        }
         this.refreshing = false;
       }
     },

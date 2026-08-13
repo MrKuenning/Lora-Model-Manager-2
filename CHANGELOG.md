@@ -4,7 +4,7 @@
 
 **Changed**
 - **Model Refresh Optimization**: Greatly improved model refresh speed. A standard refresh now uses a smart mtime check across all associated files (including `.png` thumbnails, `.txt` files, etc.) instead of forcing a full re-parse of all `.safetensors` files. This makes refresh nearly instantaneous and correctly detects newly added thumbnails without a page reload.
-- **Refresh Visual Feedback**: Added a spinning animation to the Refresh button in the header when a background refresh is actively running.
+- **Refresh Visual Feedback**: Added a spinning animation to the Refresh button in the header when a background refresh is actively running. Enforced a minimum 600ms visual spin time so the animation remains visible even when the backend responds instantaneously.
 
 **Fixed**
 - **Rename Conflict Prevention**: Added a validation check to prevent renaming a model to a name that already exists in the library, avoiding data overwriting or "disappearing model" glitches.
