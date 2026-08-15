@@ -200,18 +200,21 @@ def run_wizard():
     # 3. Port Configuration
     print("\n--- Step 3: Web Server Port ---")
     current_port = config.get("port", 8080)
-    port_input = input(f"Enter server port [Default: {current_port}]: ").strip()
+    print(f"Default port is 8080 (currently configured: {current_port})")
+    port_input = input(f"Enter server port [Press Enter for {current_port}]: ").strip()
     if port_input:
         try:
             port = int(port_input)
             if 1 <= port <= 65535:
                 config["port"] = port
             else:
-                print("Port out of range (1-65535). Using default.")
+                print(f"Port out of range (1-65535). Keeping {current_port}.")
+                config["port"] = current_port
         except ValueError:
-            print("Invalid port number. Using default.")
-
-    # Save configuration
+            print(f"Invalid port number. Keeping {current_port}.")
+            config["port"] = current_port
+    else:
+        config["port"] = current_port
     save_config(config)
 
     print("\n" + "=" * 64)

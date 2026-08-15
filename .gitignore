@@ -1,6 +1,9 @@
 .DS_Store
 node_modules
 Extra_Files
+Frontend Compile.bat
+Frontend Start for Dev.bat
+
 
 # Python virtual environment
 venv/

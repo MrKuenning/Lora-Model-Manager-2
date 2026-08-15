@@ -168,16 +168,18 @@ Organize and clean up folder navigation when moving models by mapping Base Model
 - **Dynamic Move Filtering**: When moving a model, the target location dropdown filters automatically to only show the configured root folder and its subdirectories.
 - **Bulk Operations Integration**: Filters the destination folder list in bulk move operations if all selected models share the same base model.
 
-## Installation & Quick Start
+## Installation & Getting Started
 
-### Requirements
-- Python 3.8 or higher (Ensure "Add Python to PATH" is checked during installation)
-- Modern web browser (Chrome, Firefox, Edge)
-- Windows operating system
-- FFmpeg (optional, required for Civitai video thumbnail extraction)
-- *Note: Node.js is NOT required for regular use (pre-compiled web assets are included).*
+### System Requirements
+- **Python 3.8 or higher** (Ensure **"Add Python to PATH"** is checked during installation)
+- Modern web browser (Chrome, Edge, Firefox, Brave)
+- Windows operating system (Linux/macOS supported via manual terminal commands)
+- **FFmpeg** (optional, only required if extracting Civitai video thumbnails)
+- *Note: Node.js is **NOT** required for general use — pre-compiled production web assets are included out of the box.*
 
-### Quick Start (3 Steps)
+---
+
+### Option A: Automated Setup (Recommended)
 
 1. **Clone the repository**:
    ```bash
@@ -185,21 +187,64 @@ Organize and clean up folder navigation when moving models by mapping Base Model
    cd Lora-Model-Manager-2
    ```
 
-2. **Run Initial Setup**:
-   Double-click `install.bat` (or run `./install.bat` in terminal).
-   - Automatically configures a self-contained Python virtual environment (`venv`).
-   - Installs all required backend dependencies.
-   - Launches an interactive setup wizard to help you select your LoRA and Checkpoints folders.
+2. **Run the Installer**:
+   Double-click **`Lora Manager - Install.bat`**.
+   - Verifies Python installation.
+   - Automatically builds an isolated virtual environment (`.\venv`).
+   - Installs all required backend dependencies (`Flask`, `Flask-CORS`, `requests`).
+   - Initializes `backend/config.json`.
+   - Launches an interactive setup wizard to configure your LoRA directory, Checkpoints directory, and port.
+   - Offers to immediately launch the server.
 
-3. **Start the Server**:
-   Double-click `Start Server.bat` (or run `python run.py`).
-   Open your browser at `http://localhost:8080`.
+3. **Start the Application**:
+   Double-click **`Lora Manager - Start Server.bat`** anytime to launch the server and open your browser automatically.
 
 ---
 
-## Developer Setup (Optional)
+### Option B: Manual Installation & CLI
 
-If you wish to modify the Vue 3 frontend source code:
+If you prefer to configure and run everything manually via terminal/command line:
+
+1. **Clone and enter the directory**:
+   ```bash
+   git clone https://github.com/MrKuenning/Lora-Model-Manager-2.git
+   cd Lora-Model-Manager-2
+   ```
+
+2. **Create and activate a virtual environment (recommended)**:
+   ```bash
+   python -m venv venv
+
+   # On Windows (Command Prompt / PowerShell):
+   venv\Scripts\activate
+
+   # On Linux / macOS:
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies**:
+   ```bash
+   pip install -r backend/requirements.txt
+   ```
+
+4. **Initial Configuration**:
+   Run the interactive setup wizard:
+   ```bash
+   python backend/setup_wizard.py
+   ```
+   *Alternatively, manually copy `backend/config-example.json` to `backend/config.json` and edit your folder paths directly in a text editor.*
+
+5. **Start the Server**:
+   ```bash
+   python run.py
+   ```
+   The backend will initialize the database, auto-sync models, and automatically open your default browser to `http://localhost:<port>` (default is `8080`).
+
+---
+
+## Developer Setup (Vue 3 Frontend Development)
+
+If you are modifying the Vue 3 frontend source code:
 
 1. **Install Node.js** (v18 or higher recommended).
 2. **Install Frontend Dependencies**:
@@ -207,10 +252,19 @@ If you wish to modify the Vue 3 frontend source code:
    cd frontend
    npm install
    ```
-3. **Start Frontend in Dev Mode (Hot-Reload)**:
-   Run `Frontend - Start for Dev.bat` or `cd frontend && npm run dev`.
+3. **Start Frontend with Hot-Reload**:
+   - Double-click `Frontend Start for Dev.bat`, or run:
+     ```bash
+     cd frontend
+     npm run dev
+     ```
 4. **Compile Production Build**:
-   Run `Frontend - Compile.bat` or `cd frontend && npm run build`.
+   - Double-click `Frontend Compile.bat`, or run:
+     ```bash
+     cd frontend
+     npm run build
+     ```
+   The compiled assets will be placed in `frontend/dist/` and served automatically by the Flask backend.
 
 ## File Structure
 

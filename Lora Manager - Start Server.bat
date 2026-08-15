@@ -7,31 +7,26 @@ echo               AI LORA MODEL MANAGER
 echo ============================================================
 echo.
 
+echo Starting backend server...
+echo.
+
 :: Detect Python executable (prefer local venv if available)
 if exist "%~dp0venv\Scripts\python.exe" (
-    set "PYTHON_EXE=%~dp0venv\Scripts\python.exe"
+    "%~dp0venv\Scripts\python.exe" "%~dp0run.py"
 ) else (
-    python --version >nul 2>&1
-    if %ERRORLEVEL% equ 0 (
-        set "PYTHON_EXE=python"
-    ) else (
-        py -3 --version >nul 2>&1
-        if %ERRORLEVEL% equ 0 (
-            set "PYTHON_EXE=py -3"
-        ) else (
+    python "%~dp0run.py" 2>nul
+    if %ERRORLEVEL% neq 0 (
+        py -3 "%~dp0run.py" 2>nul
+        if %ERRORLEVEL% neq 0 (
+            echo.
             echo [ERROR] Python is not installed or not in your PATH.
-            echo Please run 'install.bat' to set up the environment.
+            echo Please run 'Lora Manager - Install.bat' to set up the environment.
             echo.
             pause
             exit /b 1
         )
     )
 )
-
-:: Start the server
-echo Starting backend server...
-echo.
-%PYTHON_EXE% run.py
 
 if %ERRORLEVEL% neq 0 (
     echo.
