@@ -168,47 +168,49 @@ Organize and clean up folder navigation when moving models by mapping Base Model
 - **Dynamic Move Filtering**: When moving a model, the target location dropdown filters automatically to only show the configured root folder and its subdirectories.
 - **Bulk Operations Integration**: Filters the destination folder list in bulk move operations if all selected models share the same base model.
 
-## Installation
+## Installation & Quick Start
 
 ### Requirements
-- Python 3.8 or higher
-- Node.js v16 or higher (for frontend Vite server)
+- Python 3.8 or higher (Ensure "Add Python to PATH" is checked during installation)
 - Modern web browser (Chrome, Firefox, Edge)
 - Windows operating system
 - FFmpeg (optional, required for Civitai video thumbnail extraction)
+- *Note: Node.js is NOT required for regular use (pre-compiled web assets are included).*
 
-### Setup
+### Quick Start (3 Steps)
 
-1. **Clone or download** the repository to your local machine
-
-2. **Install Backend Dependencies**:
-   Open a terminal in the `backend/` directory and run:
+1. **Clone the repository**:
    ```bash
-   pip install -r requirements.txt
+   git clone https://github.com/MrKuenning/Lora-Model-Manager-2.git
+   cd Lora-Model-Manager-2
    ```
 
-3. **Install Frontend Dependencies**:
-   Open a terminal in the `frontend/` directory and run:
+2. **Run Initial Setup**:
+   Double-click `install.bat` (or run `./install.bat` in terminal).
+   - Automatically configures a self-contained Python virtual environment (`venv`).
+   - Installs all required backend dependencies.
+   - Launches an interactive setup wizard to help you select your LoRA and Checkpoints folders.
+
+3. **Start the Server**:
+   Double-click `Start Server.bat` (or run `python run.py`).
+   Open your browser at `http://localhost:8080`.
+
+---
+
+## Developer Setup (Optional)
+
+If you wish to modify the Vue 3 frontend source code:
+
+1. **Install Node.js** (v18 or higher recommended).
+2. **Install Frontend Dependencies**:
    ```bash
+   cd frontend
    npm install
    ```
-
-## Running the Application
-
-For a streamlined experience on Windows, you can simply double-click the provided batch files:
-
-1. **Start the Backend**:
-   Run `Start Server.bat` from the project root.
-
-2. **Start the Frontend**:
-   - For development (with hot-reload): Run `Frontend - Start for Dev.bat`
-   - To build for production: Run `Frontend - Compile.bat`
-
-Alternatively, you can run them manually:
-- Backend: `cd backend && python app.py`
-- Frontend: `cd frontend && npm run dev`
-
-3. **Set your models directories** in Settings if this is your first time
+3. **Start Frontend in Dev Mode (Hot-Reload)**:
+   Run `Frontend - Start for Dev.bat` or `cd frontend && npm run dev`.
+4. **Compile Production Build**:
+   Run `Frontend - Compile.bat` or `cd frontend && npm run build`.
 
 ## File Structure
 

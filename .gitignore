@@ -1,7 +1,17 @@
 .DS_Store
 node_modules
-/dist
 Extra_Files
+
+# Python virtual environment
+venv/
+.venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
 
 # local env files
 .env.local
@@ -18,6 +28,9 @@ config.json
 
 #database files
 lora_manager.db
+*.db
+*.db-wal
+*.db-shm
 
 # Editor directories and files
 .idea

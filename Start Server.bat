@@ -1,22 +1,40 @@
 @echo off
-title LMM Server
-echo Starting Lora Model Manager Backend (Flask + SQLite)...
+title AI Lora Model Manager
+cd /d "%~dp0"
 
-:: Check if Python is installed
-python --version >nul 2>&1
-IF %ERRORLEVEL% NEQ 0 (
-    echo Python is not installed or not in your PATH.
-    echo Please install Python 3.8+ and try again.
-    pause
-    exit /b 1
+echo ============================================================
+echo               AI LORA MODEL MANAGER
+echo ============================================================
+echo.
+
+:: Detect Python executable (prefer local venv if available)
+if exist "%~dp0venv\Scripts\python.exe" (
+    set "PYTHON_EXE=%~dp0venv\Scripts\python.exe"
+) else (
+    python --version >nul 2>&1
+    if %ERRORLEVEL% equ 0 (
+        set "PYTHON_EXE=python"
+    ) else (
+        py -3 --version >nul 2>&1
+        if %ERRORLEVEL% equ 0 (
+            set "PYTHON_EXE=py -3"
+        ) else (
+            echo [ERROR] Python is not installed or not in your PATH.
+            echo Please run 'install.bat' to set up the environment.
+            echo.
+            pause
+            exit /b 1
+        )
+    )
 )
 
-:: Install requirements
-echo Installing dependencies...
-python -m pip install -r backend\requirements.txt
-
 :: Start the server
-echo Starting server...
-python run.py
+echo Starting backend server...
+echo.
+%PYTHON_EXE% run.py
 
-pause
+if %ERRORLEVEL% neq 0 (
+    echo.
+    echo Server stopped with an error code: %ERRORLEVEL%
+    pause
+)
