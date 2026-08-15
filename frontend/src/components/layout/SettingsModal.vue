@@ -24,7 +24,13 @@
           <div v-if="activeTab === 'general'" class="settings-section">
             <div class="setting-group">
               <label>Server Port</label>
-              <input type="number" v-model.number="localSettings.port" class="form-control" placeholder="8080" min="1" max="65535" style="max-width: 200px;">
+              <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                <input type="number" v-model.number="localSettings.port" class="form-control" placeholder="8080" min="1" max="65535" style="max-width: 160px;">
+                <label class="checkbox-label" style="margin: 0; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                  <input type="checkbox" v-model="localSettings.autoOpenBrowser">
+                  <strong>Automatically open browser on server start</strong>
+                </label>
+              </div>
               <small>Port used by the backend Flask server (requires server restart to take effect)</small>
               <div v-if="isRestrictedPort(localSettings.port)" class="warning-text" style="margin-top: 5px; margin-bottom: 0;">
                 <i class="fas fa-exclamation-triangle"></i> Port {{ localSettings.port }} is blocked by web browsers for security (ERR_UNSAFE_PORT). Please use ports like 8080, 8000, 5000, 3000, or 8888.
@@ -353,6 +359,7 @@ const isRestrictedPort = (port) => {
 // Create a deep reactive copy of settings for editing
 const localSettings = reactive({
   port: 8080,
+  autoOpenBrowser: true,
   theme: 'dark',
   defaultView: 'grid',
   defaultSort: 'name-asc',
@@ -376,6 +383,7 @@ const localSettings = reactive({
 onMounted(() => {
   // Initialize local copy
   localSettings.port = settings.port || 8080;
+  localSettings.autoOpenBrowser = settings.autoOpenBrowser !== false; // Default true
   localSettings.theme = settings.theme;
   localSettings.defaultView = settings.defaultView;
   localSettings.defaultSort = settings.defaultSort;

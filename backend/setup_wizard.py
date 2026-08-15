@@ -15,6 +15,7 @@ EXAMPLE_CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '
 
 PREFERRED_ORDER = [
     "port",
+    "autoOpenBrowser",
     "theme",
     "defaultView",
     "defaultSort",

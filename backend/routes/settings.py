@@ -19,6 +19,7 @@ def _load_settings():
     except FileNotFoundError:
         default_settings = {
             "port": 8080,
+            "autoOpenBrowser": True,
             "modelsDirectory": "",
             "checkpointsDirectory": "",
             "defaultDownloadDirectory": "",
@@ -57,6 +58,7 @@ def _save_settings(data):
     try:
         preferred_order = [
             "port",
+            "autoOpenBrowser",
             "theme",
             "defaultView",
             "defaultSort",

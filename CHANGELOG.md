@@ -1,5 +1,22 @@
 # Lora Model Manager - Changelog
 
+### 08/14/2026 - v2.1.0
+
+**Added**
+- **Automated 1-Click Installer (`Lora Manager - Install.bat`)**: Added a guided setup installer that automatically checks for Python 3.8+, creates a self-contained Python virtual environment (`venv/`), installs all backend dependencies from `requirements.txt`, runs the configuration wizard, and offers to launch the application immediately.
+- **Interactive Setup Wizard (`backend/setup_wizard.py`)**: Built an interactive CLI and native Windows directory picker wizard to guide users through configuring their LoRA models folder, Checkpoints folder, and server port on initial install.
+- **Automatic Browser Launch Setting**: Added an **"Automatically open browser on server start"** checkbox setting next to the Server Port configuration in the Settings modal and `config.json` (`autoOpenBrowser`).
+- **Production Pre-Compiled Asset Tracking**: Unignored and tracked `frontend/dist/` in Git so users can clone the repository and run immediately without needing Node.js or npm installed.
+- **Smart Virtual Environment Server Launcher (`Lora Manager - Start Server.bat`)**: Automatically launches the server using the isolated `venv` environment when present, falling back to system Python if needed.
+
+**Changed**
+- **Simplified Quick Start Workflow**: Streamlined user onboarding to 3 steps: `git clone` -> `Lora Manager - Install.bat` -> `Lora Manager - Start Server.bat`.
+- **Standardized Default Port Configuration**: Set standard default port across backend, frontend, and example configuration to `8080`.
+
+**Fixed**
+- **Spaces in File Paths Support**: Fixed batch execution errors (`'C:\Users\...' is not recognized as an internal or external command`) across all batch files when the project is installed inside directories with spaces.
+- **Dynamic Browser Port Navigation**: Fixed an issue where the browser launch URL was hardcoded to port `8080` regardless of the user's custom configured port.
+
 ### 08/10/2026 - v2.0.24
 
 **Changed**

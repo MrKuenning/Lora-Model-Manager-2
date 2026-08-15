@@ -140,9 +140,10 @@ def main():
     print(f"\nLora Model Manager running at: http://localhost:{port}")
     print("Press Ctrl+C to stop.\n")
 
-    # Open browser automatically on configured port
-    import threading
-    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not getattr(app, 'debug', False):
+    # Open browser automatically on configured port if enabled
+    auto_open = settings.get('autoOpenBrowser', True)
+    if auto_open and (os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not getattr(app, 'debug', False)):
+        import threading
         threading.Timer(1.2, lambda: webbrowser.open(f"http://localhost:{port}")).start()
 
     app.run(host='0.0.0.0', port=port, debug=True)
