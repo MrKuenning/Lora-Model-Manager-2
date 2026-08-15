@@ -199,6 +199,9 @@ Organize and clean up folder navigation when moving models by mapping Base Model
 3. **Start the Application**:
    Double-click **`Lora Manager - Start Server.bat`** anytime to launch the server and open your browser automatically.
 
+4. **Updating the Application**:
+   Double-click **`Lora Manager - Update.bat`** anytime to pull the latest updates from GitHub and automatically refresh dependencies.
+
 ---
 
 ### Option B: Manual Installation & CLI

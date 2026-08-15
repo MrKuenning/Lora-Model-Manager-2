@@ -8,6 +8,7 @@
 - **Automatic Browser Launch Setting**: Added an **"Automatically open browser on server start"** checkbox setting next to the Server Port configuration in the Settings modal and `config.json` (`autoOpenBrowser`).
 - **Production Pre-Compiled Asset Tracking**: Unignored and tracked `frontend/dist/` in Git so users can clone the repository and run immediately without needing Node.js or npm installed.
 - **Smart Virtual Environment Server Launcher (`Lora Manager - Start Server.bat`)**: Automatically launches the server using the isolated `venv` environment when present, falling back to system Python if needed.
+- **1-Click Application Updater (`Lora Manager - Update.bat`)**: Added a batch updater script that automatically runs `git pull` from GitHub and refreshes dependencies in the virtual environment.
 
 **Changed**
 - **Simplified Quick Start Workflow**: Streamlined user onboarding to 3 steps: `git clone` -> `Lora Manager - Install.bat` -> `Lora Manager - Start Server.bat`.
