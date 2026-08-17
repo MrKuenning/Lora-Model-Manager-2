@@ -174,9 +174,10 @@ const progressPercentage = computed(() => {
   return Math.round((currentIndex.value / currentQueueLength.value) * 100);
 });
 
-onMounted(() => {
+onMounted(async () => {
+  await settingsStore.fetchSettings();
   if (modelsStore.models.length === 0) {
-    modelsStore.fetchModels();
+    await modelsStore.fetchModels();
   }
 });
 
@@ -275,7 +276,6 @@ const fetchMissingData = (source = 'civitai') => {
       }
       if (res && res.status === 'not_found') throw new Error('not found');
       if (res && res.status === 'error') throw new Error(res.message);
-      addLog(`SUCCESS: Fetched metadata for ${m.filename}`, 'success');
     }
   }));
   runScanQueue(tasks);
@@ -283,7 +283,7 @@ const fetchMissingData = (source = 'civitai') => {
 
 const getMissingThumbnails = () => {
   const targets = getMissingThumbnailModels();
-  const skipNsfw = settingsStore.scanSettings?.skipNsfwPreviews !== false;
+  const skipNsfw = settingsStore.scanSettings?.skipNsfwPreviews === true;
   const maxSize = settingsStore.scanSettings?.downloadMaxSize === true;
   
   const tasks = targets.map(model => ({
@@ -291,11 +291,16 @@ const getMissingThumbnails = () => {
     actionName: 'Download Thumbnail',
     actionFn: async (m) => {
       const res = await api.civitaiDownloadPreview(m.path, skipNsfw, maxSize, false);
+      if (res && res.logs) {
+        res.logs.forEach(log => {
+          const msg = typeof log === 'object' ? log.message : log;
+          const type = typeof log === 'object' ? log.type : 'info';
+          addLog(msg, type);
+        });
+      }
       if (res && res.status === 'error') throw new Error(res.message);
       if (res && res.status === 'skipped') {
         addLog(`SKIPPED: ${m.filename} (${res.message || 'No thumbnail found'})`, 'warning');
-      } else {
-        addLog(`SUCCESS: Downloaded thumbnail for ${m.filename}`, 'success');
       }
     }
   }));
@@ -304,7 +309,7 @@ const getMissingThumbnails = () => {
 
 const getAllThumbnails = () => {
   const targets = modelsStore.models;
-  const skipNsfw = settingsStore.scanSettings?.skipNsfwPreviews !== false;
+  const skipNsfw = settingsStore.scanSettings?.skipNsfwPreviews === true;
   const maxSize = settingsStore.scanSettings?.downloadMaxSize === true;
   
   const tasks = targets.map(model => ({
@@ -312,11 +317,16 @@ const getAllThumbnails = () => {
     actionName: 'Download Thumbnail',
     actionFn: async (m) => {
       const res = await api.civitaiDownloadPreview(m.path, skipNsfw, maxSize, true);
+      if (res && res.logs) {
+        res.logs.forEach(log => {
+          const msg = typeof log === 'object' ? log.message : log;
+          const type = typeof log === 'object' ? log.type : 'info';
+          addLog(msg, type);
+        });
+      }
       if (res && res.status === 'error') throw new Error(res.message);
       if (res && res.status === 'skipped') {
         addLog(`SKIPPED: ${m.filename} (${res.message || 'No thumbnail found'})`, 'warning');
-      } else {
-        addLog(`SUCCESS: Downloaded thumbnail for ${m.filename}`, 'success');
       }
     }
   }));
@@ -330,8 +340,17 @@ const generateMissingHashes = () => {
     actionName: 'Generate Hash',
     actionFn: async (m) => {
       const res = await api.civitaiGenerateHash(m.path, true);
+      if (res && res.logs) {
+        res.logs.forEach(log => {
+          const msg = typeof log === 'object' ? log.message : log;
+          const type = typeof log === 'object' ? log.type : 'info';
+          addLog(msg, type);
+        });
+      }
       if (res && res.status === 'error') throw new Error(res.message);
-      addLog(`SUCCESS: Generated hash for ${m.filename}`, 'success');
+      if (res && res.status === 'success' && !res.logs) {
+        addLog(`Hash generated successfully for ${m.filename}`, 'success');
+      }
     }
   }));
   runScanQueue(tasks);
@@ -344,21 +363,6 @@ const regenerateAllHashes = () => {
     actionName: 'Regenerate Hash',
     actionFn: async (m) => {
       const res = await api.civitaiGenerateHash(m.path, false);
-      if (res && res.status === 'error') throw new Error(res.message);
-      addLog(`SUCCESS: Regenerated hash for ${m.filename}`, 'success');
-    }
-  }));
-  runScanQueue(tasks);
-};
-
-const runAllInOne = () => {
-  // Build Tasks for Fetch Missing Metadata
-  const metadataTargets = getMissingMetadataModels();
-  const tasks = metadataTargets.map(model => ({
-    model,
-    actionName: 'Fetch Metadata',
-    actionFn: async (m) => {
-      const res = await api.civitaiFetchByHash(m.path);
       if (res && res.logs) {
         res.logs.forEach(log => {
           const msg = typeof log === 'object' ? log.message : log;
@@ -366,28 +370,61 @@ const runAllInOne = () => {
           addLog(msg, type);
         });
       }
-      if (res && res.status === 'not_found') throw new Error('not found');
       if (res && res.status === 'error') throw new Error(res.message);
-      addLog(`SUCCESS: Fetched metadata for ${m.filename}`, 'success');
+      if (res && res.status === 'success' && !res.logs) {
+        addLog(`Hash regenerated successfully for ${m.filename}`, 'success');
+      }
     }
   }));
+  runScanQueue(tasks);
+};
+
+const runAllInOne = () => {
+  // Step 1: Missing metadata targets (fetch metadata & auto-download thumbnails)
+  const metadataTargets = getMissingMetadataModels();
+  const tasks = [];
   
-  // Build Tasks for Download Missing Thumbnails
-  const thumbTargets = getMissingThumbnailModels();
-  const skipNsfw = settingsStore.scanSettings?.skipNsfwPreviews !== false;
+  metadataTargets.forEach(model => {
+    tasks.push({
+      model,
+      actionName: 'Process Metadata & Thumbnails',
+      actionFn: async (m) => {
+        const res = await api.civitaiFetchByHash(m.path);
+        if (res && res.logs) {
+          res.logs.forEach(log => {
+            const msg = typeof log === 'object' ? log.message : log;
+            const type = typeof log === 'object' ? log.type : 'info';
+            addLog(msg, type);
+          });
+        }
+        if (res && res.status === 'not_found') throw new Error('not found');
+        if (res && res.status === 'error') throw new Error(res.message);
+      }
+    });
+  });
+  
+  // Step 2: Models that already had metadata but are missing thumbnails
+  const metadataTargetPaths = new Set(metadataTargets.map(m => m.path));
+  const otherMissingThumbs = getMissingThumbnailModels().filter(m => !metadataTargetPaths.has(m.path));
+  const skipNsfw = settingsStore.scanSettings?.skipNsfwPreviews === true;
   const maxSize = settingsStore.scanSettings?.downloadMaxSize === true;
   
-  thumbTargets.forEach(model => {
+  otherMissingThumbs.forEach(model => {
     tasks.push({
       model,
       actionName: 'Download Thumbnail',
       actionFn: async (m) => {
         const res = await api.civitaiDownloadPreview(m.path, skipNsfw, maxSize, false);
+        if (res && res.logs) {
+          res.logs.forEach(log => {
+            const msg = typeof log === 'object' ? log.message : log;
+            const type = typeof log === 'object' ? log.type : 'info';
+            addLog(msg, type);
+          });
+        }
         if (res && res.status === 'error') throw new Error(res.message);
         if (res && res.status === 'skipped') {
           addLog(`SKIPPED: ${m.filename} (${res.message || 'No thumbnail found'})`, 'warning');
-        } else {
-          addLog(`SUCCESS: Downloaded thumbnail for ${m.filename}`, 'success');
         }
       }
     });

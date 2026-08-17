@@ -31,6 +31,23 @@ DEFAULT_HEADERS = {
     'Accept-Language': 'en-US,en;q=0.9',
 }
 
+DEFAULT_IMAGE_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Referer': 'https://civitai.com/',
+}
+
+_HTTP_SESSION = None
+
+def get_http_session():
+    """Get or initialize shared HTTP Session for connection pooling."""
+    global _HTTP_SESSION
+    if _HTTP_SESSION is None:
+        _HTTP_SESSION = requests.Session()
+        _HTTP_SESSION.headers.update(DEFAULT_HEADERS)
+    return _HTTP_SESSION
+
 
 def get_civitai_headers():
     """
@@ -46,6 +63,13 @@ def get_civitai_headers():
     except Exception:
         pass
     return headers
+
+
+def get_image_headers():
+    """
+    Get HTTP headers specifically optimized for Civitai Cloudflare CDN image requests.
+    """
+    return dict(DEFAULT_IMAGE_HEADERS)
 
 
 def get_url_variants(url, max_size=False):
@@ -128,13 +152,13 @@ def load_json_robust(file_path):
         return None
 
 
-def generate_sha256(file_path, chunk_size=8192):
+def generate_sha256(file_path, chunk_size=4*1024*1024):
     """
     Generate SHA256 hash for a file
     
     Args:
         file_path: Path to the file
-        chunk_size: Size of chunks to read (default 8KB)
+        chunk_size: Size of chunks to read (default 4MB)
         
     Returns:
         SHA256 hash as hex string, or None on error
@@ -249,7 +273,7 @@ def fetch_model_info_by_hash(file_hash):
     """
     try:
         url = f"{CIVITAI_API_URLS['hash']}{file_hash}"
-        response = requests.get(url, headers=get_civitai_headers(), timeout=30)
+        response = requests.get(url, headers=get_civitai_headers(), timeout=10)
         
         if response.status_code == 404:
             print(f"Model not found on Civitai for hash: {file_hash}")
@@ -370,7 +394,7 @@ def scrape_civarchive_by_hash(file_hash):
     try:
         url = f"https://civitaiarchive.com/sha256/{file_hash}"
         print(f"Fetching from CivArchive: {url}")
-        response = requests.get(url, headers=get_civitai_headers(), timeout=30, allow_redirects=True)
+        response = requests.get(url, headers=get_civitai_headers(), timeout=10, allow_redirects=True)
         
         if response.status_code == 404:
             print(f"Model not found on CivArchive for hash: {file_hash}")
@@ -397,7 +421,7 @@ def scrape_civarchive_by_url(url):
     """
     try:
         print(f"Fetching from CivArchive URL: {url}")
-        response = requests.get(url, headers=get_civitai_headers(), timeout=30)
+        response = requests.get(url, headers=get_civitai_headers(), timeout=10)
         
         if response.status_code == 404:
             print(f"Model not found on CivArchive for URL: {url}")
@@ -424,7 +448,7 @@ def fetch_model_info_by_id(model_id):
     """
     try:
         url = f"{CIVITAI_API_URLS['model_id']}{model_id}"
-        response = requests.get(url, headers=get_civitai_headers(), timeout=30)
+        response = requests.get(url, headers=get_civitai_headers(), timeout=10)
         
         if not response.ok:
             print(f"Civitai API error {response.status_code}: {response.text}")
@@ -449,7 +473,7 @@ def fetch_model_info_by_version_id(version_id):
     try:
         url = f"{CIVITAI_API_URLS['model_version_id']}{version_id}"
         print(f"Fetching model version from: {url}")
-        response = requests.get(url, headers=get_civitai_headers(), timeout=30)
+        response = requests.get(url, headers=get_civitai_headers(), timeout=10)
         
         if response.status_code == 404:
             print(f"Model version not found on Civitai: {version_id}")
@@ -953,10 +977,11 @@ def extract_video_frames(video_path, output_base_path):
 def _save_pil_image(image_bytes, target_path):
     """
     Safely open and convert image bytes to standard RGB PNG and save to target_path.
+    If PIL is not available or fails, falls back to directly writing raw image bytes.
     """
-    import io
-    from PIL import Image
     try:
+        from PIL import Image
+        import io
         img = Image.open(io.BytesIO(image_bytes))
         # Handle different modes
         if img.mode in ('RGBA', 'P', 'LA'):
@@ -973,12 +998,29 @@ def _save_pil_image(image_bytes, target_path):
         
         img.save(target_path, format='PNG')
         return True
+    except ImportError:
+        # Fallback if Pillow is not installed
+        try:
+            with open(target_path, 'wb') as f:
+                f.write(image_bytes)
+            print(f"Saved raw image bytes to {target_path} (Pillow not installed)")
+            return True
+        except Exception as e:
+            print(f"Error saving raw image bytes to {target_path}: {e}")
+            return False
     except Exception as e:
-        print(f"Error converting/saving image to {target_path}: {e}")
-        return False
+        # Fallback if image conversion fails
+        try:
+            with open(target_path, 'wb') as f:
+                f.write(image_bytes)
+            print(f"Saved raw image bytes fallback to {target_path}: {e}")
+            return True
+        except Exception as ex:
+            print(f"Error writing image fallback to {target_path}: {ex}")
+            return False
 
 
-def download_preview_image(model_path, max_size=False, skip_nsfw=True, force_additional=False):
+def download_preview_image(model_path, max_size=False, skip_nsfw=False, force_additional=False):
     """
     Download preview image for a model.
     Reads image URLs from the model's .json file, with automatic fallback to
@@ -1086,6 +1128,9 @@ def download_preview_image(model_path, max_size=False, skip_nsfw=True, force_add
             
             # 1. Try static images first
             candidate_idx = 0
+            session = get_http_session()
+            img_headers = get_image_headers()
+            
             if need_p1:
                 while candidate_idx < len(static_candidates):
                     item = static_candidates[candidate_idx]
@@ -1098,15 +1143,18 @@ def download_preview_image(model_path, max_size=False, skip_nsfw=True, force_add
                     saved = False
                     for v_url in variants:
                         try:
-                            resp = requests.get(v_url, headers=get_civitai_headers(), timeout=30)
+                            resp = session.get(v_url, headers=img_headers, timeout=5)
                             if resp.ok and resp.content and _save_pil_image(resp.content, preview_path):
                                 print(f"Downloaded preview 1: {preview_path} (from {v_url})")
                                 downloaded += 1
                                 need_p1 = False
                                 saved = True
                                 break
-                        except Exception:
-                            pass
+                            else:
+                                status = resp.status_code if resp is not None else 'no response'
+                                print(f"Preview 1 fetch failed for {v_url}: status={status}")
+                        except Exception as e:
+                            print(f"Exception on preview 1 {v_url}: {e}")
                     if saved:
                         break
                         
@@ -1122,15 +1170,18 @@ def download_preview_image(model_path, max_size=False, skip_nsfw=True, force_add
                     saved = False
                     for v_url in variants:
                         try:
-                            resp = requests.get(v_url, headers=get_civitai_headers(), timeout=30)
+                            resp = session.get(v_url, headers=img_headers, timeout=5)
                             if resp.ok and resp.content and _save_pil_image(resp.content, preview2_path):
                                 print(f"Downloaded preview 2: {preview2_path} (from {v_url})")
                                 downloaded += 1
                                 need_p2 = False
                                 saved = True
                                 break
-                        except Exception:
-                            pass
+                            else:
+                                status = resp.status_code if resp is not None else 'no response'
+                                print(f"Preview 2 fetch failed for {v_url}: status={status}")
+                        except Exception as e:
+                            print(f"Exception on preview 2 {v_url}: {e}")
                     if saved:
                         break
             

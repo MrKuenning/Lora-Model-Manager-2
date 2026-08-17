@@ -52,53 +52,65 @@ def scan_models():
 def fetch_by_hash():
     """Generate hash and fetch model info from Civitai."""
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         model_path = data.get('modelPath')
         logs = []
 
         if not model_path:
             return jsonify({'status': 'error', 'message': 'Missing modelPath'}), 400
 
-        # Generate SHA256 hash
-        logs.append({'message': f"Generating SHA256 for: {os.path.basename(model_path)}", 'type': 'info'})
-        print(f"Generating SHA256 for: {model_path}")
+        filename = os.path.basename(model_path)
+
+        # 1. Creating hash
+        logs.append({'message': f"Creating hash for {filename}...", 'type': 'info'})
         file_hash = civitai_handler.generate_sha256(model_path)
 
         if not file_hash:
+            logs.append({'message': "Failed to generate SHA256 hash", 'type': 'error'})
             return jsonify({'status': 'error', 'message': 'Failed to generate SHA256 hash', 'logs': logs})
 
-        # Fetch model info from Civitai
-        logs.append({'message': f"Checking Civitai for match...", 'type': 'info'})
-        print(f"Fetching model info for hash: {file_hash}")
+        logs.append({'message': f"Hash generated successfully ({file_hash[:10]}...)", 'type': 'success'})
+
+        # 2. Gathering Metadata
+        logs.append({'message': "Gathering Metadata...", 'type': 'info'})
         model_info = civitai_handler.fetch_model_info_by_hash(file_hash)
 
         if not model_info:
-            logs.append({'message': f"Not found on Civitai. Checking CivArchive...", 'type': 'warning'})
-            print(f"Model not found on Civitai, checking CivArchive for hash: {file_hash}")
+            logs.append({'message': "Not found on Civitai. Checking CivArchive...", 'type': 'warning'})
             model_info = civitai_handler.scrape_civarchive_by_hash(file_hash)
 
         if model_info is None:
-            logs.append({'message': f"Failed to connect to CivArchive.", 'type': 'error'})
+            logs.append({'message': "Failed to connect to Civitai / CivArchive APIs.", 'type': 'error'})
             return jsonify({'status': 'error', 'message': 'Failed to connect to APIs', 'logs': logs})
 
         if not model_info:
-            logs.append({'message': f"Not found on CivArchive.", 'type': 'error'})
+            logs.append({'message': f"Metadata not found on Civitai or CivArchive", 'type': 'error'})
             return jsonify({'status': 'not_found', 'message': 'Model not found on Civitai or CivArchive', 'logs': logs})
 
-        # Save directly as JSON
+        # 3. JSON created successfully
         success = civitai_handler.save_civitai_info(model_path, model_info)
         civitai_handler.save_sha256_to_json(model_path, file_hash)
 
         if not success:
-            logs.append({'message': f"Failed to save JSON.", 'type': 'error'})
+            logs.append({'message': "Failed to save JSON.", 'type': 'error'})
             return jsonify({'status': 'error', 'message': 'Failed to save model JSON', 'logs': logs})
+
+        logs.append({'message': "JSON created successfully", 'type': 'success'})
+
+        # 4. Fetching Preview Images
+        logs.append({'message': "Fetching Preview Images...", 'type': 'info'})
+        preview_success = civitai_handler.download_preview_image(model_path)
+        if preview_success:
+            logs.append({'message': "Thumbnail downloaded successfully", 'type': 'success'})
+        else:
+            logs.append({'message': "Thumbnail skipped (no preview available or skipped)", 'type': 'warning'})
 
         _sync_model_path_to_db(model_path)
 
-        logs.append({'message': f"Successfully matched and saved metadata!", 'type': 'success'})
         return jsonify({
             'status': 'success',
-            'message': 'Model data saved to JSON successfully',
+            'message': 'JSON and thumbnails created successfully' if preview_success else 'JSON created successfully, thumbnail skipped',
+            'previewSuccess': preview_success,
             'modelInfo': model_info,
             'logs': logs
         })
@@ -112,42 +124,63 @@ def fetch_by_hash():
 def fetch_civarchive_by_hash():
     """Generate hash and fetch model info from CivArchive."""
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         model_path = data.get('modelPath')
+        logs = []
 
         if not model_path:
             return jsonify({'status': 'error', 'message': 'Missing modelPath'}), 400
 
-        # Generate SHA256 hash
-        print(f"Generating SHA256 for: {model_path}")
+        filename = os.path.basename(model_path)
+
+        # 1. Creating hash
+        logs.append({'message': f"Creating hash for {filename}...", 'type': 'info'})
         file_hash = civitai_handler.generate_sha256(model_path)
 
         if not file_hash:
-            return jsonify({'status': 'error', 'message': 'Failed to generate SHA256 hash'})
+            logs.append({'message': "Failed to generate SHA256 hash", 'type': 'error'})
+            return jsonify({'status': 'error', 'message': 'Failed to generate SHA256 hash', 'logs': logs})
 
-        # Fetch model info from CivArchive
-        print(f"Fetching model info from CivArchive for hash: {file_hash}")
+        logs.append({'message': f"Hash generated successfully ({file_hash[:10]}...)", 'type': 'success'})
+
+        # 2. Gathering Metadata from CivArchive
+        logs.append({'message': "Gathering Metadata from CivArchive...", 'type': 'info'})
         model_info = civitai_handler.scrape_civarchive_by_hash(file_hash)
 
         if model_info is None:
-            return jsonify({'status': 'error', 'message': 'Failed to connect to CivArchive or parse response'})
+            logs.append({'message': "Failed to connect to CivArchive.", 'type': 'error'})
+            return jsonify({'status': 'error', 'message': 'Failed to connect to CivArchive', 'logs': logs})
 
         if not model_info:
-            return jsonify({'status': 'not_found', 'message': 'Model not found on CivArchive'})
+            logs.append({'message': "Model not found on CivArchive.", 'type': 'error'})
+            return jsonify({'status': 'not_found', 'message': 'Model not found on CivArchive', 'logs': logs})
 
-        # Save directly as JSON
+        # 3. JSON created successfully
         success = civitai_handler.save_civitai_info(model_path, model_info)
         civitai_handler.save_sha256_to_json(model_path, file_hash)
 
         if not success:
-            return jsonify({'status': 'error', 'message': 'Failed to save model JSON'})
+            logs.append({'message': "Failed to save JSON.", 'type': 'error'})
+            return jsonify({'status': 'error', 'message': 'Failed to save model JSON', 'logs': logs})
+
+        logs.append({'message': "JSON created successfully", 'type': 'success'})
+
+        # 4. Fetching Preview Images
+        logs.append({'message': "Fetching Preview Images...", 'type': 'info'})
+        preview_success = civitai_handler.download_preview_image(model_path)
+        if preview_success:
+            logs.append({'message': "Thumbnail downloaded successfully", 'type': 'success'})
+        else:
+            logs.append({'message': "Thumbnail skipped (no preview available or skipped)", 'type': 'warning'})
 
         _sync_model_path_to_db(model_path)
 
         return jsonify({
             'status': 'success',
             'message': 'Model data saved to JSON successfully from CivArchive',
-            'modelInfo': model_info
+            'previewSuccess': preview_success,
+            'modelInfo': model_info,
+            'logs': logs
         })
 
     except Exception as e:
@@ -159,38 +192,33 @@ def fetch_civarchive_by_hash():
 def fetch_by_url():
     """Fetch model info from Civitai using a manually provided URL."""
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         model_path = data.get('modelPath')
         civitai_url = data.get('civitaiUrl')
+        logs = []
 
         if not model_path:
             return jsonify({'status': 'error', 'message': 'Missing modelPath'}), 400
         if not civitai_url:
             return jsonify({'status': 'error', 'message': 'Missing civitaiUrl'}), 400
 
+        filename = os.path.basename(model_path)
+        logs.append({'message': f"Gathering Metadata from URL: {civitai_url}", 'type': 'info'})
+
         # Handle explicit 'ignore' URL
         if civitai_url == 'https://no-match.com/ignored':
-            print(f"Ignoring model: {model_path}")
-            model_info = {"ignored": True, "url": civitai_url, "name": os.path.basename(model_path)}
-        # Check if URL is for CivArchive
+            model_info = {"ignored": True, "url": civitai_url, "name": filename}
         elif 'civarchive.com' in civitai_url or 'civitaiarchive.com' in civitai_url:
-            print(f"Detected CivArchive URL, delegating to scraper: {civitai_url}")
             model_info = civitai_handler.scrape_civarchive_by_url(civitai_url)
             if model_info is None:
-                return jsonify({'status': 'error', 'message': 'Failed to connect to CivArchive or parse response'})
+                return jsonify({'status': 'error', 'message': 'Failed to connect to CivArchive', 'logs': logs})
             if not model_info:
-                return jsonify({'status': 'not_found', 'message': 'Model/version not found on CivArchive'})
+                return jsonify({'status': 'not_found', 'message': 'Model/version not found on CivArchive', 'logs': logs})
         else:
-            # Parse the URL to get model/version IDs for Civitai
             model_id, version_id = civitai_handler.parse_civitai_url(civitai_url)
-
             if not version_id and not model_id:
-                return jsonify({
-                    'status': 'error',
-                    'message': 'Could not parse model or version ID from URL.'
-                })
+                return jsonify({'status': 'error', 'message': 'Could not parse model or version ID from URL.', 'logs': logs})
 
-            # Prefer version ID if available
             if version_id:
                 model_info = civitai_handler.fetch_model_info_by_version_id(version_id)
             else:
@@ -199,22 +227,33 @@ def fetch_by_url():
                     model_info = model_info['modelVersions'][0]
 
             if model_info is None:
-                return jsonify({'status': 'error', 'message': 'Failed to connect to Civitai API'})
-
+                return jsonify({'status': 'error', 'message': 'Failed to connect to Civitai API', 'logs': logs})
             if not model_info:
-                return jsonify({'status': 'not_found', 'message': 'Model/version not found on Civitai'})
+                return jsonify({'status': 'not_found', 'message': 'Model/version not found on Civitai', 'logs': logs})
 
         success = civitai_handler.save_civitai_info(model_path, model_info)
-
         if not success:
-            return jsonify({'status': 'error', 'message': 'Failed to save model JSON'})
+            return jsonify({'status': 'error', 'message': 'Failed to save model JSON', 'logs': logs})
+
+        logs.append({'message': "JSON created successfully", 'type': 'success'})
+
+        preview_success = False
+        if not model_info.get('ignored'):
+            logs.append({'message': "Fetching Preview Images...", 'type': 'info'})
+            preview_success = civitai_handler.download_preview_image(model_path)
+            if preview_success:
+                logs.append({'message': "Thumbnail downloaded successfully", 'type': 'success'})
+            else:
+                logs.append({'message': "Thumbnail skipped (no preview available or skipped)", 'type': 'warning'})
 
         _sync_model_path_to_db(model_path)
 
         return jsonify({
             'status': 'success',
             'message': 'Model data saved to JSON from URL',
-            'modelInfo': model_info
+            'previewSuccess': preview_success,
+            'modelInfo': model_info,
+            'logs': logs
         })
 
     except Exception as e:
@@ -226,23 +265,29 @@ def fetch_by_url():
 def download_preview():
     """Download preview image for a model."""
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         model_path = data.get('modelPath')
         max_size = data.get('maxSize', False)
-        skip_nsfw = data.get('skipNsfw', True)
+        skip_nsfw = data.get('skipNsfw', False)
         force_additional = data.get('forceAdditional', False)
+        logs = []
 
         if not model_path:
             return jsonify({'status': 'error', 'message': 'Missing modelPath'}), 400
 
+        logs.append({'message': "Fetching Preview Images...", 'type': 'info'})
         success = civitai_handler.download_preview_image(model_path, max_size, skip_nsfw, force_additional)
 
         if success:
             _sync_model_path_to_db(model_path)
+            logs.append({'message': "Thumbnail downloaded successfully", 'type': 'success'})
+        else:
+            logs.append({'message': "Thumbnail skipped or not found", 'type': 'warning'})
 
         return jsonify({
             'status': 'success' if success else 'skipped',
-            'message': 'Preview downloaded' if success else 'Preview skipped or not found'
+            'message': 'Thumbnail downloaded successfully' if success else 'Thumbnail skipped or not found',
+            'logs': logs
         })
 
     except Exception as e:

@@ -1564,9 +1564,21 @@ const deleteModel = async () => {
 const fetchAllCivitaiData = async () => {
   toast.showToast('Fetching all Civitai metadata & thumbnails...', 'info');
   try {
-    await api.civitaiFetchByHash(model.value.path);
-    await api.civitaiDownloadPreview(model.value.path, false, false, true);
-    toast.showToast('All Civitai data downloaded!', 'success');
+    const res = await api.civitaiFetchByHash(model.value.path);
+    if (res && res.status === 'not_found') {
+      toast.showToast(res.message || 'Model not found on Civitai or CivArchive', 'warning');
+      return;
+    }
+    if (res && res.status === 'error') {
+      toast.showToast(res.message || 'Failed to fetch metadata', 'error');
+      return;
+    }
+    const thumbRes = await api.civitaiDownloadPreview(model.value.path, false, false, true);
+    if (thumbRes && thumbRes.status === 'success') {
+      toast.showToast('All Civitai metadata & thumbnails downloaded!', 'success');
+    } else {
+      toast.showToast('Metadata saved, preview status: ' + (thumbRes?.message || 'Done'), 'info');
+    }
     await loadModel();
     modelsStore.fetchModels();
   } catch (err) {

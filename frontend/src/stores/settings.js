@@ -86,7 +86,7 @@ export const useSettingsStore = defineStore('settings', {
     ],
     scanSettings: {
       skipExistingData: true,
-      skipNsfwPreviews: true,
+      skipNsfwPreviews: false,
       downloadMaxSize: false,
       fetchCreatorInfo: true,
       delayBetweenRequests: 0.5

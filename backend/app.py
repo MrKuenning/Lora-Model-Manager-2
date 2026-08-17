@@ -7,6 +7,15 @@ Serves the Vue frontend in production and provides a REST API for all operations
 
 import os
 import sys
+
+# Force UTF-8 encoding on standard output and error streams for Windows consoles
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
 import json
 import shutil
 import webbrowser
@@ -142,11 +151,11 @@ def main():
 
     # Open browser automatically on configured port if enabled
     auto_open = settings.get('autoOpenBrowser', True)
-    if auto_open and (os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not getattr(app, 'debug', False)):
+    if auto_open:
         import threading
         threading.Timer(1.2, lambda: webbrowser.open(f"http://localhost:{port}")).start()
 
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False, threaded=True)
 
 
 if __name__ == '__main__':

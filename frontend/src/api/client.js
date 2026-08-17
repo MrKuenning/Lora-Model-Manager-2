@@ -61,7 +61,7 @@ export const api = {
   civitaiFetchByHash: (modelPath) => apiClient.post('/civitai/fetch-by-hash', { modelPath }).then(res => res.data),
   civArchiveFetchByHash: (modelPath) => apiClient.post('/civarchive/fetch-by-hash', { modelPath }).then(res => res.data),
   civitaiFetchByUrl: (modelPath, civitaiUrl) => apiClient.post('/civitai/fetch-by-url', { modelPath, civitaiUrl }).then(res => res.data),
-  civitaiDownloadPreview: (modelPath, skipNsfw = true, maxSize = false, forceAdditional = false) => 
+  civitaiDownloadPreview: (modelPath, skipNsfw = false, maxSize = false, forceAdditional = false) => 
     apiClient.post('/civitai/download-preview', { modelPath, skipNsfw, maxSize, forceAdditional }).then(res => res.data),
   civitaiConvertToJson: (modelPath, useApi = true) => apiClient.post('/civitai/convert', { modelPath, useApi }).then(res => res.data),
   civitaiFixThumbnail: (modelPath) => apiClient.post('/civitai/fix-thumbnail', { modelPath }).then(res => res.data),
