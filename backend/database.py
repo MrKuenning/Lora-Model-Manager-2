@@ -130,26 +130,57 @@ def _map_sd_version(base_model):
     return mapping.get(base_model, 'Unknown')
 
 
+def _find_model_preview_files(root, model_name):
+    """
+    Find all preview image files associated with a model in the root folder.
+    Supports .png, .jpg, .jpeg, .webp, .gif, .bmp with formats like:
+      - model.preview.png / model.preview.jpg / model.preview.webp
+      - model.png / model.jpg / model.webp
+      - model.preview2.png / model.preview2.jpg / model.preview2.webp, etc.
+    Returns a sorted list of absolute paths.
+    """
+    image_exts = ('.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp')
+    slots = {}
+
+    # Slot 1: check .preview.ext first, then direct .ext
+    for ext in image_exts:
+        p = os.path.join(root, f"{model_name}.preview{ext}")
+        if os.path.exists(p):
+            slots[1] = p
+            break
+
+    if 1 not in slots:
+        for ext in image_exts:
+            p = os.path.join(root, f"{model_name}{ext}")
+            if os.path.exists(p):
+                slots[1] = p
+                break
+
+    # Slots 2..10: check .preview{i}.ext
+    for i in range(2, 11):
+        for ext in image_exts:
+            p = os.path.join(root, f"{model_name}.preview{i}{ext}")
+            if os.path.exists(p):
+                slots[i] = p
+                break
+
+    return [slots[k] for k in sorted(slots.keys())]
+
+
 def _parse_model_from_filesystem(model_name, root, file, models_dir):
     """
     Parse a single model's data from the filesystem.
     Returns a dict compatible with the API response format.
     """
-    preview_path = os.path.join(root, f"{model_name}.preview.png")
     json_path = os.path.join(root, f"{model_name}.json")
     civitai_path = os.path.join(root, f"{model_name}.civitai.info")
 
-    # Preview images
-    relative_preview_path = os.path.relpath(preview_path, models_dir).replace("\\", "/")
+    # Preview images (supports .png, .jpg, .jpeg, .webp, .gif, .bmp)
+    found_previews = _find_model_preview_files(root, model_name)
     preview_images = []
-    if os.path.exists(preview_path):
-        preview_images.append("/" + relative_preview_path)
-
-    for i in range(2, 5):
-        extra_preview_path = os.path.join(root, f"{model_name}.preview{i}.png")
-        if os.path.exists(extra_preview_path):
-            relative_extra = os.path.relpath(extra_preview_path, models_dir).replace("\\", "/")
-            preview_images.append("/" + relative_extra)
+    for p_path in found_previews:
+        rel = os.path.relpath(p_path, models_dir).replace("\\", "/")
+        preview_images.append("/" + rel)
 
     main_preview_url = preview_images[0] if preview_images else "/assets/placeholder.png"
 

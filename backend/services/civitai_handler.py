@@ -1039,20 +1039,39 @@ def download_preview_image(model_path, max_size=False, skip_nsfw=False, force_ad
         base_path = os.path.splitext(model_path)[0]
         info_path = f"{base_path}{INFO_EXTENSION}"
         json_path = f"{base_path}.json"
-        preview_path = f"{base_path}{PREVIEW_EXTENSION}"
-        preview2_path = f"{base_path}.preview2.png"
         
-        # Check which preview slots are available
-        has_preview1 = os.path.exists(preview_path)
-        has_preview2 = os.path.exists(preview2_path)
+        # Check which preview slots are available across all formats (.png, .jpg, .jpeg, .webp)
+        exts = ('.png', '.jpg', '.jpeg', '.webp')
+        existing_p1 = None
+        for ext in exts:
+            p = f"{base_path}.preview{ext}"
+            if os.path.exists(p):
+                existing_p1 = p
+                break
+        if not existing_p1:
+            for ext in exts:
+                p = f"{base_path}{ext}"
+                if os.path.exists(p):
+                    existing_p1 = p
+                    break
+
+        existing_p2 = None
+        for ext in exts:
+            p = f"{base_path}.preview2{ext}"
+            if os.path.exists(p):
+                existing_p2 = p
+                break
+
+        has_preview1 = bool(existing_p1)
+        has_preview2 = bool(existing_p2)
         
         # In normal mode, if both slots exist, we're done
         if not force_additional and has_preview1 and has_preview2:
-            print(f"All preview slots filled: {preview_path}")
+            print(f"All preview slots filled: {existing_p1}")
             return True
             
         if not force_additional and has_preview1 and not os.path.exists(json_path) and not os.path.exists(info_path):
-            print(f"Preview exists: {preview_path}")
+            print(f"Preview exists: {existing_p1}")
             return True
 
         # --- Collect candidate items from local files ---
@@ -1103,8 +1122,8 @@ def download_preview_image(model_path, max_size=False, skip_nsfw=False, force_ad
         # Helper to attempt downloading from a list of candidate items
         def _try_download_from_candidates(candidates):
             downloaded = 0
-            need_p1 = not os.path.exists(preview_path) or force_additional
-            need_p2 = not os.path.exists(preview2_path) or force_additional
+            need_p1 = not has_preview1 or force_additional
+            need_p2 = not has_preview2 or force_additional
             
             # Filter candidates based on NSFW setting
             usable_candidates = []

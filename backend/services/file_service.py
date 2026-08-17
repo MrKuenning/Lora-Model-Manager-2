@@ -197,10 +197,30 @@ def delete_model_files(model_path):
     }
 
 
+def _find_thumbnail_file_for_slot(directory, model_name, slot):
+    """Find the existing thumbnail file for a specific slot number (1-based) with any supported extension."""
+    exts = ('.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp')
+    if slot == 1:
+        for ext in exts:
+            p = os.path.join(directory, f"{model_name}.preview{ext}")
+            if os.path.exists(p):
+                return p
+        for ext in exts:
+            p = os.path.join(directory, f"{model_name}{ext}")
+            if os.path.exists(p):
+                return p
+    else:
+        for ext in exts:
+            p = os.path.join(directory, f"{model_name}.preview{slot}{ext}")
+            if os.path.exists(p):
+                return p
+    return None
+
+
 def save_uploaded_preview(base_dir, model_name, image_data, location_dir):
     """
     Save an uploaded preview image for a model.
-    Automatically determines the next available preview number.
+    Automatically determines the next available preview number and preserves image format.
     """
     model_file = find_model_file(location_dir, model_name)
     if not model_file:
@@ -208,15 +228,24 @@ def save_uploaded_preview(base_dir, model_name, image_data, location_dir):
 
     model_dir = os.path.dirname(model_file)
 
-    # Determine next preview number
-    preview_num = ""
-    if os.path.exists(os.path.join(model_dir, f"{model_name}.preview.png")):
-        n = 2
-        while os.path.exists(os.path.join(model_dir, f"{model_name}.preview{n}.png")):
-            n += 1
-        preview_num = str(n)
+    # Detect extension from magic bytes
+    ext = '.png'
+    if image_data.startswith(b'\xff\xd8\xff'):
+        ext = '.jpg'
+    elif image_data.startswith(b'RIFF') and b'WEBP' in image_data[:16]:
+        ext = '.webp'
+    elif image_data.startswith(b'\x89PNG\r\n\x1a\n'):
+        ext = '.png'
 
-    preview_filename = f"{model_name}.preview{preview_num}.png"
+    # Determine next preview slot
+    if not _find_thumbnail_file_for_slot(model_dir, model_name, 1):
+        preview_filename = f"{model_name}.preview{ext}"
+    else:
+        n = 2
+        while _find_thumbnail_file_for_slot(model_dir, model_name, n):
+            n += 1
+        preview_filename = f"{model_name}.preview{n}{ext}"
+
     preview_path = os.path.join(model_dir, preview_filename)
 
     with open(preview_path, 'wb') as f:
@@ -232,46 +261,42 @@ def save_uploaded_preview(base_dir, model_name, image_data, location_dir):
 def delete_thumbnail(base_dir, model_name, thumbnail_index):
     """
     Delete a specific thumbnail and renumber remaining ones.
-    thumbnail_index is 1-based.
+    thumbnail_index is 1-based. Supports .png, .jpg, .jpeg, .webp.
     """
-    if thumbnail_index == 1:
-        thumb_filename = f"{model_name}.preview.png"
-    else:
-        thumb_filename = f"{model_name}.preview{thumbnail_index}.png"
+    model_file = find_model_file(base_dir, model_name)
+    if not model_file:
+        return {'status': 'error', 'message': f'Model not found: {model_name}'}
 
-    thumb_path = find_file_path(base_dir, thumb_filename)
-    if not thumb_path or not os.path.exists(thumb_path):
-        return {'status': 'error', 'message': f'Thumbnail not found: {thumb_filename}'}
+    base_dir_path = os.path.dirname(model_file)
+    target_thumb_path = _find_thumbnail_file_for_slot(base_dir_path, model_name, thumbnail_index)
+    if not target_thumb_path or not os.path.exists(target_thumb_path):
+        return {'status': 'error', 'message': f'Thumbnail not found for slot {thumbnail_index}'}
 
-    os.remove(thumb_path)
-    base_dir_path = os.path.dirname(thumb_path)
+    os.remove(target_thumb_path)
 
-    # Find remaining thumbnails
+    # Find remaining thumbnails (slots 1..10)
     remaining_thumbs = []
-    for i in range(1, 5):
+    for i in range(1, 11):
         if i == thumbnail_index:
             continue
-        if i == 1:
-            check_file = f"{model_name}.preview.png"
-        else:
-            check_file = f"{model_name}.preview{i}.png"
-        check_path = os.path.join(base_dir_path, check_file)
-        if os.path.exists(check_path):
-            remaining_thumbs.append((i, check_path))
+        p = _find_thumbnail_file_for_slot(base_dir_path, model_name, i)
+        if p and os.path.exists(p):
+            ext = os.path.splitext(p)[1]
+            remaining_thumbs.append((i, p, ext))
 
     # Renumber using temp names to avoid conflicts
     temp_renames = []
-    for idx, (original_idx, file_path) in enumerate(remaining_thumbs, 1):
-        temp_name = f"{model_name}.preview_temp_{idx}.png"
+    for idx, (original_idx, file_path, ext) in enumerate(remaining_thumbs, 1):
+        temp_name = f"{model_name}.preview_temp_{idx}{ext}"
         temp_path = os.path.join(base_dir_path, temp_name)
         os.rename(file_path, temp_path)
-        temp_renames.append((temp_path, idx))
+        temp_renames.append((temp_path, idx, ext))
 
-    for temp_path, final_idx in temp_renames:
+    for temp_path, final_idx, ext in temp_renames:
         if final_idx == 1:
-            final_name = f"{model_name}.preview.png"
+            final_name = f"{model_name}.preview{ext}"
         else:
-            final_name = f"{model_name}.preview{final_idx}.png"
+            final_name = f"{model_name}.preview{final_idx}{ext}"
         final_path = os.path.join(base_dir_path, final_name)
         os.rename(temp_path, final_path)
 
@@ -282,6 +307,7 @@ def reorder_thumbnails(base_dir, model_name, new_order):
     """
     Reorder thumbnails based on a new ordering array.
     new_order is a list like [2, 1, 3, 4] meaning preview2 becomes the new preview.
+    Supports .png, .jpg, .jpeg, .webp.
     """
     model_file = find_model_file(base_dir, model_name)
     if not model_file:
@@ -292,24 +318,20 @@ def reorder_thumbnails(base_dir, model_name, new_order):
     # Step 1: Rename to temp names
     existing_files = []
     for orig_idx in new_order:
-        if orig_idx == 1:
-            filename = f"{model_name}.preview.png"
-        else:
-            filename = f"{model_name}.preview{orig_idx}.png"
-
-        file_path = os.path.join(base_dir_path, filename)
-        if os.path.exists(file_path):
-            temp_name = f"{model_name}.preview_temp_{orig_idx}.png"
+        file_path = _find_thumbnail_file_for_slot(base_dir_path, model_name, orig_idx)
+        if file_path and os.path.exists(file_path):
+            ext = os.path.splitext(file_path)[1]
+            temp_name = f"{model_name}.preview_temp_{orig_idx}{ext}"
             temp_path = os.path.join(base_dir_path, temp_name)
             os.rename(file_path, temp_path)
-            existing_files.append((orig_idx, temp_path))
+            existing_files.append((orig_idx, temp_path, ext))
 
     # Step 2: Rename to final positions
-    for new_idx, (orig_idx, temp_path) in enumerate(existing_files, 1):
+    for new_idx, (orig_idx, temp_path, ext) in enumerate(existing_files, 1):
         if new_idx == 1:
-            final_name = f"{model_name}.preview.png"
+            final_name = f"{model_name}.preview{ext}"
         else:
-            final_name = f"{model_name}.preview{new_idx}.png"
+            final_name = f"{model_name}.preview{new_idx}{ext}"
 
         final_path = os.path.join(base_dir_path, final_name)
         os.rename(temp_path, final_path)
