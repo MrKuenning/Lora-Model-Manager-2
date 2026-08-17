@@ -11,6 +11,7 @@
   "checkpointsDirectory": "",
   "defaultDownloadDirectory": "",
   "defaultSortingDirectory": "",
+  "civitaiApiKey": "",
   "visibleColumns": {
     "authorName": false,
     "authorsWords": false,

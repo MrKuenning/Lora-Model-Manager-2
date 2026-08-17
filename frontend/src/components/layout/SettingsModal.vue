@@ -290,6 +290,12 @@
           
           <!-- Scanner Tab -->
           <div v-if="activeTab === 'scanner'" class="settings-section columns-grid">
+            <div class="setting-group" style="grid-column: 1 / -1;">
+              <label>Civitai API Key (Optional)</label>
+              <input type="password" v-model="localSettings.civitaiApiKey" class="form-control" placeholder="Enter your Civitai API Key">
+              <small>If provided, the app will attach your API token to Civitai requests (enabling download of restricted/early-access models and thumbnails).</small>
+            </div>
+
             <label class="checkbox-label">
               <input type="checkbox" v-model="localSettings.scanSettings.skipExistingData"> Skip models with existing Civitai data
             </label>
@@ -371,6 +377,7 @@ const localSettings = reactive({
   checkpointsDirectory: '',
   defaultDownloadDirectory: '',
   defaultSortingDirectory: '',
+  civitaiApiKey: '',
   visibleColumns: {},
   columnOrder: [],
   gridCard: {},
@@ -395,6 +402,7 @@ onMounted(() => {
   localSettings.checkpointsDirectory = settings.checkpointsDirectory;
   localSettings.defaultDownloadDirectory = settings.defaultDownloadDirectory;
   localSettings.defaultSortingDirectory = settings.defaultSortingDirectory;
+  localSettings.civitaiApiKey = settings.civitaiApiKey || '';
   localSettings.visibleColumns = JSON.parse(JSON.stringify(settings.visibleColumns || {}));
   
   // Ensure columnOrder has all visibleColumns keys

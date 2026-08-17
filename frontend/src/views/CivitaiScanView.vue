@@ -290,10 +290,13 @@ const getMissingThumbnails = () => {
     model,
     actionName: 'Download Thumbnail',
     actionFn: async (m) => {
-      const res = await api.civitaiDownloadPreview(m.path, skipNsfw, maxSize);
+      const res = await api.civitaiDownloadPreview(m.path, skipNsfw, maxSize, false);
       if (res && res.status === 'error') throw new Error(res.message);
-      if (res && res.status === 'skipped') throw new Error(res.message);
-      addLog(`SUCCESS: Downloaded thumbnail for ${m.filename}`, 'success');
+      if (res && res.status === 'skipped') {
+        addLog(`SKIPPED: ${m.filename} (${res.message || 'No thumbnail found'})`, 'warning');
+      } else {
+        addLog(`SUCCESS: Downloaded thumbnail for ${m.filename}`, 'success');
+      }
     }
   }));
   runScanQueue(tasks);
@@ -308,10 +311,13 @@ const getAllThumbnails = () => {
     model,
     actionName: 'Download Thumbnail',
     actionFn: async (m) => {
-      const res = await api.civitaiDownloadPreview(m.path, skipNsfw, maxSize);
+      const res = await api.civitaiDownloadPreview(m.path, skipNsfw, maxSize, true);
       if (res && res.status === 'error') throw new Error(res.message);
-      if (res && res.status === 'skipped') throw new Error(res.message);
-      addLog(`SUCCESS: Downloaded thumbnail for ${m.filename}`, 'success');
+      if (res && res.status === 'skipped') {
+        addLog(`SKIPPED: ${m.filename} (${res.message || 'No thumbnail found'})`, 'warning');
+      } else {
+        addLog(`SUCCESS: Downloaded thumbnail for ${m.filename}`, 'success');
+      }
     }
   }));
   runScanQueue(tasks);
@@ -376,10 +382,13 @@ const runAllInOne = () => {
       model,
       actionName: 'Download Thumbnail',
       actionFn: async (m) => {
-        const res = await api.civitaiDownloadPreview(m.path, skipNsfw, maxSize);
+        const res = await api.civitaiDownloadPreview(m.path, skipNsfw, maxSize, false);
         if (res && res.status === 'error') throw new Error(res.message);
-        if (res && res.status === 'skipped') throw new Error(res.message);
-        addLog(`SUCCESS: Downloaded thumbnail for ${m.filename}`, 'success');
+        if (res && res.status === 'skipped') {
+          addLog(`SKIPPED: ${m.filename} (${res.message || 'No thumbnail found'})`, 'warning');
+        } else {
+          addLog(`SUCCESS: Downloaded thumbnail for ${m.filename}`, 'success');
+        }
       }
     });
   });

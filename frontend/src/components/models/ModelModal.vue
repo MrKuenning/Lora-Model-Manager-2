@@ -1565,7 +1565,7 @@ const fetchAllCivitaiData = async () => {
   toast.showToast('Fetching all Civitai metadata & thumbnails...', 'info');
   try {
     await api.civitaiFetchByHash(model.value.path);
-    await api.civitaiDownloadPreview(model.value.path);
+    await api.civitaiDownloadPreview(model.value.path, false, false, true);
     toast.showToast('All Civitai data downloaded!', 'success');
     await loadModel();
     modelsStore.fetchModels();
@@ -1649,9 +1649,14 @@ const fixThumbnail = async () => {
 const downloadThumbnails = async () => {
   toast.showToast('Downloading thumbnails...', 'info');
   try {
-    await api.civitaiDownloadPreview(model.value.path);
-    toast.showToast('Thumbnails downloaded!', 'success');
+    const res = await api.civitaiDownloadPreview(model.value.path, false, false, true);
+    if (res && res.status === 'success') {
+      toast.showToast('Thumbnails downloaded!', 'success');
+    } else {
+      toast.showToast(res?.message || 'No thumbnails found or already exists', 'info');
+    }
     await loadModel();
+    modelsStore.fetchModels();
   } catch (err) {
     toast.showToast('Failed to download thumbnails', 'error');
   }

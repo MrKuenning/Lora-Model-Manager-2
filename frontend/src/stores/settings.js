@@ -9,6 +9,7 @@ export const useSettingsStore = defineStore('settings', {
     checkpointsDirectory: '',
     defaultDownloadDirectory: '',
     defaultSortingDirectory: '',
+    civitaiApiKey: '',
     theme: 'dark',
     defaultView: 'grid',
     defaultSort: 'name-asc',

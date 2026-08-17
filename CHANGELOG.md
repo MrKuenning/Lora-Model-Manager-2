@@ -1,5 +1,20 @@
 # Lora Model Manager - Changelog
 
+### 08/16/2026 - v2.1.1
+
+**Added**
+- **Civitai Image CDN Multi-Variant Transformation Support**: Added intelligent fallback URL variant generation for Civitai Cloudflare image CDNs (`anim=false,width=450,optimized=true`, `width=450`, `original=true`, and plain URLs) to ensure transformed preview images resolve reliably without 404 errors.
+- **Dynamic Online Civitai & CivArchive Fallback Resolution**: When local preview URLs return 404 or are missing, the downloader now automatically performs live lookups against Civitai's API using the model's SHA256 hash or version ID (with CivArchive as a fallback), automatically updates the local `.json` sidecar with fresh metadata, and downloads the preview thumbnails.
+- **Civitai API Key Support**: Added an optional **Civitai API Key** field in the Settings modal Scanner tab and `config.json` (`civitaiApiKey`), enabling metadata and preview downloads for restricted, early-access, or member-only models.
+- **Immediate SQLite Database Syncing**: Connected single-model synchronization (`sync_single_model`) to preview download, hash generation, and metadata fetching endpoints so newly downloaded thumbnails appear immediately across Grid and Table views without restarting the server.
+
+**Changed**
+- **Static Preview Image Priority**: Updated metadata parsing to prioritize clean static preview images over video URLs for thumbnail slots 1 and 2, while maintaining FFmpeg video frame extraction if only video assets are available.
+- **Robust Image Mode Conversion**: Upgraded image saving with PIL (`_save_pil_image`) to seamlessly convert all image color modes (`RGBA`, `P`, `LA`, `CMYK`, `RGB`) into standardized `.preview.png` and `.preview2.png` files.
+
+**Fixed**
+- **Civitai Scan Queue Error Handling**: Fixed an issue in `CivitaiScanView.vue` where skipped preview downloads threw unhandled exceptions that aborted the scan queue. Skipped items now log as clean warnings and allow the bulk scan to continue smoothly.
+
 ### 08/14/2026 - v2.1.0
 
 **Added**

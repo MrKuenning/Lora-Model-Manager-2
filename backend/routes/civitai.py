@@ -10,9 +10,25 @@ import json
 from ..services import civitai_handler
 from ..services.file_service import find_file_path
 from ..routes.settings import get_path_for_location
-from ..database import sync_models
+from ..database import sync_models, sync_single_model
 
 civitai_bp = Blueprint('civitai', __name__)
+
+
+def _sync_model_path_to_db(model_path):
+    """Helper to sync a model into the SQLite DB after metadata/preview update."""
+    try:
+        model_name = os.path.splitext(os.path.basename(model_path))[0]
+        # Determine location based on path or fallback to loras
+        checkpoints_dir = get_path_for_location('checkpoints')
+        loras_dir = get_path_for_location('loras')
+        
+        if checkpoints_dir and os.path.abspath(model_path).startswith(os.path.abspath(checkpoints_dir)):
+            sync_single_model(model_name, checkpoints_dir, 'checkpoints')
+        elif loras_dir:
+            sync_single_model(model_name, loras_dir, 'loras')
+    except Exception as e:
+        print(f"Error syncing model to DB: {e}")
 
 
 @civitai_bp.route('/api/civitai/scan', methods=['POST'])
@@ -77,6 +93,8 @@ def fetch_by_hash():
             logs.append({'message': f"Failed to save JSON.", 'type': 'error'})
             return jsonify({'status': 'error', 'message': 'Failed to save model JSON', 'logs': logs})
 
+        _sync_model_path_to_db(model_path)
+
         logs.append({'message': f"Successfully matched and saved metadata!", 'type': 'success'})
         return jsonify({
             'status': 'success',
@@ -123,6 +141,8 @@ def fetch_civarchive_by_hash():
 
         if not success:
             return jsonify({'status': 'error', 'message': 'Failed to save model JSON'})
+
+        _sync_model_path_to_db(model_path)
 
         return jsonify({
             'status': 'success',
@@ -189,6 +209,8 @@ def fetch_by_url():
         if not success:
             return jsonify({'status': 'error', 'message': 'Failed to save model JSON'})
 
+        _sync_model_path_to_db(model_path)
+
         return jsonify({
             'status': 'success',
             'message': 'Model data saved to JSON from URL',
@@ -215,9 +237,12 @@ def download_preview():
 
         success = civitai_handler.download_preview_image(model_path, max_size, skip_nsfw, force_additional)
 
+        if success:
+            _sync_model_path_to_db(model_path)
+
         return jsonify({
             'status': 'success' if success else 'skipped',
-            'message': 'Preview downloaded' if success else 'Preview skipped or already exists'
+            'message': 'Preview downloaded' if success else 'Preview skipped or not found'
         })
 
     except Exception as e:

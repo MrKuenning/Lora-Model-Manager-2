@@ -24,10 +24,61 @@ CIVITAI_API_URLS = {
     "hash": "https://civitai.com/api/v1/model-versions/by-hash/"
 }
 
-# Default headers for requests
+# Default headers for requests (modern browser UA to prevent Cloudflare/WAF blocks)
 DEFAULT_HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
 }
+
+
+def get_civitai_headers():
+    """
+    Get HTTP headers for Civitai requests, including optional API key from settings.
+    """
+    headers = dict(DEFAULT_HEADERS)
+    try:
+        from ..routes.settings import _load_settings
+        settings = _load_settings()
+        api_key = settings.get('civitaiApiKey', '').strip()
+        if api_key:
+            headers['Authorization'] = f'Bearer {api_key}'
+    except Exception:
+        pass
+    return headers
+
+
+def get_url_variants(url, max_size=False):
+    """
+    Generate prioritized URL variants for Civitai images, handling Cloudflare transformations.
+    """
+    if not url:
+        return []
+    variants = []
+    
+    if 'image.civitai.com' in url:
+        parts = url.split('/')
+        # Structure: https://image.civitai.com/<account>/<uuid>/<transformation>/<filename>
+        if len(parts) >= 6:
+            prefix = '/'.join(parts[:5])  # https://image.civitai.com/<account>/<uuid>
+            filename = parts[-1] if len(parts) > 6 else 'preview.jpeg'
+            
+            if max_size:
+                variants.append(f"{prefix}/original=true/{filename}")
+                variants.append(f"{prefix}/width=1024/{filename}")
+                variants.append(url)
+                variants.append(f"{prefix}/width=450/{filename}")
+            else:
+                variants.append(f"{prefix}/anim=false,width=450,optimized=true/{filename}")
+                variants.append(f"{prefix}/width=450/{filename}")
+                variants.append(f"{prefix}/original=true/{filename}")
+                variants.append(url)
+    
+    if url not in variants:
+        variants.append(url)
+        
+    return variants
+
 
 # File extensions
 INFO_EXTENSION = '.civitai.info'
@@ -198,7 +249,7 @@ def fetch_model_info_by_hash(file_hash):
     """
     try:
         url = f"{CIVITAI_API_URLS['hash']}{file_hash}"
-        response = requests.get(url, headers=DEFAULT_HEADERS, timeout=30)
+        response = requests.get(url, headers=get_civitai_headers(), timeout=30)
         
         if response.status_code == 404:
             print(f"Model not found on Civitai for hash: {file_hash}")
@@ -319,7 +370,7 @@ def scrape_civarchive_by_hash(file_hash):
     try:
         url = f"https://civitaiarchive.com/sha256/{file_hash}"
         print(f"Fetching from CivArchive: {url}")
-        response = requests.get(url, headers=DEFAULT_HEADERS, timeout=30, allow_redirects=True)
+        response = requests.get(url, headers=get_civitai_headers(), timeout=30, allow_redirects=True)
         
         if response.status_code == 404:
             print(f"Model not found on CivArchive for hash: {file_hash}")
@@ -346,7 +397,7 @@ def scrape_civarchive_by_url(url):
     """
     try:
         print(f"Fetching from CivArchive URL: {url}")
-        response = requests.get(url, headers=DEFAULT_HEADERS, timeout=30)
+        response = requests.get(url, headers=get_civitai_headers(), timeout=30)
         
         if response.status_code == 404:
             print(f"Model not found on CivArchive for URL: {url}")
@@ -373,7 +424,7 @@ def fetch_model_info_by_id(model_id):
     """
     try:
         url = f"{CIVITAI_API_URLS['model_id']}{model_id}"
-        response = requests.get(url, headers=DEFAULT_HEADERS, timeout=30)
+        response = requests.get(url, headers=get_civitai_headers(), timeout=30)
         
         if not response.ok:
             print(f"Civitai API error {response.status_code}: {response.text}")
@@ -398,7 +449,7 @@ def fetch_model_info_by_version_id(version_id):
     try:
         url = f"{CIVITAI_API_URLS['model_version_id']}{version_id}"
         print(f"Fetching model version from: {url}")
-        response = requests.get(url, headers=DEFAULT_HEADERS, timeout=30)
+        response = requests.get(url, headers=get_civitai_headers(), timeout=30)
         
         if response.status_code == 404:
             print(f"Model version not found on Civitai: {version_id}")
@@ -469,7 +520,7 @@ def get_creator_from_api(model_id, use_api=True):
         return ''
     try:
         api_url = f"https://civitai.com/api/v1/models/{model_id}"
-        response = requests.get(api_url, headers=DEFAULT_HEADERS, timeout=10)
+        response = requests.get(api_url, headers=get_civitai_headers(), timeout=10)
         if response.status_code == 200:
             model_data = response.json()
             if 'creator' in model_data and 'username' in model_data['creator']:
@@ -611,8 +662,24 @@ def create_json_from_api_data(model_path, api_data, use_api_for_creator=True, ex
         if 'images' in api_data:
             images = api_data['images']
             if isinstance(images, list) and images:
+                # Save full image URLs list in web_civitai_data for fallback resolution
+                mapped_data['web_civitai_data']['images'] = [
+                    img.get('url') for img in images if isinstance(img, dict) and img.get('url')
+                ]
+                
+                # Separate static images vs video to prioritize clean static preview images
+                static_images = [
+                    img for img in images 
+                    if isinstance(img, dict) and img.get('url') and not (
+                        '.mp4' in img.get('url', '').lower() or 
+                        '.webm' in img.get('url', '').lower() or 
+                        img.get('type') == 'video'
+                    )
+                ]
+                candidate_pool = static_images if static_images else images
+                
                 # First image: example prompt + preview URL
-                first_image = images[0]
+                first_image = candidate_pool[0]
                 if 'meta' in first_image and isinstance(first_image['meta'], dict):
                     if 'prompt' in first_image['meta']:
                         mapped_data['example prompt 1'] = first_image['meta']['prompt']
@@ -621,9 +688,9 @@ def create_json_from_api_data(model_path, api_data, use_api_for_creator=True, ex
                 if 'url' in first_image:
                     mapped_data['web_civitai_data']['preview_image_1'] = first_image['url']
                 
-                # Second image: example prompt 2 + preview URL (NEW)
-                if len(images) > 1:
-                    second_image = images[1]
+                # Second image: example prompt 2 + preview URL
+                if len(candidate_pool) > 1:
+                    second_image = candidate_pool[1]
                     if 'meta' in second_image and isinstance(second_image['meta'], dict):
                         if 'prompt' in second_image['meta']:
                             mapped_data['example prompt 2'] = second_image['meta']['prompt']
@@ -765,18 +832,21 @@ def create_dummy_info_file(model_path):
         return False
 
 
-def get_full_size_image_url(image_url, width):
+def get_full_size_image_url(image_url, width=None):
     """
-    Convert Civitai image URL to full size version
-    
-    Args:
-        image_url: Original image URL
-        width: Desired width
-        
-    Returns:
-        Modified URL with new width
+    Convert Civitai image URL to full size version or specific width
     """
-    return re.sub(r'/width=\d+/', f'/width={width}/', image_url)
+    if not image_url:
+        return ''
+    if 'image.civitai.com' in image_url:
+        parts = image_url.split('/')
+        if len(parts) >= 6:
+            prefix = '/'.join(parts[:5])
+            filename = parts[-1] if len(parts) > 6 else 'preview.jpeg'
+            if width:
+                return f"{prefix}/width={width}/{filename}"
+            return f"{prefix}/original=true/{filename}"
+    return re.sub(r'/width=\d+/', f'/width={width}/' if width else '/original=true/', image_url)
 
 
 def check_ffmpeg_available():
@@ -840,7 +910,6 @@ def extract_video_frames(video_path, output_base_path):
             return (False, f"FFmpeg error extracting first frame: {error_msg[:200]}")
         
         # Extract last frame using reverse filter (proven method from standalone version)
-        # This is slower but more reliable for certain formats/containers
         last_frame_cmd = [
             'ffmpeg', '-y',
             '-i', video_path,
@@ -855,7 +924,7 @@ def extract_video_frames(video_path, output_base_path):
             last_frame_cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            timeout=60  # Increased timeout for slow reverse filter
+            timeout=60
         )
         
         if result.returncode != 0:
@@ -863,7 +932,6 @@ def extract_video_frames(video_path, output_base_path):
             print(f"FFmpeg error extracting last frame: {error_msg}")
             
             # Fallback: Just try to get one frame normally for the second slot if reverse fails
-            print(f"Warning: Last frame extraction failed, using fallback.")
             fallback_cmd = [
                 'ffmpeg', '-y',
                 '-i', video_path,
@@ -882,11 +950,39 @@ def extract_video_frames(video_path, output_base_path):
         return (False, f"Error extracting frames: {str(e)}")
 
 
+def _save_pil_image(image_bytes, target_path):
+    """
+    Safely open and convert image bytes to standard RGB PNG and save to target_path.
+    """
+    import io
+    from PIL import Image
+    try:
+        img = Image.open(io.BytesIO(image_bytes))
+        # Handle different modes
+        if img.mode in ('RGBA', 'P', 'LA'):
+            bg = Image.new('RGB', img.size, (255, 255, 255))
+            if img.mode == 'P':
+                img = img.convert('RGBA')
+            if img.mode in ('RGBA', 'LA'):
+                bg.paste(img, mask=img.split()[-1])
+                img = bg
+            else:
+                img = img.convert('RGB')
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        img.save(target_path, format='PNG')
+        return True
+    except Exception as e:
+        print(f"Error converting/saving image to {target_path}: {e}")
+        return False
+
+
 def download_preview_image(model_path, max_size=False, skip_nsfw=True, force_additional=False):
     """
     Download preview image for a model.
-    Reads image URLs from the model's .json file (preview_image_1/2 fields,
-    with fallback to z_info_file.images, then .civitai.info for backward compat).
+    Reads image URLs from the model's .json file, with automatic fallback to
+    querying Civitai API or CivArchive if URLs are missing or returning 404.
     
     Args:
         model_path: Path to the model file
@@ -908,241 +1004,238 @@ def download_preview_image(model_path, max_size=False, skip_nsfw=True, force_add
         has_preview1 = os.path.exists(preview_path)
         has_preview2 = os.path.exists(preview2_path)
         
-        # Count how many we still need to download
-        slots_needed = 0
-        if not has_preview1:
-            slots_needed += 1
-        if not has_preview2:
-            slots_needed += 1
-        
-        # In force mode, always try to fill empty slots even if some are filled
-        if not force_additional and slots_needed == 0:
+        # In normal mode, if both slots exist, we're done
+        if not force_additional and has_preview1 and has_preview2:
             print(f"All preview slots filled: {preview_path}")
             return True
-        
-        # In normal mode, skip if no slots needed
-        if not force_additional and has_preview1 and slots_needed == 0:
-            print(f"Preview exists (use force mode to add more): {preview_path}")
+            
+        if not force_additional and has_preview1 and not os.path.exists(json_path) and not os.path.exists(info_path):
+            print(f"Preview exists: {preview_path}")
             return True
+
+        # --- Collect candidate items from local files ---
+        candidate_items = []
+        json_data = None
         
-        # --- Try to get image URLs from multiple sources ---
-        images = []
-        
-        # Source 1: JSON file preview_image fields (preferred)
         if os.path.exists(json_path):
             try:
-                with open(json_path, 'r', encoding='utf-8') as f:
-                    json_data = json.load(f)
-                
-                # Check for preview_image fields in web_civitai_data
+                json_data = load_json_robust(json_path) or {}
                 wcd = json_data.get('web_civitai_data', {})
-                img1 = wcd.get('preview_image_1', '')
-                img2 = wcd.get('preview_image_2', '')
-                # Fallback to old flat format
-                if not img1:
-                    img1 = json_data.get('preview_image_1', '')
-                if not img2:
-                    img2 = json_data.get('preview_image_2', '')
+                
+                # Check preview_image fields
+                img1 = wcd.get('preview_image_1') or json_data.get('preview_image_1', '')
+                img2 = wcd.get('preview_image_2') or json_data.get('preview_image_2', '')
                 if img1:
-                    img_type = 'video' if '.mp4' in img1.lower() or '.webm' in img1.lower() else 'image'
-                    images.append({'url': img1, 'type': img_type, 'nsfwLevel': 1})
+                    candidate_items.append({'url': img1, 'type': 'video' if ('.mp4' in img1.lower() or '.webm' in img1.lower()) else 'image', 'nsfwLevel': 1})
                 if img2:
-                    img_type = 'video' if '.mp4' in img2.lower() or '.webm' in img2.lower() else 'image'
-                    images.append({'url': img2, 'type': img_type, 'nsfwLevel': 1})
-                
-                # Fallback: check z_info_file.images
-                if not images:
-                    z_info = json_data.get('z_info_file', {})
-                    if 'images' in z_info:
-                        images = z_info['images']
-            except Exception as e:
-                print(f"Error reading JSON for preview URLs: {e}")
-        
-        # Source 2: Legacy .civitai.info file (backward compat)
-        if not images and os.path.exists(info_path):
-            try:
-                with open(info_path, 'r', encoding='utf-8') as f:
-                    model_info = json.load(f)
-                images = model_info.get('images', [])
-            except Exception as e:
-                print(f"Error reading info file for preview URLs: {e}")
-        
-        if not images:
-            print(f"No preview image URLs found")
-            return False
-        
-        # Track if we found any video to try as fallback
-        video_to_try = None
-        
-        # Collect suitable images
-        images_to_skip = 0
-        if has_preview1:
-            images_to_skip += 1
-        if has_preview2:
-            images_to_skip += 1
-        
-        suitable_images = []
-        skipped_count = 0
-        
-        for img in images:
-            # Handle both dict format (from z_info_file/info) and simple URL string
-            if isinstance(img, dict):
-                # Skip if NSFW and skip_nsfw is True
-                if skip_nsfw and img.get('nsfw') and img.get('nsfw') != 'None':
-                    print(f"Skipping NSFW item")
-                    continue
-                
-                img_type = img.get('type', 'image')
-                img_url = img.get('url')
-            else:
-                # Simple URL string from preview_image fields
-                img_type = 'image'
-                img_url = img
-            
-            if not img_url:
-                continue
-            
-            # Collect image URLs
-            if img_type == 'image':
-                # Skip images for already-filled slots
-                if skipped_count < images_to_skip:
-                    skipped_count += 1
-                    continue
-                
-                # Use max size if requested
-                if max_size and isinstance(img, dict) and img.get('width'):
-                    img_url = get_full_size_image_url(img_url, img['width'])
-                suitable_images.append(img_url)
-                
-                # Stop after collecting enough images for empty slots
-                if len(suitable_images) >= slots_needed:
-                    break
-            
-            # Save first video URL for fallback
-            elif img_type == 'video' and video_to_try is None:
-                video_to_try = img_url
-        
-        # Download collected images to empty slots
-        if suitable_images:
-            downloaded_count = 0
-            image_index = 0
-            
-            import io
-            from PIL import Image
-            
-            # Download to first slot if empty
-            if not has_preview1 and image_index < len(suitable_images):
-                try:
-                    response = requests.get(suitable_images[image_index], headers=DEFAULT_HEADERS, timeout=30)
-                    if response.ok:
-                        try:
-                            img = Image.open(io.BytesIO(response.content))
-                            # Convert to RGB if it has alpha or is in a different mode to save reliably
-                            if img.mode in ('RGBA', 'P', 'LA'):
-                                bg = Image.new('RGB', img.size, (255, 255, 255))
-                                if img.mode == 'P':
-                                    img = img.convert('RGBA')
-                                if img.mode in ('RGBA', 'LA'):
-                                    bg.paste(img, mask=img.split()[-1])
-                                    img = bg
-                                else:
-                                    img = img.convert('RGB')
-                            else:
-                                img = img.convert('RGB')
-                            
-                            img.save(preview_path, format='PNG')
-                            print(f"Downloaded and converted preview: {preview_path}")
-                            downloaded_count += 1
-                            image_index += 1
-                        except Exception as img_err:
-                            print(f"Invalid image data downloaded for first slot: {img_err}")
-                            image_index += 1
-                    else:
-                        print(f"Failed to download first image: {response.status_code}")
-                        image_index += 1
-                except Exception as e:
-                    print(f"Error downloading first image: {e}")
-                    image_index += 1
-            
-            # Download to second slot if empty
-            if not has_preview2 and image_index < len(suitable_images):
-                try:
-                    response = requests.get(suitable_images[image_index], headers=DEFAULT_HEADERS, timeout=30)
-                    if response.ok:
-                        try:
-                            img = Image.open(io.BytesIO(response.content))
-                            if img.mode in ('RGBA', 'P', 'LA'):
-                                bg = Image.new('RGB', img.size, (255, 255, 255))
-                                if img.mode == 'P':
-                                    img = img.convert('RGBA')
-                                if img.mode in ('RGBA', 'LA'):
-                                    bg.paste(img, mask=img.split()[-1])
-                                    img = bg
-                                else:
-                                    img = img.convert('RGB')
-                            else:
-                                img = img.convert('RGB')
-                            
-                            img.save(preview2_path, format='PNG')
-                            print(f"Downloaded and converted preview2: {preview2_path}")
-                            downloaded_count += 1
-                        except Exception as img_err:
-                            print(f"Invalid image data downloaded for second slot: {img_err}")
-                    else:
-                        print(f"Failed to download second image: {response.status_code}")
-                except Exception as e:
-                    print(f"Error downloading second image: {e}")
-            
-            if downloaded_count > 0:
-                return True
-        
-        # If no image found but we have a video, try to extract frames
-        if video_to_try:
-            print(f"No suitable image found, trying to extract frames from video...")
-            
-            if not check_ffmpeg_available():
-                print("FFmpeg not available - cannot extract video frames")
-                print("Install FFmpeg to enable video thumbnail extraction")
-                return False
-            
-            # Download video to temp file
-            try:
-                response = requests.get(video_to_try, headers=DEFAULT_HEADERS, timeout=60, stream=True)
-                if not response.ok:
-                    print(f"Failed to download video: {response.status_code}")
-                    return False
-                
-                # Create temp file with video extension
-                with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as tmp_video:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        tmp_video.write(chunk)
-                    tmp_video_path = tmp_video.name
-                
-                # Extract frames
-                success, message = extract_video_frames(tmp_video_path, base_path)
-                
-                # Cleanup temp video
-                try:
-                    os.unlink(tmp_video_path)
-                except:
-                    pass
-                
-                if success:
-                    print(f"Video frame extraction: {message}")
-                    return True
-                else:
-                    print(f"Video frame extraction failed: {message}")
-                    return False
+                    candidate_items.append({'url': img2, 'type': 'video' if ('.mp4' in img2.lower() or '.webm' in img2.lower()) else 'image', 'nsfwLevel': 1})
                     
-            except Exception as e:
-                print(f"Error processing video: {e}")
-                return False
+                # Check images list in web_civitai_data
+                wcd_images = wcd.get('images', [])
+                if isinstance(wcd_images, list):
+                    for img in wcd_images:
+                        if isinstance(img, str) and img and not any(c.get('url') == img for c in candidate_items):
+                            candidate_items.append({'url': img, 'type': 'video' if ('.mp4' in img.lower() or '.webm' in img.lower()) else 'image', 'nsfwLevel': 1})
+                        elif isinstance(img, dict) and img.get('url') and not any(c.get('url') == img.get('url') for c in candidate_items):
+                            candidate_items.append(img)
                 
-        print(f"No suitable preview image or video found")
+                # Check z_info_file
+                z_info = json_data.get('z_info_file', {})
+                if isinstance(z_info.get('images'), list):
+                    for img in z_info['images']:
+                        if isinstance(img, dict) and img.get('url') and not any(c.get('url') == img.get('url') for c in candidate_items):
+                            candidate_items.append(img)
+            except Exception as e:
+                print(f"Error reading JSON for candidate images: {e}")
+                
+        if not candidate_items and os.path.exists(info_path):
+            try:
+                info_data = load_json_robust(info_path) or {}
+                if isinstance(info_data.get('images'), list):
+                    for img in info_data['images']:
+                        if isinstance(img, dict) and img.get('url'):
+                            candidate_items.append(img)
+            except Exception as e:
+                print(f"Error reading info file for candidate images: {e}")
+
+        # Helper to attempt downloading from a list of candidate items
+        def _try_download_from_candidates(candidates):
+            downloaded = 0
+            need_p1 = not os.path.exists(preview_path) or force_additional
+            need_p2 = not os.path.exists(preview2_path) or force_additional
+            
+            # Filter candidates based on NSFW setting
+            usable_candidates = []
+            for item in candidates:
+                if not item:
+                    continue
+                if isinstance(item, str):
+                    usable_candidates.append({'url': item, 'type': 'video' if ('.mp4' in item.lower() or '.webm' in item.lower()) else 'image', 'nsfwLevel': 1})
+                elif isinstance(item, dict):
+                    if skip_nsfw:
+                        # Skip if marked NSFW (Civitai nsfwLevel: 1=PG, >1 is NSFW, or nsfw: True/'true')
+                        nsfw_level = item.get('nsfwLevel', 1)
+                        is_nsfw = item.get('nsfw')
+                        if (isinstance(nsfw_level, (int, float)) and nsfw_level > 1) or (is_nsfw and str(is_nsfw).lower() not in ('false', 'none', '0')):
+                            continue
+                    usable_candidates.append(item)
+            
+            # Separate static images vs videos
+            static_candidates = [c for c in usable_candidates if c.get('type') != 'video' and not ('.mp4' in c.get('url', '').lower() or '.webm' in c.get('url', '').lower())]
+            video_candidates = [c for c in usable_candidates if c.get('type') == 'video' or ('.mp4' in c.get('url', '').lower() or '.webm' in c.get('url', '').lower())]
+            
+            # 1. Try static images first
+            candidate_idx = 0
+            if need_p1:
+                while candidate_idx < len(static_candidates):
+                    item = static_candidates[candidate_idx]
+                    candidate_idx += 1
+                    raw_url = item.get('url')
+                    if not raw_url:
+                        continue
+                    
+                    variants = get_url_variants(raw_url, max_size)
+                    saved = False
+                    for v_url in variants:
+                        try:
+                            resp = requests.get(v_url, headers=get_civitai_headers(), timeout=30)
+                            if resp.ok and resp.content and _save_pil_image(resp.content, preview_path):
+                                print(f"Downloaded preview 1: {preview_path} (from {v_url})")
+                                downloaded += 1
+                                need_p1 = False
+                                saved = True
+                                break
+                        except Exception:
+                            pass
+                    if saved:
+                        break
+                        
+            if need_p2:
+                while candidate_idx < len(static_candidates):
+                    item = static_candidates[candidate_idx]
+                    candidate_idx += 1
+                    raw_url = item.get('url')
+                    if not raw_url:
+                        continue
+                    
+                    variants = get_url_variants(raw_url, max_size)
+                    saved = False
+                    for v_url in variants:
+                        try:
+                            resp = requests.get(v_url, headers=get_civitai_headers(), timeout=30)
+                            if resp.ok and resp.content and _save_pil_image(resp.content, preview2_path):
+                                print(f"Downloaded preview 2: {preview2_path} (from {v_url})")
+                                downloaded += 1
+                                need_p2 = False
+                                saved = True
+                                break
+                        except Exception:
+                            pass
+                    if saved:
+                        break
+            
+            # 2. If slots still needed, try video frame extraction with FFmpeg
+            if (need_p1 or need_p2) and video_candidates and check_ffmpeg_available():
+                for v_item in video_candidates:
+                    v_url = v_item.get('url')
+                    if not v_url:
+                        continue
+                    try:
+                        v_resp = requests.get(v_url, headers=get_civitai_headers(), timeout=60, stream=True)
+                        if v_resp.ok:
+                            with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as tmp_video:
+                                for chunk in v_resp.iter_content(chunk_size=8192):
+                                    tmp_video.write(chunk)
+                                tmp_video_path = tmp_video.name
+                            
+                            success, msg = extract_video_frames(tmp_video_path, base_path)
+                            try:
+                                os.unlink(tmp_video_path)
+                            except Exception:
+                                pass
+                                
+                            if success:
+                                print(f"Extracted frames from video: {msg}")
+                                downloaded += 1
+                                break
+                    except Exception as v_err:
+                        print(f"Error downloading/extracting video preview: {v_err}")
+                        
+            return downloaded
+
+        # Attempt downloading with existing candidates
+        initial_downloaded = 0
+        if candidate_items:
+            initial_downloaded = _try_download_from_candidates(candidate_items)
+            if not force_additional and os.path.exists(preview_path) and os.path.exists(preview2_path):
+                return True
+            if not force_additional and os.path.exists(preview_path) and len(candidate_items) == 1:
+                return True
+            if initial_downloaded > 0 and os.path.exists(preview_path):
+                return True
+
+        # --- Dynamic Civitai / CivArchive Lookup Fallback ---
+        # If no candidates existed OR initial download failed (e.g. 404 URLs), look up online!
+        print(f"Querying Civitai/CivArchive online for fresh metadata & thumbnail URLs for {os.path.basename(model_path)}...")
+        
+        fresh_api_data = None
+        
+        # 1. Try version_id / model_id if available in JSON
+        if json_data:
+            wcd = json_data.get('web_civitai_data', {})
+            version_id = wcd.get('file_id') or json_data.get('file_id')
+            model_id = wcd.get('model_id') or json_data.get('model_id')
+            civitai_url = wcd.get('url') or json_data.get('url')
+            
+            if version_id:
+                fresh_api_data = fetch_model_info_by_version_id(version_id)
+            if not fresh_api_data and civitai_url and ('civitai.com' in civitai_url or 'civarchive' in civitai_url):
+                m_id, v_id = parse_civitai_url(civitai_url)
+                if v_id:
+                    fresh_api_data = fetch_model_info_by_version_id(v_id)
+                elif m_id:
+                    fresh_api_data = fetch_model_info_by_id(m_id)
+                    if fresh_api_data and 'modelVersions' in fresh_api_data and fresh_api_data['modelVersions']:
+                        fresh_api_data = fresh_api_data['modelVersions'][0]
+            if not fresh_api_data and model_id:
+                m_data = fetch_model_info_by_id(model_id)
+                if m_data and 'modelVersions' in m_data and m_data['modelVersions']:
+                    fresh_api_data = m_data['modelVersions'][0]
+        
+        # 2. Try SHA256 hash lookup
+        if not fresh_api_data:
+            sha256 = None
+            if json_data:
+                sha256 = json_data.get('sha256')
+            if not sha256 and os.path.exists(model_path):
+                print(f"Computing SHA256 for {os.path.basename(model_path)}...")
+                sha256 = generate_sha256(model_path)
+                if sha256:
+                    save_sha256_to_json(model_path, sha256)
+            
+            if sha256:
+                fresh_api_data = fetch_model_info_by_hash(sha256)
+                if not fresh_api_data:
+                    fresh_api_data = scrape_civarchive_by_hash(sha256)
+
+        # 3. If fresh data retrieved, update JSON and download candidates
+        if fresh_api_data and isinstance(fresh_api_data, dict) and 'images' in fresh_api_data:
+            create_json_from_api_data(model_path, fresh_api_data)
+            fresh_candidates = fresh_api_data.get('images', [])
+            if fresh_candidates:
+                downloaded_fresh = _try_download_from_candidates(fresh_candidates)
+                if downloaded_fresh > 0 or os.path.exists(preview_path):
+                    return True
+                    
+        # Check final status
+        if os.path.exists(preview_path):
+            return True
+            
+        print(f"No suitable preview thumbnail could be downloaded for: {model_path}")
         return False
         
     except Exception as e:
-        print(f"Error downloading preview: {e}")
+        print(f"Error downloading preview for {model_path}: {e}")
         return False
 
 
