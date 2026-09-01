@@ -225,7 +225,6 @@ const confirmBulkDelete = async () => {
         await models.deleteModel(m.id, m.path);
       }
       bulkStore.clearSelection();
-      bulkStore.toggleBulkMode();
     } catch (err) {
       console.error(err);
       alert('Failed to delete some models.');

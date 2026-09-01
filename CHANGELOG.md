@@ -1,5 +1,10 @@
 # Lora Model Manager - Changelog
 
+### 08/31/2026 - v2.1.2
+
+**Fixed**
+- **Persistent Bulk Edit State**: Fixed an issue where Bulk Edit mode would prematurely turn off after moving, renaming, or deleting models. Bulk Edit now stays toggled on across all batch operations until explicitly disabled by the user or when the page is reloaded.
+
 ### 08/16/2026 - v2.1.1
 
 **Added**

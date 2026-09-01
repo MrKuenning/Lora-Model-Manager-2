@@ -174,7 +174,6 @@ const executeRename = async () => {
   }
   
   bulkStore.clearSelection();
-  bulkStore.toggleBulkMode();
   modelsStore.fetchModels();
   emit('close');
 };

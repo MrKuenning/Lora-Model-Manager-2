@@ -137,7 +137,6 @@ const executeMove = async () => {
   }
   
   bulkStore.clearSelection();
-  bulkStore.toggleBulkMode();
   modelsStore.fetchModels();
   emit('close');
 };
