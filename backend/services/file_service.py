@@ -337,3 +337,224 @@ def reorder_thumbnails(base_dir, model_name, new_order):
         os.rename(temp_path, final_path)
 
     return {'status': 'success', 'message': 'Thumbnails reordered successfully'}
+
+
+INVALID_FOLDER_CHARS = set(r'\/:*?"<>|')
+
+def sanitize_folder_name(name):
+    """Ensure folder name doesn't contain invalid characters or path traversal components."""
+    if not name or not isinstance(name, str):
+        return None
+    name = name.strip()
+    if not name or name in ('.', '..'):
+        return None
+    for ch in INVALID_FOLDER_CHARS:
+        if ch in name:
+            return None
+    return name
+
+
+def create_folder(models_dir, parent_folder, folder_name):
+    """Create a new directory inside models_dir/parent_folder."""
+    clean_name = sanitize_folder_name(folder_name)
+    if not clean_name:
+        return {'status': 'error', 'message': 'Invalid folder name. Folder names cannot contain \\ / : * ? " < > | or be empty.'}
+        
+    if not models_dir or not os.path.exists(models_dir):
+        return {'status': 'error', 'message': 'Models directory does not exist.'}
+        
+    norm_parent = (parent_folder or '').replace('\\', '/').strip('/')
+    if norm_parent:
+        target_dir = os.path.normpath(os.path.join(models_dir, norm_parent.replace('/', os.sep), clean_name))
+    else:
+        target_dir = os.path.normpath(os.path.join(models_dir, clean_name))
+        
+    # Safety: ensure target is within models_dir
+    models_dir_norm = os.path.normpath(models_dir)
+    try:
+        common = os.path.commonpath([models_dir_norm, target_dir])
+        if common != models_dir_norm:
+            return {'status': 'error', 'message': 'Invalid folder path (path traversal prevented).'}
+    except ValueError:
+        return {'status': 'error', 'message': 'Invalid folder path.'}
+        
+    if os.path.exists(target_dir):
+        return {'status': 'error', 'message': f'A folder named "{clean_name}" already exists here.'}
+        
+    try:
+        os.makedirs(target_dir, exist_ok=False)
+        rel_path = os.path.relpath(target_dir, models_dir).replace('\\', '/')
+        return {
+            'status': 'success',
+            'message': f'Folder "{clean_name}" created successfully.',
+            'path': rel_path,
+            'name': clean_name
+        }
+    except Exception as e:
+        return {'status': 'error', 'message': f'Failed to create folder: {str(e)}'}
+
+
+def rename_folder(models_dir, old_folder_path, new_name, location='loras'):
+    """Rename an existing folder and update all references in SQLite database."""
+    clean_name = sanitize_folder_name(new_name)
+    if not clean_name:
+        return {'status': 'error', 'message': 'Invalid folder name. Folder names cannot contain \\ / : * ? " < > | or be empty.'}
+        
+    norm_old = (old_folder_path or '').replace('\\', '/').strip('/')
+    if not norm_old:
+        return {'status': 'error', 'message': 'Cannot rename the Root directory.'}
+        
+    if not models_dir or not os.path.exists(models_dir):
+        return {'status': 'error', 'message': 'Models directory does not exist.'}
+        
+    old_full_path = os.path.normpath(os.path.join(models_dir, norm_old.replace('/', os.sep)))
+    models_dir_norm = os.path.normpath(models_dir)
+    
+    try:
+        common = os.path.commonpath([models_dir_norm, old_full_path])
+        if common != models_dir_norm:
+            return {'status': 'error', 'message': 'Invalid folder path (path traversal prevented).'}
+    except ValueError:
+        return {'status': 'error', 'message': 'Invalid folder path.'}
+        
+    if not os.path.exists(old_full_path) or not os.path.isdir(old_full_path):
+        return {'status': 'error', 'message': f'Folder "{norm_old}" does not exist.'}
+        
+    parent_dir = os.path.dirname(old_full_path)
+    new_full_path = os.path.normpath(os.path.join(parent_dir, clean_name))
+    
+    if os.path.exists(new_full_path):
+        return {'status': 'error', 'message': f'A folder named "{clean_name}" already exists in this directory.'}
+        
+    new_rel_path = os.path.relpath(new_full_path, models_dir).replace('\\', '/')
+    
+    try:
+        os.rename(old_full_path, new_full_path)
+        
+        # Update SQLite database and JSON files
+        try:
+            from ..database import rename_folder_in_db
+            rename_folder_in_db(models_dir, norm_old, new_rel_path, location)
+        except Exception as db_err:
+            print(f"Warning: Database update after folder rename encountered error: {db_err}")
+            
+        return {
+            'status': 'success',
+            'message': f'Folder renamed to "{clean_name}" successfully.',
+            'oldPath': norm_old,
+            'newPath': new_rel_path,
+            'name': clean_name
+        }
+    except Exception as e:
+        return {'status': 'error', 'message': f'Failed to rename folder: {str(e)}'}
+
+
+def check_folder_contents(models_dir, folder_path):
+    """Inspect a folder and return counts and samples of model files and non-model files."""
+    norm_path = (folder_path or '').replace('\\', '/').strip('/')
+    if not norm_path:
+        return {'status': 'error', 'message': 'Cannot inspect Root directory.'}
+        
+    if not models_dir or not os.path.exists(models_dir):
+        return {'status': 'error', 'message': 'Models directory does not exist.'}
+        
+    full_path = os.path.normpath(os.path.join(models_dir, norm_path.replace('/', os.sep)))
+    models_dir_norm = os.path.normpath(models_dir)
+    
+    try:
+        common = os.path.commonpath([models_dir_norm, full_path])
+        if common != models_dir_norm:
+            return {'status': 'error', 'message': 'Invalid folder path.'}
+    except ValueError:
+        return {'status': 'error', 'message': 'Invalid folder path.'}
+        
+    if not os.path.exists(full_path):
+        return {'status': 'error', 'message': f'Folder "{norm_path}" does not exist.'}
+        
+    if not os.path.isdir(full_path):
+        return {'status': 'error', 'message': f'"{norm_path}" is not a directory.'}
+        
+    model_files = []
+    other_files = []
+    
+    for root, dirs, files in os.walk(full_path):
+        for f in files:
+            if f.lower().endswith(MODEL_EXTENSIONS):
+                model_files.append(f)
+            else:
+                other_files.append(f)
+                
+    total_files = len(model_files) + len(other_files)
+    
+    return {
+        'status': 'success',
+        'path': norm_path,
+        'isEmpty': total_files == 0,
+        'modelCount': len(model_files),
+        'otherFileCount': len(other_files),
+        'totalFiles': total_files,
+        'modelFilesSample': model_files[:5],
+        'otherFilesSample': other_files[:5]
+    }
+
+
+def delete_empty_folder(models_dir, folder_path, location='loras'):
+    """Safely delete a folder only if it contains 0 files."""
+    norm_path = (folder_path or '').replace('\\', '/').strip('/')
+    if not norm_path:
+        return {'status': 'error', 'message': 'Cannot delete the Root directory.'}
+        
+    if not models_dir or not os.path.exists(models_dir):
+        return {'status': 'error', 'message': 'Models directory does not exist.'}
+        
+    full_path = os.path.normpath(os.path.join(models_dir, norm_path.replace('/', os.sep)))
+    models_dir_norm = os.path.normpath(models_dir)
+    
+    try:
+        common = os.path.commonpath([models_dir_norm, full_path])
+        if common != models_dir_norm:
+            return {'status': 'error', 'message': 'Invalid folder path (path traversal prevented).'}
+    except ValueError:
+        return {'status': 'error', 'message': 'Invalid folder path.'}
+        
+    if not os.path.exists(full_path):
+        return {'status': 'error', 'message': f'Folder "{norm_path}" does not exist.'}
+        
+    if not os.path.isdir(full_path):
+        return {'status': 'error', 'message': f'"{norm_path}" is not a directory.'}
+        
+    # Strictly verify that NO files exist in this folder or any of its subfolders
+    model_files = []
+    other_files = []
+    for root, dirs, files in os.walk(full_path):
+        for f in files:
+            if f.lower().endswith(MODEL_EXTENSIONS):
+                model_files.append(f)
+            else:
+                other_files.append(f)
+            
+    if model_files:
+        sample = ', '.join(model_files[:3])
+        more = f" and {len(model_files) - 3} more" if len(model_files) > 3 else ""
+        return {
+            'status': 'error',
+            'message': f'Cannot delete folder "{norm_path}": It contains {len(model_files)} model file(s) ({sample}{more}). Only empty folders can be deleted.'
+        }
+    elif other_files:
+        sample = ', '.join(other_files[:3])
+        more = f" and {len(other_files) - 3} more" if len(other_files) > 3 else ""
+        return {
+            'status': 'error',
+            'message': f'Cannot delete folder "{norm_path}": The folder does not contain any models, but it contains {len(other_files)} other file(s) on disk (e.g. {sample}{more}). Only completely empty folders can be deleted.'
+        }
+        
+    try:
+        shutil.rmtree(full_path)
+        return {
+            'status': 'success',
+            'message': f'Folder "{norm_path}" deleted successfully.',
+            'deletedPath': norm_path
+        }
+    except Exception as e:
+        return {'status': 'error', 'message': f'Failed to delete folder: {str(e)}'}
+

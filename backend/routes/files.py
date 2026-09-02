@@ -9,7 +9,8 @@ import glob
 from ..constants import MODEL_EXTENSIONS
 from ..services.file_service import (
     get_folders, save_uploaded_preview, delete_thumbnail, reorder_thumbnails,
-    find_file_path
+    find_file_path, create_folder, rename_folder, delete_empty_folder,
+    check_folder_contents
 )
 from ..routes.settings import get_path_for_location
 
@@ -27,6 +28,72 @@ def list_folders():
 
     folders = get_folders(models_path)
     return jsonify({'folders': folders})
+
+
+@files_bp.route('/api/folders/check', methods=['GET'])
+def check_folder():
+    """Inspect folder contents to determine if it is truly empty."""
+    folder_path = request.args.get('folderPath', '')
+    location = request.args.get('location', 'loras')
+
+    models_path = get_path_for_location(location)
+    if not models_path or not os.path.exists(models_path):
+        return jsonify({'status': 'error', 'message': f'Directory not set or does not exist for location: {location}'}), 400
+
+    result = check_folder_contents(models_path, folder_path)
+    status_code = 200 if result.get('status') == 'success' else 400
+    return jsonify(result), status_code
+
+
+
+@files_bp.route('/api/folders', methods=['POST'])
+def add_folder():
+    """Create a new folder."""
+    data = request.get_json() or {}
+    parent_folder = data.get('parentFolder', '')
+    folder_name = data.get('folderName', '')
+    location = data.get('location', 'loras')
+
+    models_path = get_path_for_location(location)
+    if not models_path or not os.path.exists(models_path):
+        return jsonify({'status': 'error', 'message': f'Directory not set or does not exist for location: {location}'}), 400
+
+    result = create_folder(models_path, parent_folder, folder_name)
+    status_code = 200 if result.get('status') == 'success' else 400
+    return jsonify(result), status_code
+
+
+@files_bp.route('/api/folders/rename', methods=['POST'])
+def edit_folder():
+    """Rename an existing folder."""
+    data = request.get_json() or {}
+    old_folder_path = data.get('folderPath', '')
+    new_name = data.get('newName', '')
+    location = data.get('location', 'loras')
+
+    models_path = get_path_for_location(location)
+    if not models_path or not os.path.exists(models_path):
+        return jsonify({'status': 'error', 'message': f'Directory not set or does not exist for location: {location}'}), 400
+
+    result = rename_folder(models_path, old_folder_path, new_name, location)
+    status_code = 200 if result.get('status') == 'success' else 400
+    return jsonify(result), status_code
+
+
+@files_bp.route('/api/folders', methods=['DELETE'])
+def remove_folder():
+    """Delete an empty folder."""
+    data = request.get_json() or {}
+    folder_path = data.get('folderPath', '')
+    location = data.get('location', 'loras')
+
+    models_path = get_path_for_location(location)
+    if not models_path or not os.path.exists(models_path):
+        return jsonify({'status': 'error', 'message': f'Directory not set or does not exist for location: {location}'}), 400
+
+    result = delete_empty_folder(models_path, folder_path, location)
+    status_code = 200 if result.get('status') == 'success' else 400
+    return jsonify(result), status_code
 
 
 @files_bp.route('/api/models/<model_id>/preview', methods=['POST'])
@@ -242,6 +309,7 @@ def clean_json():
         settings.get('checkpointsDirectory', '')
     ]
     
+
     cleaned_count = 0
     errors = []
     
@@ -265,7 +333,7 @@ def clean_json():
                             
                             fields_to_preserve = [
                                 'activation text', 'sd version', 'preferred weight',
-                                'negative text', 'nsfw', 'base model', 'example prompt 1',
+                                'negative text', 'nsfw', 'example prompt 1',
                                 'category', 'subcategory', 'tags',
                                 'name', 'model version', 'high low', 'sha256'
                             ]
@@ -273,6 +341,11 @@ def clean_json():
                                 if field in existing_data and existing_data[field] is not None and existing_data[field] != '':
                                     mapped_data[field] = existing_data[field]
                             
+                            if not mapped_data.get('base model'):
+                                existing_bm = existing_data.get('base model') or existing_data.get('baseModel')
+                                if existing_bm:
+                                    mapped_data['base model'] = existing_bm
+
                             existing_wcd = existing_data.get('web_civitai_data', {})
                             for field in ['civitai text', 'url', 'creator']:
                                 if field in existing_wcd and existing_wcd[field]:
@@ -280,6 +353,11 @@ def clean_json():
                                 elif field in existing_data and existing_data[field] is not None and existing_data[field] != '':
                                     mapped_data['web_civitai_data'][field] = existing_data[field]
                         
+                        if mapped_data.get('base model'):
+                            mapped_data['baseModel'] = mapped_data['base model']
+                        elif mapped_data.get('baseModel'):
+                            mapped_data['base model'] = mapped_data['baseModel']
+
                         write_json_file(info_path, mapped_data)
                         
                         if os.path.exists(info_path):

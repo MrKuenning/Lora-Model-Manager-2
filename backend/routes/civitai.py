@@ -393,13 +393,18 @@ def convert_to_json():
 
                     fields_to_preserve = [
                         'activation text', 'sd version', 'preferred weight',
-                        'negative text', 'nsfw', 'base model', 'example prompt 1',
+                        'negative text', 'nsfw', 'example prompt 1',
                         'category', 'subcategory', 'tags',
                         'name', 'model version', 'high low', 'sha256'
                     ]
                     for field in fields_to_preserve:
                         if field in existing_data and existing_data[field] is not None and existing_data[field] != '':
                             mapped_data[field] = existing_data[field]
+
+                    if not mapped_data.get('base model'):
+                        existing_bm = existing_data.get('base model') or existing_data.get('baseModel')
+                        if existing_bm:
+                            mapped_data['base model'] = existing_bm
 
                     existing_wcd = existing_data.get('web_civitai_data', {})
                     for field in ['civitai text', 'url', 'creator']:
@@ -409,6 +414,11 @@ def convert_to_json():
                             mapped_data['web_civitai_data'][field] = existing_data[field]
             except Exception as e:
                 print(f"Error preserving existing fields: {e}")
+
+        if mapped_data.get('base model'):
+            mapped_data['baseModel'] = mapped_data['base model']
+        elif mapped_data.get('baseModel'):
+            mapped_data['base model'] = mapped_data['baseModel']
 
         civitai_handler.write_json_file(info_path, mapped_data)
 

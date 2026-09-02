@@ -1562,6 +1562,7 @@ const deleteModel = async () => {
 
 // Civitai Tools
 const fetchAllCivitaiData = async () => {
+  if (saveTimeout) clearTimeout(saveTimeout);
   toast.showToast('Fetching all Civitai metadata & thumbnails...', 'info');
   try {
     const res = await api.civitaiFetchByHash(model.value.path);
@@ -1587,6 +1588,7 @@ const fetchAllCivitaiData = async () => {
 };
 
 const fetchCivitaiByHash = async () => {
+  if (saveTimeout) clearTimeout(saveTimeout);
   toast.showToast('Fetching metadata via hash...', 'info');
   try {
     await api.civitaiFetchByHash(model.value.path);
@@ -1599,6 +1601,7 @@ const fetchCivitaiByHash = async () => {
 };
 
 const fetchCivArchiveByHash = async () => {
+  if (saveTimeout) clearTimeout(saveTimeout);
   toast.showToast('Checking CivArchive via hash...', 'info');
   try {
     const res = await api.civArchiveFetchByHash(model.value.path);
@@ -1625,6 +1628,7 @@ const fetchCivArchiveByHash = async () => {
 const promptCivitaiUrl = async () => {
   const url = prompt('Enter Civitai URL:');
   if (url) {
+    if (saveTimeout) clearTimeout(saveTimeout);
     toast.showToast('Fetching metadata via URL...', 'info');
     try {
       await api.civitaiFetchByUrl(model.value.path, url);

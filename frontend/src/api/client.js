@@ -26,6 +26,10 @@ export const api = {
   
   // Folders
   getFolders: (location) => apiClient.get(`/folders?location=${location}`).then(res => res.data.folders),
+  createFolder: (parentFolder, folderName, location) => apiClient.post('/folders', { parentFolder, folderName, location }).then(res => res.data),
+  renameFolder: (folderPath, newName, location) => apiClient.post('/folders/rename', { folderPath, newName, location }).then(res => res.data),
+  deleteFolder: (folderPath, location) => apiClient.delete('/folders', { data: { folderPath, location } }).then(res => res.data),
+  checkFolder: (folderPath, location) => apiClient.get(`/folders/check?folderPath=${encodeURIComponent(folderPath)}&location=${location}`).then(res => res.data),
   sortDownloads: () => apiClient.post('/files/sort-downloads').then(res => res.data),
   
   // Associated Files

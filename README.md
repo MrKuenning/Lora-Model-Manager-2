@@ -31,7 +31,7 @@ See the full changelog at [CHANGELOG.md](CHANGELOG.md)
 - **Grouped View**: Organize models by category, folder, or base model
 <img src="https://github.com/user-attachments/assets/5b7a5d5e-8373-4480-8366-4aa06058568a" width="500" />
 
-- **Folder Tree & List View Sidebar**: Sidebar layout allowing toggleable Tree or List representations of directories. The sidebar's visibility and current view mode are persisted in your browser's local storage.
+- **Folder Tree & List View Sidebar**: Sidebar layout allowing toggleable Tree or List representations of directories with integrated folder management. The sidebar's visibility and current view mode are persisted in your browser's local storage.
 
 ### 🔍 Advanced Search & Filtering
 - **Advanced Boolean Search Engine**: Supports precise filtering using operators (`|` OR, `!` NOT, space for AND), `< >` groupings, `" "` exact phrases, and explicit field targeting (e.g., `cat:anime`).
@@ -127,13 +127,29 @@ Action buttons in the model popup for single-model operations:
 Perform batch operations on multiple models at once or clean up your collection:
 
 1. **Bulk Selection Mode**: Click **Bulk** in the header to select multiple cards:
-   - **Move**: Batch move selected models to a new subfolder or base model root folder
+   - **Move**: Batch move selected models to an existing folder, a base model root, or create a new subfolder on the fly
    - **Edit**: Update Category, Subcategory, Version, or High/Low for all selected models
    - **Rename**: Preview and apply recommended standardized filenames across selections
 2. **Duplicate Model Finder**: Click **Find Duplicates** in the header toolbar to scan your collection:
    - Calculates SHA256 checksums across all models to locate exact duplicates
    - Groups identical files side-by-side with preview cards, file sizes, and folder paths
    - Offers one-click deletion of duplicate files and their associated sidecars
+
+### 📂 Interactive Folder Management (Add, Rename & Safe Delete)
+Full filesystem folder management directly within the application without opening Windows Explorer:
+
+- **Sidebar Folder Manager Mode**: Click **Manage Folders** pinned at the bottom of the sidebar to toggle management mode:
+  - **`+` Add Subfolder**: Create new folders anywhere in the directory hierarchy or directly in the root folder.
+  - **✏️ Rename Folder**: Safely rename folders on disk with automatic real-time synchronization of model file paths, SQLite records, preview URLs, and metadata `.json` sidecars.
+  - **❌ Safe Folder Deletion**: Built with strict multi-layer protections to avoid accidental data loss.
+- **Live Disk Inspection & Safeguards**:
+  - Before confirming a deletion, the app scans the physical directory on disk (`/api/folders/check`) to verify what files exist.
+  - **Model File Protection**: If a folder contains any model files (`.safetensors`, `.ckpt`, etc.), deletion is strictly disabled with a clear warning citing sample model names.
+  - **Non-Model File Protection**: If a folder contains non-model files (such as `.lset` presets, configs, `.json`, or text files), deletion is blocked and sample filenames are displayed.
+  - **100% Empty Verification**: Only folders that contain zero files on disk can be deleted.
+- **On-the-Fly Folder Creation in Move Operations**:
+  - In the **Bulk Move** dialog, select any existing folder as a parent and click **New Folder** to instantly create a new destination subfolder.
+  - The newly created folder is refreshed in the list and auto-selected as the move destination.
 
 ### 🎴 Grid Card Settings
 

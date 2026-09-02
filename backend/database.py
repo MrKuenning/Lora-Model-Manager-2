@@ -193,21 +193,33 @@ def _parse_model_from_filesystem(model_name, root, file, models_dir):
         try:
             with open(json_path, "r", encoding='utf-8-sig') as f:
                 json_data = json.load(f)
-                if "baseModel" in json_data:
-                    base_model = json_data["baseModel"]
-                elif "base model" in json_data:
-                    base_model = json_data["base model"]
+                bm = json_data.get("baseModel")
+                bm_spaced = json_data.get("base model")
+                if bm and bm != "Unknown":
+                    base_model = bm
+                elif bm_spaced and bm_spaced != "Unknown":
+                    base_model = bm_spaced
+                elif bm:
+                    base_model = bm
+                elif bm_spaced:
+                    base_model = bm_spaced
         except Exception as e:
             print(f"Error reading JSON: {json_path} - {e}")
 
-    if base_model == "Unknown" and os.path.exists(civitai_path):
+    if (base_model == "Unknown" or not base_model) and os.path.exists(civitai_path):
         try:
             with open(civitai_path, "r", encoding='utf-8-sig') as f:
                 civitai_data = json.load(f)
-                if "baseModel" in civitai_data:
-                    base_model = civitai_data["baseModel"]
-                elif "base model" in civitai_data:
-                    base_model = civitai_data["base model"]
+                bm = civitai_data.get("baseModel")
+                bm_spaced = civitai_data.get("base model")
+                if bm and bm != "Unknown":
+                    base_model = bm
+                elif bm_spaced and bm_spaced != "Unknown":
+                    base_model = bm_spaced
+                elif bm:
+                    base_model = bm
+                elif bm_spaced:
+                    base_model = bm_spaced
         except Exception as e:
             print(f"Error reading civitai.info: {civitai_path} - {e}")
 
@@ -230,7 +242,9 @@ def _parse_model_from_filesystem(model_name, root, file, models_dir):
         relative_folder = ""
 
     # Extract fields from json_data
-    sd_version = json_data.get('sd version', _map_sd_version(base_model))
+    sd_version = json_data.get('sd version')
+    if not sd_version or sd_version == 'Unknown':
+        sd_version = _map_sd_version(base_model)
     category = json_data.get('category', os.path.basename(root))
     subcategory = json_data.get('subcategory', '')
     activation_text = json_data.get('activation text', '')
@@ -666,3 +680,68 @@ def _row_to_api_dict(row):
         'folder': d.get('folder', ''),
         'sha256': d.get('sha256', ''),
     }
+
+
+def rename_folder_in_db(models_dir, old_rel_path, new_rel_path, location='loras'):
+    """
+    Update models in SQLite when a folder is renamed.
+    Updates path, folder, preview_url, preview_images, and any associated .json files.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    old_rel = old_rel_path.replace('\\', '/').strip('/')
+    new_rel = new_rel_path.replace('\\', '/').strip('/')
+    
+    rows = cursor.execute("SELECT id, path, folder, preview_url, preview_images FROM models WHERE location = ?", (location,)).fetchall()
+    for row in rows:
+        m_path = row['path']
+        m_folder = (row['folder'] or '').replace('\\', '/').strip('/')
+        
+        if m_folder == old_rel or m_folder.startswith(old_rel + '/'):
+            suffix = m_folder[len(old_rel):]
+            new_folder = new_rel + suffix
+            new_folder_fs = new_folder.replace('/', os.sep)
+            
+            filename = os.path.basename(m_path)
+            new_path = os.path.join(models_dir, new_folder_fs, filename)
+            
+            new_preview = row['preview_url']
+            if new_preview and new_preview != '/assets/placeholder.png':
+                old_frag = '/' + old_rel + '/'
+                new_frag = '/' + new_rel + '/'
+                new_preview = new_preview.replace(old_frag, new_frag)
+                
+            new_preview_images = row['preview_images']
+            if new_preview_images:
+                try:
+                    imgs = json.loads(new_preview_images)
+                    if isinstance(imgs, list):
+                        old_frag = '/' + old_rel + '/'
+                        new_frag = '/' + new_rel + '/'
+                        imgs = [img.replace(old_frag, new_frag) for img in imgs]
+                        new_preview_images = json.dumps(imgs)
+                except Exception:
+                    pass
+                    
+            cursor.execute("""
+                UPDATE models 
+                SET path = ?, folder = ?, preview_url = ?, preview_images = ?
+                WHERE id = ? AND location = ?
+            """, (new_path, new_folder, new_preview, new_preview_images, row['id'], location))
+            
+            json_file = os.path.splitext(new_path)[0] + '.json'
+            if os.path.exists(json_file):
+                try:
+                    with open(json_file, 'r', encoding='utf-8') as f:
+                        j_data = json.load(f)
+                    if isinstance(j_data, dict) and 'folder' in j_data:
+                        j_data['folder'] = new_folder
+                        with open(json_file, 'w', encoding='utf-8') as f:
+                            json.dump(j_data, f, indent=4)
+                except Exception:
+                    pass
+
+    conn.commit()
+    conn.close()
+

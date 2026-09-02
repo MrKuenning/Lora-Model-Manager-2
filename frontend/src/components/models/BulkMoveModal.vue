@@ -13,7 +13,56 @@
       <div class="modal-body" v-else>
         <div class="bulk-form">
           <div class="form-group">
-            <label>Target Folder:</label>
+            <div class="target-folder-header">
+              <label>Target Folder:</label>
+              <button 
+                type="button" 
+                class="btn btn-secondary btn-small" 
+                @click="openNewFolderDialog"
+                title="Create a new folder inside the selected folder"
+              >
+                <i class="fas fa-folder-plus"></i> New Folder
+              </button>
+            </div>
+
+            <!-- New Folder Inline Dialog -->
+            <div v-if="showNewFolderDialog" class="new-folder-dialog">
+              <div class="new-folder-title">
+                <i class="fas fa-folder-plus"></i>
+                <span>Create a new folder here: <code>{{ targetFolder === '' ? 'Root' : targetFolder }}</code></span>
+              </div>
+              <div class="new-folder-controls">
+                <input 
+                  type="text" 
+                  v-model="newFolderName" 
+                  class="form-control flex-1" 
+                  placeholder="New folder name" 
+                  @keydown.enter.prevent="createNewFolder"
+                  @keydown.esc="showNewFolderDialog = false"
+                  ref="newFolderInputRef"
+                  :disabled="isCreatingFolder"
+                />
+                <button 
+                  type="button" 
+                  class="btn btn-success" 
+                  @click="createNewFolder" 
+                  :disabled="!newFolderName.trim() || isCreatingFolder"
+                >
+                  <i class="fas fa-check" v-if="!isCreatingFolder"></i>
+                  <i class="fas fa-spinner fa-spin" v-else></i> Confirm
+                </button>
+                <button 
+                  type="button" 
+                  class="btn btn-secondary" 
+                  @click="showNewFolderDialog = false" 
+                  :disabled="isCreatingFolder"
+                  title="Cancel"
+                >
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+
             <div class="folder-list">
               <div 
                 v-for="folder in availableFolders" 
@@ -55,7 +104,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { useBulkStore } from '../../stores/bulk';
 import { useModelsStore } from '../../stores/models';
 import { useSettingsStore } from '../../stores/settings';
@@ -71,6 +120,44 @@ const toast = useToast();
 const loading = ref(false);
 const selectedModels = computed(() => bulkStore.getSelectedModels(modelsStore.models));
 const targetFolder = ref('');
+
+// New folder state
+const showNewFolderDialog = ref(false);
+const newFolderName = ref('');
+const isCreatingFolder = ref(false);
+const newFolderInputRef = ref(null);
+
+const openNewFolderDialog = async () => {
+  newFolderName.value = '';
+  showNewFolderDialog.value = true;
+  await nextTick();
+  if (newFolderInputRef.value) {
+    newFolderInputRef.value.focus();
+  }
+};
+
+const createNewFolder = async () => {
+  const name = newFolderName.value.trim();
+  if (!name) return;
+  
+  isCreatingFolder.value = true;
+  try {
+    const res = await api.createFolder(targetFolder.value, name, modelsStore.currentLocation);
+    if (res && res.status === 'success') {
+      toast.showToast(res.message || `Folder "${name}" created.`, 'success');
+      await modelsStore.fetchFolders();
+      targetFolder.value = res.path;
+      showNewFolderDialog.value = false;
+      newFolderName.value = '';
+    } else {
+      toast.showToast(res?.message || 'Failed to create folder', 'error');
+    }
+  } catch (err) {
+    toast.showToast(err?.response?.data?.message || err.message || 'Failed to create folder', 'error');
+  } finally {
+    isCreatingFolder.value = false;
+  }
+};
 
 const availableFolders = computed(() => {
   // Find common root across all selected models
@@ -315,5 +402,49 @@ const executeMove = async () => {
   background-color: var(--color-btn-primary);
   color: white;
   font-weight: bold;
+}
+
+.target-folder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.new-folder-dialog {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  padding: 12px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.new-folder-title {
+  font-size: 0.9em;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.new-folder-title code {
+  background: var(--color-bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--color-btn-primary);
+  font-weight: bold;
+}
+
+.new-folder-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.flex-1 {
+  flex: 1;
 }
 </style>

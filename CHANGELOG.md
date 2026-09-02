@@ -1,5 +1,20 @@
 # Lora Model Manager - Changelog
 
+### 09/02/2026 - v2.2.0
+
+**Added**
+- **Expanded Folder Management (Add, Rename, Delete)**:
+  - **Bulk Move Modal New Folder Creation**: Added a **New Folder** button to the Bulk Move dialog allowing users to create new subfolders directly under any selected parent path on the fly and auto-select the new folder as the destination.
+  - **Sidebar Folder Manager Mode**: Added a dedicated **Manage Folders** toggle at the bottom of the sidebar. When active, every folder in both Tree and Flat views displays action controls to **Add Subfolder (+)**, **Rename (Pencil)**, and **Safe Delete (X)**.
+  - **Live Disk Inspection (`/api/folders/check`)**: Integrated real-time folder contents inspection that scans the physical directory on disk before deletion, categorizing files into model files vs. other files (e.g., `.lset`, configs, `.json`) with sample file names.
+  - **Accidental Deletion & Non-Model File Safety**: Strictly prevents accidental file loss by blocking deletion if a folder contains any files. The delete modal provides clear, contextual status messages informing the user whether the folder contains model files, contains other non-model files, or is 100% empty and safe to delete.
+  - **Automatic Database & Sidecar Sync on Rename**: Renaming a folder dynamically updates directory paths on disk, SQLite database records (`path`, `folder`, `preview_url`, `preview_images`), and metadata `.json` files for all affected models.
+
+**Fixed**
+- **Civitai Metadata Base Model Overwrite**: Fixed an issue where scraping metadata via the Model Card's Civitai tools did not update the model's **Base Model** or **Forge Model Type** (`sd version`). Removed `base model` from protected overwrite fields so fresh API data updates the model, while preserving custom user fields (e.g. category, notes, user trigger words).
+- **Key Synchronization (`base model` & `baseModel`)**: Synchronized camelCase and space-separated base model keys across JSON generation and database filesystem parsing to eliminate stale `"Unknown"` overrides.
+- **Auto-Save Scraping Conflict**: Prevented debounced form auto-saves from racing with incoming Civitai metadata when scraping from the Model Card.
+
 ### 08/31/2026 - v2.1.2
 
 **Fixed**

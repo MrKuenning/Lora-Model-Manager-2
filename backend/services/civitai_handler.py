@@ -587,6 +587,7 @@ def create_json_from_api_data(model_path, api_data, use_api_for_creator=True, ex
         mapped_data = {
             'activation text': '',
             'base model': '',
+            'baseModel': '',
             'base_model_type': '',
             'category': '',
             'description': '',
@@ -630,9 +631,11 @@ def create_json_from_api_data(model_path, api_data, use_api_for_creator=True, ex
                 mapped_data['web_civitai_data']['civitai text'] = ', '.join(trained_words)
         
         # Base model
-        if 'baseModel' in api_data:
-            mapped_data['base model'] = api_data['baseModel']
-            mapped_data['sd version'] = map_sd_version(api_data['baseModel'])
+        api_base_model = api_data.get('baseModel') or api_data.get('base_model')
+        if api_base_model:
+            mapped_data['base model'] = api_base_model
+            mapped_data['baseModel'] = api_base_model
+            mapped_data['sd version'] = map_sd_version(api_base_model)
         
         # Base model type (NEW)
         if 'baseModelType' in api_data:
@@ -749,16 +752,15 @@ def create_json_from_api_data(model_path, api_data, use_api_for_creator=True, ex
             mapped_data['notes'] = '\n'.join(notes)
         
  
-        
         # --- Merge with existing JSON data (preserve user-edited fields) ---
         existing_data = load_json_robust(json_path)
         if existing_data:
             try:
-                # Fields to preserve if already populated by user
+                # Fields to preserve if already populated by user (note: 'base model' is NOT protected so Civitai can populate it)
                 fields_to_preserve = [
-                    'activation text', 'sd version', 'preferred weight',
+                    'activation text', 'preferred weight',
                     'negative text',
-                    'nsfw', 'base model', 'example prompt 1',
+                    'nsfw', 'example prompt 1',
                     'category', 'subcategory', 'tags',
                     'name', 'model version', 'high low',
                     'sha256', 'folder', 'description'
@@ -767,6 +769,21 @@ def create_json_from_api_data(model_path, api_data, use_api_for_creator=True, ex
                     if field in existing_data and existing_data[field] is not None and existing_data[field] != '':
                         mapped_data[field] = existing_data[field]
                 
+                # If API didn't provide a base model, fall back to existing if available
+                if not mapped_data.get('base model') or mapped_data.get('base model') == 'Unknown':
+                    existing_bm = existing_data.get('base model') or existing_data.get('baseModel')
+                    if existing_bm and existing_bm != 'Unknown':
+                        mapped_data['base model'] = existing_bm
+                        mapped_data['baseModel'] = existing_bm
+                        if not mapped_data.get('sd version') or mapped_data.get('sd version') == 'Unknown':
+                            mapped_data['sd version'] = map_sd_version(existing_bm)
+
+                # For sd version: if not mapped or Unknown, preserve existing if valid
+                if not mapped_data.get('sd version') or mapped_data.get('sd version') == 'Unknown':
+                    existing_sd = existing_data.get('sd version')
+                    if existing_sd and existing_sd != 'Unknown':
+                        mapped_data['sd version'] = existing_sd
+
                 # Preserve web_civitai_data sub-fields if they exist in old format
                 # (migrate from old flat format to nested)
                 existing_wcd = existing_data.get('web_civitai_data', {})
@@ -780,7 +797,7 @@ def create_json_from_api_data(model_path, api_data, use_api_for_creator=True, ex
                         mapped_data['web_civitai_data'][field] = existing_data[field]
                 
                 # Also preserve any extra fields in existing JSON not in our template
-                fields_to_ignore = {'creator', 'original_filename', 'downloadUrl', 'z_info_file'}
+                fields_to_ignore = {'creator', 'original_filename', 'downloadUrl', 'z_info_file', 'baseModel'}
                 for key, value in existing_data.items():
                     if key not in mapped_data and key not in fields_to_ignore:
                         mapped_data[key] = value
@@ -789,6 +806,12 @@ def create_json_from_api_data(model_path, api_data, use_api_for_creator=True, ex
                 print(f"Error merging existing JSON data: {e}")
         elif os.path.exists(json_path):
             print(f"WARNING: Could not read existing JSON for merging at {json_path}. Proceeding with new data only.")
+        
+        # Ensure both 'base model' and 'baseModel' are in sync
+        if mapped_data.get('base model'):
+            mapped_data['baseModel'] = mapped_data['base model']
+        elif mapped_data.get('baseModel'):
+            mapped_data['base model'] = mapped_data['baseModel']
         
         # --- Write sorted JSON ---
         sorted_data = {k: mapped_data[k] for k in sorted(mapped_data.keys())}

@@ -12,7 +12,36 @@
       <i class="fas" :class="node.path === '' ? 'fa-home' : (models.currentFolder === node.path ? 'fa-folder-open' : 'fa-folder')"></i>
       
       <span class="folder-name">{{ node.name || 'Root' }}</span>
-      <span class="folder-count">{{ models.folderCounts.nested[node.path] || 0 }}</span>
+
+      <!-- FOLDER MANAGER ACTIONS -->
+      <span class="folder-actions" v-if="folderManager && folderManager.isManagingFolders.value" @click.stop>
+        <button 
+          class="action-btn btn-add" 
+          @click.stop="folderManager.openNewModal(node.path)" 
+          title="Add subfolder"
+        >
+          <i class="fas fa-plus"></i>
+        </button>
+        <button 
+          v-if="node.path !== ''" 
+          class="action-btn btn-rename" 
+          @click.stop="folderManager.openRenameModal(node.path)" 
+          title="Rename folder"
+        >
+          <i class="fas fa-pencil-alt"></i>
+        </button>
+        <button 
+          v-if="node.path !== ''" 
+          class="action-btn btn-delete" 
+          :class="{ disabled: folderManager.isFolderNonEmpty(node.path) }" 
+          @click.stop="folderManager.openDeleteModal(node.path)" 
+          :title="folderManager.isFolderNonEmpty(node.path) ? 'Cannot delete: folder contains models/subfolders' : 'Delete empty folder'"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </span>
+
+      <span class="folder-count" v-else>{{ models.folderCounts.nested[node.path] || 0 }}</span>
     </div>
     
     <ul v-if="isExpanded && node.children && node.children.length > 0" class="folder-list nested">
@@ -30,7 +59,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 import { useModelsStore } from '../../stores/models';
 
 const props = defineProps({
@@ -41,6 +70,7 @@ const props = defineProps({
 
 const emit = defineEmits(['toggle', 'select']);
 const models = useModelsStore();
+const folderManager = inject('folderManager', null);
 
 const isExpanded = computed(() => !!props.expandedState[props.node.path]);
 
@@ -119,6 +149,55 @@ export default {
   padding: 0;
   margin: 0;
   list-style: none;
+}
+
+.folder-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.action-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.75em;
+  color: var(--color-text-muted);
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text);
+  border-color: var(--color-text-muted);
+}
+
+.action-btn.btn-add:hover {
+  color: #4ade80;
+  border-color: #4ade80;
+}
+
+.action-btn.btn-rename:hover {
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.action-btn.btn-delete:hover {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.action-btn.btn-delete.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 /* Inherit size from sidebar */
