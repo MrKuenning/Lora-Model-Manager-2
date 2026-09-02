@@ -1,5 +1,10 @@
 # Lora Model Manager - Changelog
 
+### 09/02/2026 - v2.2.1
+
+**Fixed**
+- **Civitai Thumbnail Download Variable Error**: Fixed an unhandled `NameError: name 'preview_path' is not defined` in `civitai_handler.py:download_preview_image` where `preview_path` and `preview2_path` were referenced without being initialized, causing preview downloads to fail silently and register as skipped.
+
 ### 09/02/2026 - v2.2.0
 
 **Added**

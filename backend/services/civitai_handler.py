@@ -1087,6 +1087,8 @@ def download_preview_image(model_path, max_size=False, skip_nsfw=False, force_ad
 
         has_preview1 = bool(existing_p1)
         has_preview2 = bool(existing_p2)
+        preview_path = existing_p1 if existing_p1 else f"{base_path}.preview.png"
+        preview2_path = existing_p2 if existing_p2 else f"{base_path}.preview2.png"
         
         # In normal mode, if both slots exist, we're done
         if not force_additional and has_preview1 and has_preview2:
