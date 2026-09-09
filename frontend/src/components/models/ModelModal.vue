@@ -36,8 +36,15 @@
         <div class="left-column">
           <!-- Image Section -->
           <div class="image-section" @dragover.prevent @drop.prevent="handleDrop">
-            <div class="main-image-container" @click="triggerFileInput">
-              <div class="drop-overlay"><i class="fas fa-upload"></i> Drop image to add</div>
+            <div class="main-image-container" @click="handleMainImageClick" :title="images.length > 0 ? 'Click to view full size preview' : 'Click to add preview image'">
+              <button 
+                type="button" 
+                class="drop-overlay drop-overlay-btn" 
+                @click.stop="triggerFileInput" 
+                title="Click to browse file or drag & drop image here"
+              >
+                <i class="fas fa-upload"></i> Browse or Drop Image
+              </button>
               <img 
                 v-if="images.length > 0"
                 :src="api.getAssetUrl(images[currentImageIndex], modelsStore.getCacheBuster(model.path))" 
@@ -701,6 +708,88 @@
       </div>
       
     </div>
+
+    <!-- FULL SIZE IMAGE CAROUSEL LIGHTBOX -->
+    <div 
+      v-if="showImageCarousel && images.length > 0" 
+      class="image-carousel-lightbox" 
+      @click.self="closeImageCarousel"
+    >
+      <div class="carousel-top-bar">
+        <div class="carousel-title-group">
+          <span class="carousel-model-name">{{ form.name || model?.name || 'Model Image Preview' }}</span>
+          <span class="carousel-counter">{{ carouselIndex + 1 }} / {{ images.length }}</span>
+        </div>
+        <div class="carousel-actions">
+          <a 
+            :href="api.getAssetUrl(images[carouselIndex], modelsStore.getCacheBuster(model.path))" 
+            target="_blank" 
+            class="btn btn-secondary btn-icon carousel-action-btn"
+            title="Open original image in new tab"
+          >
+            <i class="fas fa-external-link-alt"></i>
+          </a>
+          <button 
+            type="button" 
+            class="btn btn-secondary btn-icon carousel-action-btn" 
+            @click="closeImageCarousel" 
+            title="Close preview (Esc)"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Carousel Content Viewport -->
+      <div class="carousel-stage">
+        <button 
+          v-if="images.length > 1"
+          type="button" 
+          class="carousel-nav-btn prev-btn" 
+          @click.stop="prevCarouselImage" 
+          title="Previous image (Left Arrow)"
+        >
+          <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <div class="carousel-image-wrapper" @click.self="closeImageCarousel">
+          <img 
+            :src="api.getAssetUrl(images[carouselIndex], modelsStore.getCacheBuster(model.path))" 
+            :alt="`${form.name || 'Model'} Image ${carouselIndex + 1}`" 
+            class="carousel-main-img"
+            @click="images.length > 1 ? nextCarouselImage() : null"
+            :title="images.length > 1 ? 'Click to advance to next image' : ''"
+          />
+        </div>
+
+        <button 
+          v-if="images.length > 1"
+          type="button" 
+          class="carousel-nav-btn next-btn" 
+          @click.stop="nextCarouselImage" 
+          title="Next image (Right Arrow)"
+        >
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+
+      <!-- Bottom Thumbnail Carousel Filmstrip -->
+      <div class="carousel-bottom-filmstrip" v-if="images.length > 1">
+        <div 
+          v-for="(img, idx) in images" 
+          :key="idx"
+          class="carousel-filmstrip-thumb"
+          :class="{ active: idx === carouselIndex }"
+          @click="selectCarouselImage(idx)"
+        >
+          <img 
+            :src="api.getAssetUrl(img, modelsStore.getCacheBuster(model.path))" 
+            alt="Thumbnail"
+            loading="lazy"
+          />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -789,6 +878,43 @@ const deleteAssociatedFile = async (file) => {
 // Image Carousel State
 const images = ref([]);
 const currentImageIndex = ref(0);
+const showImageCarousel = ref(false);
+const carouselIndex = ref(0);
+
+const openImageCarousel = (idx = currentImageIndex.value) => {
+  if (!images.value || images.value.length === 0) return;
+  carouselIndex.value = Math.max(0, Math.min(idx, images.value.length - 1));
+  showImageCarousel.value = true;
+};
+
+const closeImageCarousel = () => {
+  showImageCarousel.value = false;
+};
+
+const nextCarouselImage = () => {
+  if (!images.value || images.value.length === 0) return;
+  carouselIndex.value = (carouselIndex.value + 1) % images.value.length;
+  currentImageIndex.value = carouselIndex.value;
+};
+
+const prevCarouselImage = () => {
+  if (!images.value || images.value.length === 0) return;
+  carouselIndex.value = (carouselIndex.value - 1 + images.value.length) % images.value.length;
+  currentImageIndex.value = carouselIndex.value;
+};
+
+const selectCarouselImage = (idx) => {
+  carouselIndex.value = idx;
+  currentImageIndex.value = idx;
+};
+
+const handleMainImageClick = () => {
+  if (images.value && images.value.length > 0) {
+    openImageCarousel(currentImageIndex.value);
+  } else {
+    triggerFileInput();
+  }
+};
 
 const openFolderPath = async () => {
   if (!model.value || !model.value.path) return;
@@ -992,6 +1118,23 @@ const loadModel = async () => {
 
 const handleKeydown = (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+  if (showImageCarousel.value) {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      closeImageCarousel();
+      return;
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      prevCarouselImage();
+      return;
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      nextCarouselImage();
+      return;
+    }
+  }
+
   if (e.key === 'ArrowLeft') {
     navigatePrevious();
   } else if (e.key === 'ArrowRight') {
@@ -1893,15 +2036,31 @@ const getFileIcon = (filename) => {
   position: absolute;
   top: 10px;
   left: 10px;
-  background: rgba(0,0,0,0.6);
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.8em;
-  color: #ccc;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.82em;
+  font-weight: 500;
+  color: #e0e0e0;
   z-index: 2;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.drop-overlay:hover {
+  background: rgba(52, 152, 219, 0.8);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+.drop-overlay:active {
+  transform: translateY(0);
 }
 
 .main-preview {
@@ -2351,5 +2510,192 @@ textarea.form-control {
   padding: 20px;
   resize: none;
   min-height: 500px;
+}
+
+/* Full Size Image Carousel Lightbox */
+.image-carousel-lightbox {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(10px);
+  z-index: 2500;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  user-select: none;
+  animation: carouselFadeIn 0.2s ease-out;
+}
+
+@keyframes carouselFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.carousel-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.75), transparent);
+  z-index: 2510;
+}
+
+.carousel-title-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 80%;
+  overflow: hidden;
+}
+
+.carousel-model-name {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.carousel-counter {
+  font-size: 0.88rem;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 4px 10px;
+  border-radius: 20px;
+  color: #ddd;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.carousel-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.carousel-action-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(40, 40, 40, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.carousel-action-btn:hover {
+  background: rgba(60, 60, 60, 0.95);
+  border-color: #3498db;
+  color: #fff;
+  transform: scale(1.08);
+}
+
+.carousel-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.carousel-image-wrapper {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 10px 20px;
+}
+
+.carousel-main-img {
+  max-width: 100%;
+  max-height: calc(100vh - 200px);
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.85);
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.carousel-main-img:active {
+  transform: scale(0.99);
+}
+
+.carousel-nav-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(30, 30, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2510;
+}
+
+.carousel-nav-btn:hover {
+  background: rgba(52, 152, 219, 0.85);
+  border-color: #3498db;
+  transform: scale(1.12);
+  box-shadow: 0 4px 16px rgba(52, 152, 219, 0.4);
+}
+
+.carousel-bottom-filmstrip {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px 24px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  overflow-x: auto;
+  max-width: 100%;
+  z-index: 2510;
+}
+
+.carousel-filmstrip-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  opacity: 0.65;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.carousel-filmstrip-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.carousel-filmstrip-thumb:hover {
+  opacity: 0.95;
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
+}
+
+.carousel-filmstrip-thumb.active {
+  opacity: 1;
+  border-color: #3498db;
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.6);
+  transform: translateY(-2px) scale(1.05);
 }
 </style>

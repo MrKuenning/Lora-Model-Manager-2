@@ -1,5 +1,19 @@
 # Lora Model Manager - Changelog
 
+### 09/09/2026 - v2.2.3
+
+**Added**
+- **Model Card Full-Size Image Carousel Lightbox**:
+  - Clicking on the main model preview image now opens an immersive, full-screen image carousel lightbox with backdrop blur (`backdrop-filter: blur(10px)`).
+  - Includes full keyboard navigation (`ArrowLeft` / `ArrowRight` to cycle images, `Escape` to close), chevron navigation buttons, direct image-click to advance, an image counter (`X / Y`), and a bottom thumbnail filmstrip for rapid image switching.
+  - Added an external link button to view the original full-resolution asset in a new browser tab.
+- **Dedicated Clickable Image Upload Button**:
+  - Replaced the passive upload overlay with an interactive, styled button labeled **"Browse or Drop Image"**.
+  - Clicking the button opens the file browser to select an image, while maintaining seamless drag-and-drop file upload capability across the entire image container.
+
+**Changed**
+- **Scan Models Header Cleanups**: Removed redundant step numbers from "Import from Downloads" and "Generate Hash" headers on the Civitai scan page.
+
 ### 09/08/2026 - v2.2.2
 
 **Added**
