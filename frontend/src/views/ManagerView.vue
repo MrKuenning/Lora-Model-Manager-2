@@ -64,6 +64,30 @@
               <option value="size">Group by Size</option>
               <option value="tags">Group by Tags</option>
             </select>
+
+            <div class="card-size-toggle" v-if="settings.defaultView === 'grid'" title="Card Size">
+              <button 
+                type="button" 
+                class="size-btn" 
+                :class="{ active: (settings.gridCard?.cardSize || 'medium') === 'small' }"
+                @click="settings.setCardSize('small')"
+                title="Small Cards"
+              >S</button>
+              <button 
+                type="button" 
+                class="size-btn" 
+                :class="{ active: (settings.gridCard?.cardSize || 'medium') === 'medium' }"
+                @click="settings.setCardSize('medium')"
+                title="Medium Cards"
+              >M</button>
+              <button 
+                type="button" 
+                class="size-btn" 
+                :class="{ active: (settings.gridCard?.cardSize || 'medium') === 'large' }"
+                @click="settings.setCardSize('large')"
+                title="Large Cards"
+              >L</button>
+            </div>
           </div>
           
           <div class="search-container">
@@ -476,6 +500,45 @@ watch(() => models.sortBy, (newSort) => {
 .filter-controls {
   display: flex;
   gap: 10px;
+  align-items: center;
+}
+
+.card-size-toggle {
+  display: flex;
+  align-items: center;
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  padding: 2px;
+  gap: 2px;
+  box-sizing: border-box;
+}
+
+.size-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 0.85em;
+  font-weight: 600;
+  padding: 6px 11px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.size-btn:hover {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.size-btn.active {
+  background: var(--color-btn-primary);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .form-select {

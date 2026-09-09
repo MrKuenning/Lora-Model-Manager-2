@@ -69,13 +69,13 @@
               </div>
 
               <div class="action-col">
-                <h3>3. Import from Downloads</h3>
+                <h3>Import from Downloads</h3>
                 <p>Move models from Download Directory to Sorting Directory.</p>
                 <button class="btn btn-secondary" @click="sortDownloadedModels"><i class="fas fa-exchange-alt"></i> Move Files</button>
               </div>
 
               <div class="action-col">
-                <h3>4. Generate Hashes</h3>
+                <h3>Generate Hashes</h3>
                 <p>Generate SHA256 file hashes for duplicate detection and Civitai lookups.</p>
                 <div class="btn-row">
                   <button class="btn btn-secondary" @click="generateMissingHashes"><i class="fas fa-hashtag"></i> Generate Missing</button>

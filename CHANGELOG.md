@@ -1,5 +1,23 @@
 # Lora Model Manager - Changelog
 
+### 09/08/2026 - v2.2.2
+
+**Added**
+- **Model Info Box Interactive Filters & Count Badges**:
+  - **Click-to-Search Base Model & Creator**: Clicking the **Base Model** or **Creator** in the Model Card details dialog now immediately populates the search query, closes the modal, and filters the library view to show matching models.
+  - **Matching Model Count Badges**: Added compact, styled count badges next to the Base Model and Creator names in the info box displaying the total number of models in the library sharing the same Base Model or Creator.
+- **Home Screen Grid Card Size Toggle**:
+  - Added a segmented **`[ S | M | L ]`** toggle to the home screen controls bar when in Grid View, allowing users to quickly switch between Small (160px), Medium (220px), and Large (300px) cards.
+  - Persists the selected card size to `config.json` via the settings API and stays in two-way synchronization with the Settings modal.
+- **Sidebar Recursive Folder View Toggle**:
+  - Added a dedicated Recursive View toggle button in the sidebar header controls (`fa-layer-group`) and options toolbar (`Recur`).
+  - Allows users to switch between recursive view (including models in all subfolders) and non-recursive view (showing only models located directly in the selected folder).
+  - Dynamically switches sidebar folder count badges between nested and immediate counts depending on recursive mode state.
+  - Automatically persists the recursive view preference to `localStorage`.
+
+**Changed**
+- **Compact Sidebar Options**: Shortened sidebar options toolbar button labels (`Recur`, `1st`, `2nd`, `Expand`) to prevent wrapping on narrower sidebar layouts.
+
 ### 09/02/2026 - v2.2.1
 
 **Fixed**

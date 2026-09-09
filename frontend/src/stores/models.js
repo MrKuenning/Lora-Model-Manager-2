@@ -18,6 +18,9 @@ export const useModelsStore = defineStore('models', {
     safemode: true,
     sidebarHidden: false,
     isTreeMode: true,
+    isRecursive: localStorage.getItem('lora_manager_isRecursive') !== null
+      ? localStorage.getItem('lora_manager_isRecursive') === 'true'
+      : true,
     sidebarSize: 'comfy', // 'comfy' or 'compact'
     flatHideRoot: false,
     flatHidePath: false,
@@ -87,10 +90,14 @@ export const useModelsStore = defineStore('models', {
 
       // 1. Filter by folder
       if (state.currentFolder) {
-        if (state.isTreeMode) {
+        if (state.isRecursive) {
           result = result.filter(m => m.folder === state.currentFolder || m.folder.startsWith(state.currentFolder + '/') || m.folder.startsWith(state.currentFolder + '\\'));
         } else {
-          result = result.filter(m => m.folder === state.currentFolder);
+          result = result.filter(m => (m.folder || '') === state.currentFolder);
+        }
+      } else {
+        if (!state.isRecursive) {
+          result = result.filter(m => !m.folder || m.folder === '');
         }
       }
 
@@ -230,6 +237,13 @@ export const useModelsStore = defineStore('models', {
   },
 
   actions: {
+    setRecursive(val) {
+      this.isRecursive = val;
+      localStorage.setItem('lora_manager_isRecursive', String(val));
+    },
+    toggleRecursive() {
+      this.setRecursive(!this.isRecursive);
+    },
     async fetchModels(refresh = false) {
       if (this.models.length === 0) {
         this.loading = true;

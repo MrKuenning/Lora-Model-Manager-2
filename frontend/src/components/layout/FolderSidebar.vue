@@ -3,6 +3,14 @@
     <div class="sidebar-header">
       <h3 v-if="!isCollapsed">Folders</h3>
       <div class="sidebar-controls" v-if="!isCollapsed">
+        <button 
+          class="btn btn-icon btn-small" 
+          :class="{ active: models.isRecursive }"
+          @click="models.toggleRecursive()" 
+          :title="models.isRecursive ? 'Recursive: ON (showing current folder + subfolders)' : 'Recursive: OFF (showing current folder only)'"
+        >
+          <i class="fas fa-layer-group"></i>
+        </button>
         <button class="btn btn-icon btn-small" @click="models.isTreeMode = !models.isTreeMode" :title="models.isTreeMode ? 'Switch to Flat View' : 'Switch to Tree View'">
           <i class="fas" :class="models.isTreeMode ? 'fa-list-ul' : 'fa-sitemap'"></i>
         </button>
@@ -23,13 +31,24 @@
     <div v-if="!isCollapsed" class="sidebar-content">
       <div class="sidebar-options">
         <template v-if="!models.isTreeMode">
+          <label class="opt-label" title="Toggle recursive folder content">
+            <input type="checkbox" :checked="models.isRecursive" @change="models.toggleRecursive()"> Recur
+          </label>
           <label class="opt-label"><input type="checkbox" v-model="models.flatHideRoot"> Hide Root</label>
           <label class="opt-label"><input type="checkbox" v-model="models.flatHidePath"> Hide Path</label>
         </template>
         <template v-else>
-          <button class="btn btn-secondary btn-tiny" @click="collapseTo(2)">1st Layer</button>
-          <button class="btn btn-secondary btn-tiny" @click="collapseTo(3)">2nd Layer</button>
-          <button class="btn btn-secondary btn-tiny" @click="expandAll">Expand All</button>
+          <button 
+            class="btn btn-tiny" 
+            :class="models.isRecursive ? 'btn-primary' : 'btn-secondary'" 
+            @click="models.toggleRecursive()"
+            :title="models.isRecursive ? 'Recursive: ON (showing current folder + subfolders). Click to show current folder only.' : 'Recursive: OFF (showing current folder only). Click to include subfolders.'"
+          >
+            <i class="fas fa-layer-group"></i> Recur
+          </button>
+          <button class="btn btn-secondary btn-tiny" @click="collapseTo(2)" title="Collapse to 1st Layer">1st</button>
+          <button class="btn btn-secondary btn-tiny" @click="collapseTo(3)" title="Collapse to 2nd Layer">2nd</button>
+          <button class="btn btn-secondary btn-tiny" @click="expandAll" title="Expand All Folders">Expand</button>
         </template>
       </div>
 
@@ -78,7 +97,7 @@
               <i class="fas fa-times"></i>
             </button>
           </span>
-          <span class="folder-count" v-else>{{ models.folderCounts.immediate[folder.path] || 0 }}</span>
+          <span class="folder-count" v-else>{{ models.isRecursive ? (models.folderCounts.nested[folder.path] || 0) : (models.folderCounts.immediate[folder.path] || 0) }}</span>
         </li>
       </ul>
       
@@ -566,6 +585,10 @@ const flatFolders = computed(() => {
 
 .sidebar-controls .btn-icon:hover {
   color: var(--color-text);
+}
+
+.sidebar-controls .btn-icon.active {
+  color: var(--color-btn-primary);
 }
 
 .sidebar-content {

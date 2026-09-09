@@ -178,6 +178,19 @@ export const useSettingsStore = defineStore('settings', {
         console.error("Failed to save settings", err);
         return false;
       }
+    },
+
+    async setCardSize(size) {
+      if (!['small', 'medium', 'large'].includes(size)) return;
+      if (!this.gridCard) this.gridCard = {};
+      this.gridCard.cardSize = size;
+      try {
+        const currentSettings = await api.getSettings();
+        currentSettings.gridCard = { ...(currentSettings.gridCard || {}), cardSize: size };
+        await this.saveSettings(currentSettings);
+      } catch (err) {
+        console.error("Failed to save card size", err);
+      }
     }
   }
 });

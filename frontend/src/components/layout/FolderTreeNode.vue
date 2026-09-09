@@ -41,7 +41,7 @@
         </button>
       </span>
 
-      <span class="folder-count" v-else>{{ models.folderCounts.nested[node.path] || 0 }}</span>
+      <span class="folder-count" v-else>{{ models.isRecursive ? (models.folderCounts.nested[node.path] || 0) : (models.folderCounts.immediate[node.path] || 0) }}</span>
     </div>
     
     <ul v-if="isExpanded && node.children && node.children.length > 0" class="folder-list nested">

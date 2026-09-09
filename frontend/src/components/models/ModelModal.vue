@@ -84,7 +84,22 @@
               <div class="info-row">
                 <label>BASE MODEL:</label>
                 <div class="info-val with-edit">
-                  <span v-if="editingField !== 'baseModel'">{{ form.baseModel || '-' }}</span>
+                  <div class="info-link-group" v-if="editingField !== 'baseModel'">
+                    <template v-if="form.baseModel">
+                      <a 
+                        href="#" 
+                        class="info-link" 
+                        @click.prevent="searchAndClose(form.baseModel)"
+                        :title="`Search models with base model: ${form.baseModel}`"
+                      >{{ form.baseModel }}</a>
+                      <span 
+                        class="info-count-badge" 
+                        @click="searchAndClose(form.baseModel)"
+                        :title="`${baseModelCount} model${baseModelCount === 1 ? '' : 's'} with base model ${form.baseModel}`"
+                      >{{ baseModelCount }}</span>
+                    </template>
+                    <span v-else>-</span>
+                  </div>
                   <div v-else style="position: relative; flex: 1; display: flex; align-items: center; width: 100%;">
                     <input 
                       id="inline-edit-baseModel"
@@ -105,7 +120,7 @@
                   <datalist id="baseModelsList">
                     <option v-for="opt in uniqueBaseModels" :key="opt" :value="opt"></option>
                   </datalist>
-                  <i class="fas fa-edit edit-icon" v-if="editingField !== 'baseModel'" @click="startEditingField('baseModel')"></i>
+                  <i class="fas fa-edit edit-icon" v-if="editingField !== 'baseModel'" @click="startEditingField('baseModel')" title="Edit Base Model"></i>
                 </div>
               </div>
               <div class="info-row">
@@ -138,8 +153,23 @@
               <div class="info-row">
                 <label>CREATOR:</label>
                 <div class="info-val with-edit">
-                  <span>{{ form.creator || '-' }}</span>
-                  <i class="fas fa-edit edit-icon" @click="promptEditField('creator', 'Creator')"></i>
+                  <div class="info-link-group">
+                    <template v-if="form.creator">
+                      <a 
+                        href="#" 
+                        class="info-link" 
+                        @click.prevent="searchAndClose(form.creator)"
+                        :title="`Search models by creator: ${form.creator}`"
+                      >{{ form.creator }}</a>
+                      <span 
+                        class="info-count-badge" 
+                        @click="searchAndClose(form.creator)"
+                        :title="`${creatorCount} model${creatorCount === 1 ? '' : 's'} by creator ${form.creator}`"
+                      >{{ creatorCount }}</span>
+                    </template>
+                    <span v-else>-</span>
+                  </div>
+                  <i class="fas fa-edit edit-icon" @click="promptEditField('creator', 'Creator')" title="Edit Creator"></i>
                 </div>
               </div>
               <div class="info-row">
@@ -1073,6 +1103,24 @@ const stopEditingField = () => {
   }
 };
 
+const baseModelCount = computed(() => {
+  const target = (form.baseModel || '').trim().toLowerCase();
+  if (!target) return 0;
+  return modelsStore.models.filter(m => (m.baseModel || m.base_model || '').trim().toLowerCase() === target).length;
+});
+
+const creatorCount = computed(() => {
+  const target = (form.creator || '').trim().toLowerCase();
+  if (!target) return 0;
+  return modelsStore.models.filter(m => (m.creator || '').trim().toLowerCase() === target).length;
+});
+
+const searchAndClose = (text) => {
+  if (!text) return;
+  modelsStore.searchQuery = text.trim();
+  emit('close');
+};
+
 const uniqueBaseModels = computed(() => {
   const set = new Set();
   modelsStore.models.forEach(m => { if (m.baseModel) set.add(m.baseModel) });
@@ -1971,7 +2019,46 @@ const getFileIcon = (filename) => {
   word-break: break-all;
   overflow-wrap: anywhere;
 }
-.info-val.with-edit { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.info-val.with-edit { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.info-link-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.info-link {
+  color: #4a90e2;
+  text-decoration: none;
+  cursor: pointer;
+  word-break: break-word;
+  transition: color 0.15s ease;
+}
+.info-link:hover {
+  text-decoration: underline;
+  color: #6eb0ff;
+}
+.info-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75em;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(74, 144, 226, 0.15);
+  color: #79b8ff;
+  border: 1px solid rgba(74, 144, 226, 0.35);
+  cursor: pointer;
+  line-height: 1.3;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+.info-count-badge:hover {
+  background: rgba(74, 144, 226, 0.3);
+  color: #ffffff;
+  border-color: rgba(74, 144, 226, 0.6);
+  transform: scale(1.05);
+}
 .edit-icon { color: #666; cursor: pointer; }
 .edit-icon:hover { color: #fff; }
 .info-row.stacked { margin-top: 5px; }
