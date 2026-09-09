@@ -9,12 +9,12 @@
       <div class="modal-body" v-if="!settings.loading">
         <div class="settings-tabs">
           <button class="tab-btn" :class="{ active: activeTab === 'general' }" @click="activeTab = 'general'">General</button>
-          <button class="tab-btn" :class="{ active: activeTab === 'views' }" @click="activeTab = 'views'">View Settings</button>
+          <button class="tab-btn" :class="{ active: activeTab === 'views' }" @click="activeTab = 'views'">Views</button>
+          <button class="tab-btn" :class="{ active: activeTab === 'grid' }" @click="activeTab = 'grid'">Grid View</button>
+          <button class="tab-btn" :class="{ active: activeTab === 'columns' }" @click="activeTab = 'columns'">Table View</button>
           <button class="tab-btn" :class="{ active: activeTab === 'safemode' }" @click="activeTab = 'safemode'">Safe Mode</button>
-          <button class="tab-btn" :class="{ active: activeTab === 'columns' }" @click="activeTab = 'columns'">Table Columns</button>
-          <button class="tab-btn" :class="{ active: activeTab === 'grid' }" @click="activeTab = 'grid'">Grid Card</button>
-          <button class="tab-btn" :class="{ active: activeTab === 'formatting' }" @click="activeTab = 'formatting'">Filename Formatting</button>
-          <button class="tab-btn" :class="{ active: activeTab === 'roots' }" @click="activeTab = 'roots'">Model Type Roots</button>
+          <button class="tab-btn" :class="{ active: activeTab === 'formatting' }" @click="activeTab = 'formatting'">File Names</button>
+          <button class="tab-btn" :class="{ active: activeTab === 'roots' }" @click="activeTab = 'roots'">Folder Roots</button>
           <button class="tab-btn" :class="{ active: activeTab === 'trimnames' }" @click="activeTab = 'trimnames'">Trim Names</button>
           <button class="tab-btn" :class="{ active: activeTab === 'scanner' }" @click="activeTab = 'scanner'">Scanner</button>
         </div>
@@ -188,70 +188,6 @@
                     <span class="checkbox-desc">Only show folders containing models that match your current base model filter (e.g. SDXL, Pony, Flux)</span>
                   </div>
                 </label>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Safe Mode Tab -->
-          <div v-if="activeTab === 'safemode'" class="settings-section">
-            <div class="settings-group-clean">
-              <div class="settings-header-clean">
-                <h3>Content Safety & NSFW Protection</h3>
-                <span class="variables-help">Startup protection defaults and NSFW image visibility</span>
-              </div>
-
-              <div class="checkbox-desc-grid" style="margin-top: 10px;">
-                <label class="checkbox-desc-item">
-                  <input type="checkbox" v-model="localSettings.safeModeDefault">
-                  <div class="checkbox-text">
-                    <div class="checkbox-title-row">
-                      <span class="checkbox-title">Enabled by Default</span>
-                      <span class="preview-badge badge-tested"><i class="fas fa-shield-alt"></i> Protected</span>
-                    </div>
-                    <span class="checkbox-desc">Safe Mode starts enabled on new browser sessions or server restarts to safeguard adult content</span>
-                  </div>
-                </label>
-
-                <label class="checkbox-desc-item">
-                  <input type="checkbox" v-model="localSettings.safeModeOnReload">
-                  <div class="checkbox-text">
-                    <div class="checkbox-title-row">
-                      <span class="checkbox-title">Reset on Page Reload</span>
-                      <span class="preview-meta-tag"><i class="fas fa-redo-alt" style="color: #3498db;"></i> Auto-Lock</span>
-                    </div>
-                    <span class="checkbox-desc">Refreshing the browser re-engages Safe Mode instead of remembering temporary unshielded state</span>
-                  </div>
-                </label>
-
-                <label class="checkbox-desc-item">
-                  <input type="checkbox" v-model="localSettings.nsfwBlurOverlay">
-                  <div class="checkbox-text">
-                    <div class="checkbox-title-row">
-                      <span class="checkbox-title">Blur NSFW Images</span>
-                      <span class="preview-badge badge-nsfw"><i class="fas fa-eye-slash"></i> Blurred</span>
-                    </div>
-                    <span class="checkbox-desc">Applies a frosted glass blur overlay on adult-rated model previews until clicked to reveal</span>
-                  </div>
-                </label>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Columns Tab -->
-          <div v-if="activeTab === 'columns'" class="settings-section columns-list">
-            <p class="section-help">Select which columns to display and drag to reorder them.</p>
-            <div v-for="(col, index) in localSettings.columnOrder" :key="col" class="column-reorder-item">
-              <label class="checkbox-label">
-                <input type="checkbox" v-model="localSettings.visibleColumns[col]">
-                {{ formatColumnName(col) }}
-              </label>
-              <div class="reorder-controls">
-                <button class="btn btn-icon btn-small" @click="moveColumnUp(index)" :disabled="index === 0" title="Move Up">
-                  <i class="fas fa-arrow-up"></i>
-                </button>
-                <button class="btn btn-icon btn-small" @click="moveColumnDown(index)" :disabled="index === localSettings.columnOrder.length - 1" title="Move Down">
-                  <i class="fas fa-arrow-down"></i>
-                </button>
               </div>
             </div>
           </div>
@@ -497,84 +433,341 @@
             </div>
 
           </div>
+
+          <!-- Table View Tab -->
+          <div v-if="activeTab === 'columns'" class="settings-section">
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Table Columns & Display Sequence</h3>
+                <span class="variables-help">Select visible table columns and reorder their position using the arrow controls</span>
+              </div>
+
+              <div class="columns-reorder-grid" style="margin-top: 10px;">
+                <div v-for="(col, index) in localSettings.columnOrder" :key="col" class="column-reorder-card">
+                  <label class="column-checkbox-label">
+                    <input type="checkbox" v-model="localSettings.visibleColumns[col]">
+                    <div class="column-info-text">
+                      <div class="checkbox-title-row">
+                        <span class="checkbox-title">{{ formatColumnName(col) }}</span>
+                        <span class="preview-meta-tag">
+                          <i :class="getColumnInfo(col).icon" :style="{ color: getColumnInfo(col).color }"></i>
+                          #{{ index + 1 }}
+                        </span>
+                      </div>
+                      <span class="checkbox-desc">{{ getColumnInfo(col).desc }}</span>
+                    </div>
+                  </label>
+                  <div class="reorder-controls">
+                    <button class="btn btn-icon btn-small" @click="moveColumnUp(index)" :disabled="index === 0" title="Move Left / Up">
+                      <i class="fas fa-arrow-up"></i>
+                    </button>
+                    <button class="btn btn-icon btn-small" @click="moveColumnDown(index)" :disabled="index === localSettings.columnOrder.length - 1" title="Move Right / Down">
+                      <i class="fas fa-arrow-down"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Safe Mode Tab -->
+          <div v-if="activeTab === 'safemode'" class="settings-section">
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Content Safety & NSFW Protection</h3>
+                <span class="variables-help">Startup protection defaults and NSFW image visibility</span>
+              </div>
+
+              <div class="checkbox-desc-grid" style="margin-top: 10px;">
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.safeModeDefault">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Enabled by Default</span>
+                      <span class="preview-badge badge-tested"><i class="fas fa-shield-alt"></i> Protected</span>
+                    </div>
+                    <span class="checkbox-desc">Safe Mode starts enabled on new browser sessions or server restarts to safeguard adult content</span>
+                  </div>
+                </label>
+
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.safeModeOnReload">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Reset on Page Reload</span>
+                      <span class="preview-meta-tag"><i class="fas fa-redo-alt" style="color: #3498db;"></i> Auto-Lock</span>
+                    </div>
+                    <span class="checkbox-desc">Refreshing the browser re-engages Safe Mode instead of remembering temporary unshielded state</span>
+                  </div>
+                </label>
+
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.nsfwBlurOverlay">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Blur NSFW Images</span>
+                      <span class="preview-badge badge-nsfw"><i class="fas fa-eye-slash"></i> Blurred</span>
+                    </div>
+                    <span class="checkbox-desc">Applies a frosted glass blur overlay on adult-rated model previews until clicked to reveal</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
           
           <!-- Formatting Tab -->
           <div v-if="activeTab === 'formatting'" class="settings-section">
-            <div class="settings-header">
-              <h3 style="margin: 0;">Filename Formatting:</h3>
-              <span class="variables-help">Variables: {modelname}, {version}, <span style="color: #f39c12; font-weight: bold;">{highlow}*</span>, {category}, {subcategory}</span>
-            </div>
-            <div class="warning-text">
-              <i class="fas fa-exclamation-triangle"></i> * {highlow} is a required field. If you include it models will require it to be populated. rename.
-            </div>
-            
-            <div class="list-container">
-              <div v-for="(format, index) in localSettings.filenameFormats" :key="index" class="list-row">
-                <input type="text" v-model="format.baseModel" class="form-control col-left" placeholder="Base Model (e.g. Pony)">
-                <input type="text" v-model="format.format" class="form-control col-right" placeholder="Format string">
-                <button v-if="format.baseModel === 'Default'" class="btn-lock" disabled title="Cannot remove default">
-                  <i class="fas fa-lock"></i>
-                </button>
-                <button v-else class="btn-remove" @click="removeFilenameFormat(index)" title="Remove">
-                  <i class="fas fa-times"></i>
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Filename Formatting Rules</h3>
+                <span class="variables-help">Define a filename formatting by base model type to be used when renaming the models.</span>
+              </div>
+
+              <!-- Available Template Variables -->
+              <div style="margin-top: 10px;">
+                <div style="font-size: 0.82em; color: var(--color-text-secondary); margin-bottom: 6px; font-weight: 600;">Available Format Variables:</div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <span class="preview-meta-tag"><i class="fas fa-file-signature" style="color: #3498db;"></i> {modelname}</span>
+                  <span class="preview-meta-tag"><i class="fas fa-code-branch" style="color: #2ecc71;"></i> {version}</span>
+                  <span class="preview-meta-tag"><i class="fas fa-layer-group"></i> {highlow}*</span>
+                  <span class="preview-meta-tag"><i class="fas fa-folder" style="color: #3498db;"></i> {category}</span>
+                  <span class="preview-meta-tag"><i class="fas fa-folder-open" style="color: #9b59b6;"></i> {subcategory}</span>
+                </div>
+              </div>
+
+              <div class="sub-setting-indent" style="border-left-color: #f39c12; margin-top: 12px; margin-bottom: 6px;">
+                <span class="checkbox-desc" style="color: #f39c12; display: flex; align-items: center; gap: 6px;">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <span><strong>* {WAN: High/Low} </strong> If {highlow} is in a format string, models must have High/Low populated to execute renaming.</span>
+                </span>
+              </div>
+
+              <div class="list-container" style="margin-top: 8px;">
+                <!-- Column Headers (Shown once above rows) -->
+                <div v-if="localSettings.filenameFormats.length > 0" class="list-header-row">
+                  <div class="list-header-col" style="flex: 0 0 35%;">
+                    <span class="checkbox-title">Base Model</span>
+                    <span class="preview-meta-tag"><i class="fas fa-cube" style="color: #2ecc71;"></i> Model Type</span>
+                  </div>
+                  <div class="list-header-col" style="flex: 1;">
+                    <span class="checkbox-title">Format Pattern</span>
+                    <span class="preview-meta-tag"><i class="fas fa-font" style="color: #9b59b6;"></i> Template</span>
+                  </div>
+                  <div style="flex: 0 0 38px;"></div>
+                </div>
+
+                <div v-for="(format, index) in localSettings.filenameFormats" :key="index" class="list-row-card">
+                  <!-- Base Model Column -->
+                  <div style="flex: 0 0 35%;">
+                    <!-- Default rule: locked input -->
+                    <input 
+                      v-if="format.baseModel === 'Default'" 
+                      type="text" 
+                      v-model="format.baseModel" 
+                      class="form-control" 
+                      disabled
+                    >
+
+                    <!-- Custom manual input mode -->
+                    <div v-else-if="format.isCustom" style="display: flex; gap: 6px;">
+                      <input 
+                        type="text" 
+                        v-model="format.baseModel" 
+                        class="form-control" 
+                        placeholder="e.g. Pony, SDXL"
+                      >
+                      <button 
+                        type="button" 
+                        class="btn-icon-toggle" 
+                        @click="format.isCustom = false" 
+                        title="Switch to dropdown list of base models"
+                      >
+                        <i class="fas fa-list"></i>
+                      </button>
+                    </div>
+
+                    <!-- Dropdown select mode -->
+                    <div v-else style="display: flex; gap: 6px;">
+                      <select 
+                        v-model="format.baseModel" 
+                        class="form-control" 
+                        @change="handleFormatSelectChange(format)"
+                      >
+                        <option value="" disabled>-- Select Base Model --</option>
+                        <option v-for="bm in getAvailableBaseModelsForFormat(index)" :key="bm" :value="bm">
+                          {{ bm }}
+                        </option>
+                        <option value="__custom__">+ Enter Custom Model Type...</option>
+                      </select>
+                      <button 
+                        type="button" 
+                        class="btn-icon-toggle" 
+                        @click="format.isCustom = true; if (format.baseModel === '__custom__') format.baseModel = '';" 
+                        title="Type a custom base model"
+                      >
+                        <i class="fas fa-pen"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Format Pattern Column -->
+                  <div style="flex: 1;">
+                    <input type="text" v-model="format.format" class="form-control" placeholder="{modelname}_{version}_{highlow}">
+                  </div>
+
+                  <!-- Action Button Column -->
+                  <div style="flex: 0 0 auto;">
+                    <button v-if="format.baseModel === 'Default'" class="btn-lock" disabled title="Cannot remove default rule">
+                      <i class="fas fa-lock"></i>
+                    </button>
+                    <button v-else class="btn-remove" @click="removeFilenameFormat(index)" title="Remove Rule">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <button class="btn btn-secondary" style="width: 100%; justify-content: center; gap: 8px; margin-top: 6px;" @click="addFilenameFormat">
+                  <i class="fas fa-plus-circle" style="color: #2ecc71;"></i> Add Format Rule
                 </button>
               </div>
-              <button class="btn-add-full" @click="addFilenameFormat">
-                <i class="fas fa-plus"></i> Add Format Rule
-              </button>
             </div>
           </div>
           
           <!-- Roots Tab -->
           <div v-if="activeTab === 'roots'" class="settings-section">
-            <div class="settings-header">
-              <h3 style="margin: 0;">Model Type Roots:</h3>
-              <span class="variables-help">Map Model Types to root folders to filter Move UI</span>
-            </div>
-            <p class="section-help" style="margin-bottom: 5px;">
-              When moving models, if the model has a matching Model Type (Base Model), the folder dropdown will be filtered to only show the root folder and its subdirectories. You should use a <strong>relative path</strong> (e.g., Comfy/QWEN) rather than a full system path. You can select existing folders from the dropdown.
-            </p>
-            
-            <div class="list-container">
-              <div v-for="(root, index) in localSettings.modelTypeRoots" :key="index" class="list-row">
-                <input type="text" v-model="root.baseModel" class="form-control col-left" placeholder="Base Model (e.g. Pony)">
-                <input type="text" v-model="root.rootFolder" class="form-control col-right" placeholder="Root Folder">
-                <button class="btn-remove" @click="removeModelTypeRoot(index)" title="Remove">
-                  <i class="fas fa-times"></i>
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Model Type Root Mappings</h3>
+                <span class="variables-help">Map Base Models to root folders to automatically scope folder destinations in the Move modal</span>
+              </div>
+
+              <div class="sub-setting-indent" style="border-left-color: #3498db; margin-top: 10px; margin-bottom: 6px;">
+                <span class="checkbox-desc" style="display: flex; align-items: flex-start; gap: 8px;">
+                  <i class="fas fa-info-circle" style="color: #3498db; margin-top: 2px;"></i>
+                  <span>When moving models with a matching Base Model, the folder picker is filtered to show only that root folder and its subdirectories. Use a <strong>relative folder path</strong> (e.g., <code>Pony/Characters</code> or <code>SDXL/Styles</code>).</span>
+                </span>
+              </div>
+
+              <div class="list-container" style="margin-top: 8px;">
+                <!-- Column Headers (Shown once above rows) -->
+                <div v-if="localSettings.modelTypeRoots.length > 0" class="list-header-row">
+                  <div class="list-header-col" style="flex: 0 0 35%;">
+                    <span class="checkbox-title">Base Model</span>
+                    <span class="preview-meta-tag"><i class="fas fa-cube" style="color: #2ecc71;"></i> Model Type</span>
+                  </div>
+                  <div class="list-header-col" style="flex: 1;">
+                    <span class="checkbox-title">Root Folder Destination</span>
+                    <span class="preview-meta-tag"><i class="fas fa-folder-open" style="color: #f39c12;"></i> Root Path</span>
+                  </div>
+                  <div style="flex: 0 0 38px;"></div>
+                </div>
+
+                <div v-for="(root, index) in localSettings.modelTypeRoots" :key="index" class="list-row-card">
+                  <!-- Base Model Column -->
+                  <div style="flex: 0 0 35%;">
+                    <!-- Custom manual input mode -->
+                    <div v-if="root.isCustom" style="display: flex; gap: 6px;">
+                      <input 
+                        type="text" 
+                        v-model="root.baseModel" 
+                        class="form-control" 
+                        placeholder="e.g. Pony, Flux.1 D"
+                      >
+                      <button 
+                        type="button" 
+                        class="btn-icon-toggle" 
+                        @click="root.isCustom = false" 
+                        title="Switch to dropdown list of base models"
+                      >
+                        <i class="fas fa-list"></i>
+                      </button>
+                    </div>
+
+                    <!-- Dropdown select mode -->
+                    <div v-else style="display: flex; gap: 6px;">
+                      <select 
+                        v-model="root.baseModel" 
+                        class="form-control" 
+                        @change="handleRootSelectChange(root)"
+                      >
+                        <option value="" disabled>-- Select Base Model --</option>
+                        <option v-for="bm in getAvailableBaseModelsForRoot(index)" :key="bm" :value="bm">
+                          {{ bm }}
+                        </option>
+                        <option value="__custom__">+ Enter Custom Model Type...</option>
+                      </select>
+                      <button 
+                        type="button" 
+                        class="btn-icon-toggle" 
+                        @click="root.isCustom = true; if (root.baseModel === '__custom__') root.baseModel = '';" 
+                        title="Type a custom base model"
+                      >
+                        <i class="fas fa-pen"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Root Folder Destination Column -->
+                  <div style="flex: 1;">
+                    <input type="text" v-model="root.rootFolder" class="form-control" placeholder="e.g. Pony/Characters">
+                  </div>
+
+                  <!-- Action Button Column -->
+                  <div style="flex: 0 0 auto;">
+                    <button class="btn-remove" @click="removeModelTypeRoot(index)" title="Remove Mapping">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <button class="btn btn-secondary" style="width: 100%; justify-content: center; gap: 8px; margin-top: 6px;" @click="addModelTypeRoot">
+                  <i class="fas fa-plus-circle" style="color: #2ecc71;"></i> Add Root Mapping
                 </button>
               </div>
-              <button class="btn-add-full" @click="addModelTypeRoot">
-                <i class="fas fa-plus"></i> Add Root Mapping
-              </button>
             </div>
           </div>
           
           <!-- Trim Names Tab -->
-          <div v-if="activeTab === 'trimnames'" class="settings-section" style="flex: 1; overflow: hidden;">
-            <div class="settings-header" style="flex: 0 0 auto;">
-              <h3 style="margin: 0;">Trim Names List:</h3>
-              <span class="variables-help">These terms are removed from model names when clicking Trim. Special characters like [] and . are handled automatically.</span>
-            </div>
-            
-            <div class="add-tag-container" style="flex: 0 0 auto;">
-              <input 
-                type="text" 
-                v-model="newTrimName" 
-                @keydown.enter="addTrimName" 
-                placeholder="Type a term to remove and press Enter" 
-                class="form-control" 
-              />
-              <button class="btn btn-secondary" @click="addTrimName">
-                <i class="fas fa-plus"></i> Add
-              </button>
-            </div>
+          <div v-if="activeTab === 'trimnames'" class="settings-section" style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
+            <div class="settings-group-clean" style="border-bottom: none; padding-bottom: 0; margin-bottom: 0; flex: 1; display: flex; flex-direction: column;">
+              <div class="settings-header-clean" style="flex: 0 0 auto;">
+                <div class="checkbox-title-row">
+                  <h3>Trim Names Filter List</h3>
+                  <span class="preview-meta-tag"><i class="fas fa-tags" style="color: #9b59b6;"></i> {{ localSettings.trimNames.length }} Filter Terms</span>
+                </div>
+                <span class="variables-help">These words and patterns are automatically stripped out when clicking Trim on model names</span>
+              </div>
 
-            <div class="tags-container" style="flex: 1; max-height: none; overflow-y: auto; align-content: flex-start;">
-              <div v-for="(name, index) in localSettings.trimNames" :key="index" class="tag-chip">
-                {{ name }}
-                <button class="btn-remove-tag" @click="removeTrimName(index)" title="Remove">
-                  <i class="fas fa-times"></i>
-                </button>
+              <div class="sub-setting-indent" style="border-left-color: #9b59b6; margin-top: 10px; margin-bottom: 12px; flex: 0 0 auto;">
+                <span class="checkbox-desc" style="display: flex; align-items: flex-start; gap: 8px;">
+                  <i class="fas fa-magic" style="color: #9b59b6; margin-top: 2px;"></i>
+                  <span>Clicking <strong>Trim</strong> strips these terms along with common noise brackets (<code>[]</code>, <code>()</code>) and surrounding periods. Clean titles keep libraries organized and searchable.</span>
+                </span>
+              </div>
+
+              <div class="add-tag-container" style="flex: 0 0 auto;">
+                <div class="input-with-button" style="width: 100%;">
+                  <input 
+                    type="text" 
+                    v-model="newTrimName" 
+                    @keydown.enter="addTrimName" 
+                    placeholder="Enter a keyword or noise tag to remove (e.g. [v1.0], SDXL, LoRA)..." 
+                    class="form-control" 
+                  />
+                  <button class="btn btn-secondary" @click="addTrimName" style="white-space: nowrap;">
+                    <i class="fas fa-plus-circle" style="color: #2ecc71;"></i> Add Filter Term
+                  </button>
+                </div>
+              </div>
+
+              <div class="tags-container" style="flex: 1; max-height: none; overflow-y: auto; align-content: flex-start; margin-top: 10px;">
+                <div v-for="(name, index) in localSettings.trimNames" :key="index" class="tag-chip">
+                  <i class="fas fa-tag" style="color: #e67e22; font-size: 0.85em;"></i>
+                  <span>{{ name }}</span>
+                  <button class="btn-remove-tag" @click="removeTrimName(index)" title="Remove Term">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -698,11 +891,13 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue';
 import { useSettingsStore } from '../../stores/settings';
+import { useModelsStore } from '../../stores/models';
 import { useToast } from '../../composables/useToast';
 import { api } from '../../api/client';
 
 const emit = defineEmits(['close']);
 const settings = useSettingsStore();
+const modelsStore = useModelsStore();
 const toast = useToast();
 
 const activeTab = ref('general');
@@ -794,9 +989,19 @@ onMounted(() => {
   };
   localSettings.gridCard = Object.assign({}, defaultGridCard, settings.gridCard || {});
   
-  localSettings.filenameFormats = JSON.parse(JSON.stringify(settings.filenameFormats || []));
-  localSettings.modelTypeRoots = JSON.parse(JSON.stringify(settings.modelTypeRoots || []));
+  localSettings.filenameFormats = JSON.parse(JSON.stringify(settings.filenameFormats || [])).map(f => ({
+    ...f,
+    isCustom: f.baseModel && f.baseModel !== 'Default' && !allBaseModels.value.some(b => b.toLowerCase() === f.baseModel.trim().toLowerCase())
+  }));
+  localSettings.modelTypeRoots = JSON.parse(JSON.stringify(settings.modelTypeRoots || [])).map(r => ({
+    ...r,
+    isCustom: r.baseModel && !allBaseModels.value.some(b => b.toLowerCase() === r.baseModel.trim().toLowerCase())
+  }));
   localSettings.trimNames = JSON.parse(JSON.stringify(settings.trimNames || []));
+  
+  if (!modelsStore.models.length && typeof modelsStore.fetchModels === 'function') {
+    modelsStore.fetchModels();
+  }
   
   const defaultScanSettings = {
     skipExistingData: true,
@@ -808,10 +1013,94 @@ onMounted(() => {
   localSettings.scanSettings = JSON.parse(JSON.stringify(settings.scanSettings || defaultScanSettings));
 });
 
+// All base models from library + defaults + current settings
+const allBaseModels = computed(() => {
+  const set = new Set();
+  if (modelsStore.uniqueBaseModels && modelsStore.uniqueBaseModels.length > 0) {
+    modelsStore.uniqueBaseModels.forEach(bm => {
+      if (bm && typeof bm === 'string' && bm.trim()) set.add(bm.trim());
+    });
+  }
+  // Standard defaults in case models list is empty or minimal
+  ['SD 1.5', 'SDXL', 'Pony', 'Illustrious', 'Flux.1 D', 'Flux.1 S', 'NoobAI'].forEach(b => set.add(b));
+  // Include existing configured formats & roots
+  if (Array.isArray(localSettings.filenameFormats)) {
+    localSettings.filenameFormats.forEach(f => {
+      if (f.baseModel && f.baseModel !== 'Default' && f.baseModel !== '__custom__' && f.baseModel.trim()) {
+        set.add(f.baseModel.trim());
+      }
+    });
+  }
+  if (Array.isArray(localSettings.modelTypeRoots)) {
+    localSettings.modelTypeRoots.forEach(r => {
+      if (r.baseModel && r.baseModel !== '__custom__' && r.baseModel.trim()) {
+        set.add(r.baseModel.trim());
+      }
+    });
+  }
+  return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+});
+
+// Available base models for a specific format rule index (excludes base models already defined in other format rules)
+const getAvailableBaseModelsForFormat = (currentIndex) => {
+  const otherRows = new Set(
+    localSettings.filenameFormats
+      .filter((f, idx) => idx !== currentIndex && f.baseModel && f.baseModel !== '__custom__')
+      .map(f => f.baseModel.trim().toLowerCase())
+  );
+  
+  return allBaseModels.value.filter(bm => {
+    const isCurrent = localSettings.filenameFormats[currentIndex]?.baseModel?.trim().toLowerCase() === bm.toLowerCase();
+    return isCurrent || !otherRows.has(bm.toLowerCase());
+  });
+};
+
+const handleFormatSelectChange = (format) => {
+  if (format.baseModel === '__custom__') {
+    format.baseModel = '';
+    format.isCustom = true;
+  }
+};
+
+// Available base models for a specific root mapping index (excludes base models already defined in other root mappings)
+const getAvailableBaseModelsForRoot = (currentIndex) => {
+  const otherRows = new Set(
+    localSettings.modelTypeRoots
+      .filter((r, idx) => idx !== currentIndex && r.baseModel && r.baseModel !== '__custom__')
+      .map(r => r.baseModel.trim().toLowerCase())
+  );
+  
+  return allBaseModels.value.filter(bm => {
+    const isCurrent = localSettings.modelTypeRoots[currentIndex]?.baseModel?.trim().toLowerCase() === bm.toLowerCase();
+    return isCurrent || !otherRows.has(bm.toLowerCase());
+  });
+};
+
+const handleRootSelectChange = (root) => {
+  if (root.baseModel === '__custom__') {
+    root.baseModel = '';
+    root.isCustom = true;
+  }
+};
+
 const formatColumnName = (key) => {
   // Convert camelCase to Title Case
   const result = key.replace(/([A-Z])/g, " $1");
   return result.charAt(0).toUpperCase() + result.slice(1);
+};
+
+const getColumnInfo = (col) => {
+  const meta = {
+    thumbnail: { icon: 'fas fa-image', color: '#3498db', desc: 'Cover image thumbnail preview' },
+    name: { icon: 'fas fa-signature', color: '#2ecc71', desc: 'Display title / model friendly name' },
+    civitaiName: { icon: 'fas fa-globe', color: '#3498db', desc: 'Civitai release version title' },
+    baseModel: { icon: 'fas fa-cube', color: '#2ecc71', desc: 'Model architecture (SDXL, Pony, Flux, etc.)' },
+    category: { icon: 'fas fa-folder', color: '#3498db', desc: 'Assigned category classification tag' },
+    size: { icon: 'fas fa-hdd', color: '#9b59b6', desc: 'File size on disk (MB / GB)' },
+    date: { icon: 'fas fa-calendar-alt', color: '#f39c12', desc: 'File creation or modification date' },
+    filename: { icon: 'fas fa-file-code', color: '#e67e22', desc: 'Actual filename on disk' }
+  };
+  return meta[col] || { icon: 'fas fa-columns', color: '#9b59b6', desc: 'Table column display' };
 };
 
 const moveColumnUp = (index) => {
@@ -829,7 +1118,7 @@ const moveColumnDown = (index) => {
 };
 
 const addFilenameFormat = () => {
-  localSettings.filenameFormats.push({ baseModel: '', format: '' });
+  localSettings.filenameFormats.push({ baseModel: '', format: '', isCustom: false });
 };
 
 const removeFilenameFormat = (index) => {
@@ -837,7 +1126,7 @@ const removeFilenameFormat = (index) => {
 };
 
 const addModelTypeRoot = () => {
-  localSettings.modelTypeRoots.push({ baseModel: '', rootFolder: '' });
+  localSettings.modelTypeRoots.push({ baseModel: '', rootFolder: '', isCustom: false });
 };
 
 const removeModelTypeRoot = (index) => {
@@ -871,7 +1160,21 @@ const removeTrimName = (index) => {
 
 const save = async () => {
   saving.value = true;
-  const success = await settings.saveSettings(localSettings);
+  // Clean up isCustom UI flags before saving settings payload
+  const payload = JSON.parse(JSON.stringify(localSettings));
+  if (Array.isArray(payload.filenameFormats)) {
+    payload.filenameFormats = payload.filenameFormats.map(f => {
+      const { isCustom, ...rest } = f;
+      return rest;
+    });
+  }
+  if (Array.isArray(payload.modelTypeRoots)) {
+    payload.modelTypeRoots = payload.modelTypeRoots.map(r => {
+      const { isCustom, ...rest } = r;
+      return rest;
+    });
+  }
+  const success = await settings.saveSettings(payload);
   saving.value = false;
   
   if (success) {
@@ -981,18 +1284,27 @@ const cleanJsonFiles = async () => {
   position: sticky;
   top: 0;
   z-index: 2;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.settings-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-btn {
   flex: 1;
-  padding: 12px;
+  padding: 12px 6px;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
   color: var(--color-text-secondary);
   font-weight: 600;
+  font-size: 0.88em;
+  white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s;
+  text-align: center;
 }
 
 .tab-btn:hover {
@@ -1394,25 +1706,117 @@ const cleanJsonFiles = async () => {
   font-size: 0.92em;
 }
 
-.columns-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* Table Column Reordering Cards */
+.columns-reorder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px 14px;
 }
 
-.column-reorder-item {
+.column-reorder-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  background-color: var(--color-bg-tertiary);
-  border-radius: var(--border-radius-sm);
-  border: 1px solid var(--color-border);
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: all 0.2s ease;
+}
+
+.column-reorder-card:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.column-reorder-card:has(input:checked) {
+  background-color: rgba(52, 152, 219, 0.07);
+  border-color: rgba(52, 152, 219, 0.28);
+}
+
+.column-checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  flex: 1;
+  user-select: none;
+}
+
+.column-checkbox-label input[type="checkbox"] {
+  margin-top: 3px;
+  cursor: pointer;
+  accent-color: var(--color-btn-primary, #3498db);
+  flex-shrink: 0;
+}
+
+.column-info-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
 }
 
 .reorder-controls {
   display: flex;
   gap: 5px;
+}
+
+/* List Header & Row Cards for Formatting & Roots */
+.list-header-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 14px 4px 14px;
+}
+
+.list-header-col {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.list-row-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: all 0.2s ease;
+}
+
+.list-row-card:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.input-with-label {
+  display: flex;
+  flex-direction: column;
+}
+
+.btn-icon-toggle {
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border, #3a3a3a);
+  color: var(--color-text-secondary, #aaa);
+  border-radius: var(--border-radius-sm, 4px);
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.btn-icon-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--color-text, #fff);
+  border-color: var(--color-btn-primary, #3498db);
 }
 
 .section-help {
@@ -1423,10 +1827,11 @@ const cleanJsonFiles = async () => {
 }
 
 .section-help code {
-  background-color: var(--color-bg-tertiary);
+  background-color: rgba(255, 255, 255, 0.06);
   padding: 2px 6px;
   border-radius: 4px;
   font-family: monospace;
+  color: var(--color-btn-primary, #3498db);
 }
 
 .modal-footer {
@@ -1447,27 +1852,30 @@ const cleanJsonFiles = async () => {
 .tags-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   max-height: 400px;
   overflow-y: auto;
   padding-right: 5px;
 }
 
 .tag-chip {
-  background-color: var(--color-bg-tertiary);
-  border: 1px solid var(--color-border);
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 6px 12px;
   border-radius: 20px;
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: monospace;
-  font-size: 0.9em;
-  transition: border-color 0.2s;
+  font-size: 0.88em;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  color: var(--color-text, #eee);
 }
 
 .tag-chip:hover {
-  border-color: var(--color-text-secondary);
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
 }
 
 .btn-remove-tag {
@@ -1479,11 +1887,14 @@ const cleanJsonFiles = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1em;
-  transition: color 0.2s;
+  font-size: 1em;
+  transition: color 0.2s, transform 0.2s;
+  opacity: 0.75;
 }
 
 .btn-remove-tag:hover {
   color: #c0392b;
+  opacity: 1;
+  transform: scale(1.15);
 }
 </style>

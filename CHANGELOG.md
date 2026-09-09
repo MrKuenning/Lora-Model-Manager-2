@@ -1,5 +1,23 @@
 # Lora Model Manager - Changelog
 
+### 09/09/2026 - v2.2.5
+
+**Added**
+- **Dynamic Base Model Dropdowns (File Names & Folder Roots)**:
+  - Added dropdown selection for existing base models in both **File Names** (filename formatting rules) and **Folder Roots** (root path mappings) tabs.
+  - Dynamically populates with unique base models found in the model library as well as standard architectures.
+  - Automatically filters out any base model already configured in preceding rows so only unused base models appear as selectable options.
+  - Added quick-toggle capability (`+ Enter Custom Model Type...` and list/pen buttons) allowing users to switch seamlessly between dropdown selection and custom text input.
+  - Sanitized runtime UI flags upon saving to keep `config.json` clean.
+
+**Changed**
+- **Settings Modal Tabs Modernization & Logical Ordering**:
+  - Reorganized the 9 Settings tabs into an intuitive workflow order: `General` -> `Views` -> `Grid View` -> `Table View` -> `Safe Mode` -> `File Names` -> `Folder Roots` -> `Trim Names` -> `Scanner`.
+  - Upgraded all Settings tabs to the modern border-separated design with color-coded preview tags, contextual help descriptions, and removed box card backgrounds.
+- **Compact List Header Layout**:
+  - Replaced repetitive row-by-row labels in **File Names** and **Folder Roots** tabs with a single, clear column header row (`Base Model / Model Type` and `Format Pattern / Template` or `Root Folder Destination / Root Path`) displayed once above the list.
+  - Compacted individual row cards to align inputs and action buttons horizontally for a cleaner, higher-density configuration view.
+
 ### 09/09/2026 - v2.2.4
 
 **Added**
