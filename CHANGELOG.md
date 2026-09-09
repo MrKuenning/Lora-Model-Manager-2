@@ -1,5 +1,22 @@
 # Lora Model Manager - Changelog
 
+### 09/09/2026 - v2.2.4
+
+**Added**
+- **Grid Card Customization & Badge Controls**:
+  - Added dedicated Badge settings in the Grid Card tab to individually toggle the visibility of **NSFW**, **Slider**, and **Tested** badges.
+  - Added **Truncated Badge Icons** mode displaying compact circular icon badges (`⊘`, `↔`, `✓`) instead of wide text banners.
+  - Added metadata visibility toggles for tags displayed below the model title: **Slider Range**, **Folder Path**, **Category**, **Base Model**, and **High / Low**.
+  - Added **Folder Path Truncation** option to automatically shorten paths to the last two folders (e.g., `Style/Retro` instead of `Models/Anime/Style/Retro`).
+  - Added **Action Buttons Bar** configuration: toggle the entire action bar, individual buttons (Trigger Words, Civitai Link, Details Modal), and choose between standard bottom placement or semi-transparent **Image Overlay**.
+  - Implemented glassmorphic, semi-transparent image action bar buttons with blur and hover micro-animations directly over the bottom of model card thumbnails.
+
+**Changed**
+- **Settings UI Modernization & Color-Coded Previews**:
+  - Removed heavy section box backgrounds across Settings modal tabs in favor of a clean, seamless dark layout with subtle dividers.
+  - Added colorful, visual preview badges and pills throughout the **General**, **View Settings**, **Safe Mode**, **Grid Card**, and **Scanner** tabs matching the exact UI elements they configure (e.g. red NSFW, purple Slider, green Tested, blue Civitai links, amber folder tags, and status shields).
+- **Clean FontAwesome Icon Integration**: Replaced missing Civitai logo image in ModelCard with FontAwesome external link icon to avoid 404 broken image assets.
+
 ### 09/09/2026 - v2.2.3
 
 **Added**

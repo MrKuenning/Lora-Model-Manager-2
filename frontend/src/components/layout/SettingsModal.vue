@@ -22,113 +22,218 @@
         <div class="settings-content">
           <!-- General Tab -->
           <div v-if="activeTab === 'general'" class="settings-section">
-            <div class="setting-group">
-              <label>Server Port</label>
-              <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
-                <input type="number" v-model.number="localSettings.port" class="form-control" placeholder="8080" min="1" max="65535" style="max-width: 160px;">
-                <label class="checkbox-label" style="margin: 0; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
-                  <input type="checkbox" v-model="localSettings.autoOpenBrowser">
-                  <strong>Automatically open browser on server start</strong>
-                </label>
+            <!-- Server & Startup -->
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Server & Launch Configuration</h3>
+                <span class="variables-help">Network port and automatic startup options</span>
               </div>
-              <small>Port used by the backend Flask server (requires server restart to take effect)</small>
-              <div v-if="isRestrictedPort(localSettings.port)" class="warning-text" style="margin-top: 5px; margin-bottom: 0;">
-                <i class="fas fa-exclamation-triangle"></i> Port {{ localSettings.port }} is blocked by web browsers for security (ERR_UNSAFE_PORT). Please use ports like 8080, 8000, 5000, 3000, or 8888.
+              
+              <div class="setting-row-2col" style="margin-top: 6px;">
+                <div class="setting-group">
+                  <div class="checkbox-title-row">
+                    <label style="margin: 0;"><i class="fas fa-network-wired" style="color: #3498db;"></i> Server Port</label>
+                    <span class="preview-meta-tag"><i class="fas fa-server" style="color: #3498db;"></i> Port {{ localSettings.port || 8080 }}</span>
+                  </div>
+                  <input type="number" v-model.number="localSettings.port" class="form-control" placeholder="8080" min="1" max="65535">
+                  <small>Backend Flask server port (requires server restart to take effect)</small>
+                  <div v-if="isRestrictedPort(localSettings.port)" class="warning-text" style="margin-top: 5px; margin-bottom: 0;">
+                    <i class="fas fa-exclamation-triangle"></i> Port {{ localSettings.port }} is blocked by web browsers for security (ERR_UNSAFE_PORT). Please use ports like 8080, 8000, 5000, 3000, or 8888.
+                  </div>
+                </div>
+
+                <div class="setting-group">
+                  <div class="checkbox-title-row">
+                    <label style="margin: 0;"><i class="fas fa-desktop" style="color: #2ecc71;"></i> Browser Launch</label>
+                  </div>
+                  <label class="checkbox-desc-item" style="height: 100%;">
+                    <input type="checkbox" v-model="localSettings.autoOpenBrowser">
+                    <div class="checkbox-text">
+                      <div class="checkbox-title-row">
+                        <span class="checkbox-title">Auto-Open Browser</span>
+                        <span class="preview-badge badge-tested"><i class="fas fa-external-link-alt"></i> Launch</span>
+                      </div>
+                      <span class="checkbox-desc">Automatically open WebUI in your default browser on server start</span>
+                    </div>
+                  </label>
+                </div>
               </div>
             </div>
-            
-            <div class="setting-group">
-              <label>LoRA Models Directory</label>
-              <div class="input-with-button">
-                <input type="text" v-model="localSettings.modelsDirectory" class="form-control" placeholder="e.g. C:\AI\Models\LoRA">
-                <button class="btn btn-secondary" @click="browseForFolder('modelsDirectory')"><i class="fas fa-folder-open"></i> Browse</button>
+
+            <!-- Model Storage Directories -->
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Model Storage Directories</h3>
+                <span class="variables-help">Primary root directories containing your model collections</span>
               </div>
-              <small>Path to your primary LoRA models folder</small>
+
+              <div class="setting-group" style="margin-top: 6px;">
+                <div class="checkbox-title-row">
+                  <label style="margin: 0;"><i class="fas fa-layer-group" style="color: #9b59b6;"></i> LoRA Models Directory</label>
+                  <span class="preview-meta-tag"><i class="fas fa-shapes" style="color: #9b59b6;"></i> LoRA Library</span>
+                </div>
+                <div class="input-with-button">
+                  <input type="text" v-model="localSettings.modelsDirectory" class="form-control" placeholder="e.g. C:\AI\Models\LoRA">
+                  <button class="btn btn-secondary" @click="browseForFolder('modelsDirectory')"><i class="fas fa-folder-open"></i> Browse</button>
+                </div>
+                <small>Path to your primary LoRA models folder</small>
+              </div>
+
+              <div class="setting-group" style="margin-top: 6px;">
+                <div class="checkbox-title-row">
+                  <label style="margin: 0;"><i class="fas fa-cube" style="color: #2ecc71;"></i> Checkpoints Directory</label>
+                  <span class="preview-meta-tag"><i class="fas fa-cubes" style="color: #2ecc71;"></i> Base Models</span>
+                </div>
+                <div class="input-with-button">
+                  <input type="text" v-model="localSettings.checkpointsDirectory" class="form-control" placeholder="e.g. C:\AI\Models\Stable-Diffusion">
+                  <button class="btn btn-secondary" @click="browseForFolder('checkpointsDirectory')"><i class="fas fa-folder-open"></i> Browse</button>
+                </div>
+                <small>Path to your primary Checkpoint models folder</small>
+              </div>
             </div>
-            
-            <div class="setting-group">
-              <label>Checkpoints Directory</label>
-              <div class="input-with-button">
-                <input type="text" v-model="localSettings.checkpointsDirectory" class="form-control" placeholder="e.g. C:\AI\Models\Stable-Diffusion">
-                <button class="btn btn-secondary" @click="browseForFolder('checkpointsDirectory')"><i class="fas fa-folder-open"></i> Browse</button>
+
+            <!-- Workflow Directories -->
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Workflow Directories</h3>
+                <span class="variables-help">Paths for incoming downloads and file processing queues</span>
               </div>
-              <small>Path to your primary Checkpoint models folder</small>
-            </div>
-            
-            <div class="setting-group">
-              <label>Default Download Directory</label>
-              <div class="input-with-button">
-                <input type="text" v-model="localSettings.defaultDownloadDirectory" class="form-control" placeholder="e.g. C:\AI\Downloads">
-                <button class="btn btn-secondary" @click="browseForFolder('defaultDownloadDirectory')"><i class="fas fa-folder-open"></i> Browse</button>
+
+              <div class="setting-group" style="margin-top: 6px;">
+                <div class="checkbox-title-row">
+                  <label style="margin: 0;"><i class="fas fa-download" style="color: #3498db;"></i> Default Download Directory</label>
+                  <span class="preview-meta-tag"><i class="fas fa-cloud-download-alt" style="color: #3498db;"></i> Incoming</span>
+                </div>
+                <div class="input-with-button">
+                  <input type="text" v-model="localSettings.defaultDownloadDirectory" class="form-control" placeholder="e.g. C:\AI\Downloads">
+                  <button class="btn btn-secondary" @click="browseForFolder('defaultDownloadDirectory')"><i class="fas fa-folder-open"></i> Browse</button>
+                </div>
+                <small>Default folder path where newly downloaded models will be saved</small>
               </div>
-              <small>Default folder path where newly downloaded models will be saved</small>
-            </div>
-            
-            <div class="setting-group">
-              <label>Default Sorting Directory</label>
-              <div class="input-with-button">
-                <input type="text" v-model="localSettings.defaultSortingDirectory" class="form-control" placeholder="e.g. C:\AI\Sorting">
-                <button class="btn btn-secondary" @click="browseForFolder('defaultSortingDirectory')"><i class="fas fa-folder-open"></i> Browse</button>
+
+              <div class="setting-group" style="margin-top: 6px;">
+                <div class="checkbox-title-row">
+                  <label style="margin: 0;"><i class="fas fa-random" style="color: #e67e22;"></i> Default Sorting Directory</label>
+                  <span class="preview-meta-tag"><i class="fas fa-inbox" style="color: #e67e22;"></i> Sorting Queue</span>
+                </div>
+                <div class="input-with-button">
+                  <input type="text" v-model="localSettings.defaultSortingDirectory" class="form-control" placeholder="e.g. C:\AI\Sorting">
+                  <button class="btn btn-secondary" @click="browseForFolder('defaultSortingDirectory')"><i class="fas fa-folder-open"></i> Browse</button>
+                </div>
+                <small>Default folder path used for processing/sorting unorganized models</small>
               </div>
-              <small>Default folder path used for processing/sorting unorganized models</small>
             </div>
           </div>
           
           <!-- Views Tab -->
           <div v-if="activeTab === 'views'" class="settings-section">
-            <div class="setting-group">
-              <label>Default View</label>
-              <select v-model="localSettings.defaultView" class="form-control">
-                <option value="grid">Grid View</option>
-                <option value="table">Table View</option>
-              </select>
+            <!-- Default View & Sorting -->
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Default View & Sorting</h3>
+                <span class="variables-help">Initial library presentation and model sorting order</span>
+              </div>
+
+              <div class="setting-row-2col" style="margin-top: 10px;">
+                <div class="setting-group">
+                  <div class="checkbox-title-row">
+                    <label style="margin: 0;">Default View</label>
+                    <span class="preview-meta-tag">
+                      <i :class="localSettings.defaultView === 'grid' ? 'fas fa-th-large' : 'fas fa-table'" style="color: #3498db;"></i>
+                      {{ localSettings.defaultView === 'grid' ? 'Grid Cards' : 'Table View' }}
+                    </span>
+                  </div>
+                  <select v-model="localSettings.defaultView" class="form-control">
+                    <option value="grid">Grid View (Cards)</option>
+                    <option value="table">Table View (Detailed rows)</option>
+                  </select>
+                  <small>Default display layout when opening libraries</small>
+                </div>
+
+                <div class="setting-group">
+                  <div class="checkbox-title-row">
+                    <label style="margin: 0;">Default Sort Order</label>
+                    <span class="preview-meta-tag">
+                      <i class="fas fa-sort-amount-down" style="color: #9b59b6;"></i> Sorted
+                    </span>
+                  </div>
+                  <select v-model="localSettings.defaultSort" class="form-control">
+                    <option value="name-asc">Name (A-Z)</option>
+                    <option value="name-desc">Name (Z-A)</option>
+                    <option value="date-desc">Date (Newest)</option>
+                    <option value="date-asc">Date (Oldest)</option>
+                    <option value="size-desc">Size (Largest)</option>
+                    <option value="size-asc">Size (Smallest)</option>
+                  </select>
+                  <small>Default order when models load</small>
+                </div>
+              </div>
             </div>
-            
-            <div class="setting-group">
-              <label>Default Sort</label>
-              <select v-model="localSettings.defaultSort" class="form-control">
-                <option value="name-asc">Name (A-Z)</option>
-                <option value="name-desc">Name (Z-A)</option>
-                <option value="date-desc">Date (Newest)</option>
-                <option value="date-asc">Date (Oldest)</option>
-                <option value="size-desc">Size (Largest)</option>
-                <option value="size-asc">Size (Smallest)</option>
-              </select>
-            </div>
-            
-            <div class="setting-group">
-              <label class="checkbox-label" style="margin-top: 10px;">
-                <input type="checkbox" v-model="localSettings.filterFoldersWithBaseModel">
-                <strong>Filter folders with base model filter</strong>
-              </label>
-              <small style="margin-left: 24px;">When enabled, the folder list will only show folders containing models that match your current base model filter.</small>
+
+            <!-- Folder Tree Filtering -->
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Folder Navigation & Filtering</h3>
+                <span class="variables-help">Sidebar folder tree behavior and dynamic filtering</span>
+              </div>
+
+              <div class="checkbox-desc-grid" style="margin-top: 10px;">
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.filterFoldersWithBaseModel">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Filter Folders with Base Model Filter</span>
+                      <span class="preview-meta-tag"><i class="fas fa-filter" style="color: #e67e22;"></i> Smart Filter</span>
+                    </div>
+                    <span class="checkbox-desc">Only show folders containing models that match your current base model filter (e.g. SDXL, Pony, Flux)</span>
+                  </div>
+                </label>
+              </div>
             </div>
           </div>
           
           <!-- Safe Mode Tab -->
           <div v-if="activeTab === 'safemode'" class="settings-section">
-            <div class="setting-group">
-              <label class="checkbox-label" style="margin-top: 10px;">
-                <input type="checkbox" v-model="localSettings.safeModeDefault">
-                <strong>Safe Mode: Enabled by default</strong>
-              </label>
-              <small style="margin-left: 24px;">When checked, Safe Mode is on for new sessions or server starts. If unchecked, it starts disabled.</small>
-            </div>
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Content Safety & NSFW Protection</h3>
+                <span class="variables-help">Startup protection defaults and NSFW image visibility</span>
+              </div>
 
-            <div class="setting-group">
-              <label class="checkbox-label" style="margin-top: 10px;">
-                <input type="checkbox" v-model="localSettings.safeModeOnReload">
-                <strong>Safe Mode: Enabled on reload</strong>
-              </label>
-              <small style="margin-left: 24px;">When checked, refreshing the page always resets Safe Mode to its default state. When unchecked, it remembers your current state.</small>
-            </div>
-            
-            <div class="setting-group">
-              <label class="checkbox-label" style="margin-top: 10px;">
-                <input type="checkbox" v-model="localSettings.nsfwBlurOverlay">
-                <strong>Blur NSFW Images by default</strong>
-              </label>
-              <small style="margin-left: 24px;">When enabled, NSFW images will be blurred until clicked.</small>
+              <div class="checkbox-desc-grid" style="margin-top: 10px;">
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.safeModeDefault">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Enabled by Default</span>
+                      <span class="preview-badge badge-tested"><i class="fas fa-shield-alt"></i> Protected</span>
+                    </div>
+                    <span class="checkbox-desc">Safe Mode starts enabled on new browser sessions or server restarts to safeguard adult content</span>
+                  </div>
+                </label>
+
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.safeModeOnReload">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Reset on Page Reload</span>
+                      <span class="preview-meta-tag"><i class="fas fa-redo-alt" style="color: #3498db;"></i> Auto-Lock</span>
+                    </div>
+                    <span class="checkbox-desc">Refreshing the browser re-engages Safe Mode instead of remembering temporary unshielded state</span>
+                  </div>
+                </label>
+
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.nsfwBlurOverlay">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Blur NSFW Images</span>
+                      <span class="preview-badge badge-nsfw"><i class="fas fa-eye-slash"></i> Blurred</span>
+                    </div>
+                    <span class="checkbox-desc">Applies a frosted glass blur overlay on adult-rated model previews until clicked to reveal</span>
+                  </div>
+                </label>
+              </div>
             </div>
           </div>
           
@@ -152,59 +257,245 @@
           </div>
           
           <!-- Grid Card Tab -->
-          <div v-if="activeTab === 'grid'" class="settings-section columns-grid">
-            <div class="setting-group" style="grid-column: 1 / -1; display: flex; gap: 20px;">
-              <div style="flex: 1;">
-                <label>Card Title Display</label>
-                <select v-model="localSettings.gridCard.titleDisplay" class="form-control">
-                  <option value="modelName">Model Name</option>
-                  <option value="fileName">File Name</option>
-                </select>
+          <div v-if="activeTab === 'grid'" class="settings-section grid-card-settings">
+            
+            <!-- Card Appearance Section -->
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Card Appearance</h3>
+                <span class="variables-help">Title format and card dimensions</span>
               </div>
-              <div style="flex: 1;">
-                <label>Card Size</label>
-                <select v-model="localSettings.gridCard.cardSize" class="form-control">
-                  <option value="small">Small</option>
-                  <option value="medium">Medium</option>
-                  <option value="large">Large</option>
-                </select>
+              <div class="setting-row-2col" style="margin-top: 10px;">
+                <div class="setting-group">
+                  <label>Card Title Display</label>
+                  <select v-model="localSettings.gridCard.titleDisplay" class="form-control">
+                    <option value="modelName">Model Name</option>
+                    <option value="fileName">File Name</option>
+                  </select>
+                  <small>Header displays friendly model name or file name.</small>
+                </div>
+                <div class="setting-group">
+                  <label>Card Size</label>
+                  <select v-model="localSettings.gridCard.cardSize" class="form-control">
+                    <option value="small">Small (Compact view)</option>
+                    <option value="medium">Medium (Standard view)</option>
+                    <option value="large">Large (High-detail view)</option>
+                  </select>
+                  <small>Default card thumbnail size across library grids.</small>
+                </div>
               </div>
             </div>
 
-            <div class="settings-header" style="grid-column: 1 / -1; margin-top: 15px; margin-bottom: 0;">
-              <h3 style="margin: 0;">Tags</h3>
-            </div>
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="localSettings.gridCard.showBaseModel"> Show Base Model Tag
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="localSettings.gridCard.showCategory"> Show Category Tag
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="localSettings.gridCard.showHighLow"> Show High/Low Tag
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="localSettings.gridCard.showFolder"> Show Folder Tag
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="localSettings.gridCard.showNsfwBadge"> Show NSFW Badge
-            </label>
+            <!-- Image Badges Section -->
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Image Badges</h3>
+                <span class="variables-help">Banners and icon overlays displayed over the preview thumbnail</span>
+              </div>
 
-            <div class="settings-header" style="grid-column: 1 / -1; margin-top: 15px; margin-bottom: 0;">
-              <h3 style="margin: 0;">Action Buttons</h3>
+              <div class="checkbox-desc-grid" style="margin-top: 10px;">
+                <!-- Truncated Badge Style -->
+                <label class="checkbox-desc-item">
+                  <input 
+                    type="checkbox" 
+                    :checked="localSettings.gridCard.badgeStyle === 'truncated'" 
+                    @change="localSettings.gridCard.badgeStyle = $event.target.checked ? 'truncated' : 'full'"
+                  >
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Truncated Badge Icons</span>
+                      <div class="badge-preview-row">
+                        <span class="preview-mini-icon badge-nsfw"><i class="fas fa-ban"></i></span>
+                        <span class="preview-mini-icon badge-slider"><i class="fas fa-arrows-alt-h"></i></span>
+                        <span class="preview-mini-icon badge-tested"><i class="fas fa-check"></i></span>
+                      </div>
+                    </div>
+                    <span class="checkbox-desc">Show compact circular icons instead of wide text banners</span>
+                  </div>
+                </label>
+
+                <!-- NSFW Badge -->
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.gridCard.showNsfwBadge">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">NSFW Badge</span>
+                      <span class="preview-badge badge-nsfw">NSFW</span>
+                    </div>
+                    <span class="checkbox-desc">Red indicator on models flagged as adult or NSFW content</span>
+                  </div>
+                </label>
+
+                <!-- Slider Badge -->
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.gridCard.showSliderBadge">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Slider Badge</span>
+                      <span class="preview-badge badge-slider">Slider</span>
+                    </div>
+                    <span class="checkbox-desc">Purple indicator on LoRAs with weight ranges</span>
+                  </div>
+                </label>
+
+                <!-- Tested Badge -->
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.gridCard.showTestedBadge">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Tested Badge</span>
+                      <span class="preview-badge badge-tested"><i class="fas fa-check"></i> Tested</span>
+                    </div>
+                    <span class="checkbox-desc">Green indicator on models verified and marked as tested</span>
+                  </div>
+                </label>
+              </div>
             </div>
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="localSettings.gridCard.showActions"> Show Action Buttons Bar
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="localSettings.gridCard.showCopyTriggerWords"> Show Copy Trigger Words
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="localSettings.gridCard.showUrlButton"> Show URL Button
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="localSettings.gridCard.showInfoButton"> Show Info Button
-            </label>
+
+            <!-- Display Below Title Section -->
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Display Below Title</h3>
+                <span class="variables-help">Metadata tags shown under the model title</span>
+              </div>
+
+              <div class="checkbox-desc-grid" style="margin-top: 10px;">
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.gridCard.showSliderRange">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Slider Range</span>
+                      <span class="preview-meta-tag"><i class="fas fa-sliders-h" style="color: #9b59b6;"></i> -3 to 3</span>
+                    </div>
+                    <span class="checkbox-desc">Displays numeric weight bounds</span>
+                  </div>
+                </label>
+
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.gridCard.showFolder">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Folder Path</span>
+                      <span class="preview-meta-tag"><i class="fas fa-folder-open" style="color: #f39c12;"></i> Styles</span>
+                    </div>
+                    <span class="checkbox-desc">Displays the folder directory location</span>
+                  </div>
+                </label>
+
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.gridCard.showCategory">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Category</span>
+                      <span class="preview-meta-tag"><i class="fas fa-folder" style="color: #3498db;"></i> Clothing</span>
+                    </div>
+                    <span class="checkbox-desc">Displays the assigned category tag</span>
+                  </div>
+                </label>
+
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.gridCard.showBaseModel">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Base Model</span>
+                      <span class="preview-meta-tag"><i class="fas fa-cube" style="color: #2ecc71;"></i> SDXL</span>
+                    </div>
+                    <span class="checkbox-desc">Displays architecture (SDXL, Pony, Flux)</span>
+                  </div>
+                </label>
+
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.gridCard.showHighLow">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">High / Low</span>
+                      <span class="preview-meta-tag"><i class="fas fa-layer-group" style="color: #e67e22;"></i> High</span>
+                    </div>
+                    <span class="checkbox-desc">Displays strength classification</span>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Sub-Option: Folder Truncation -->
+              <div v-if="localSettings.gridCard.showFolder" class="sub-setting-indent" style="margin-top: 8px;">
+                <label class="checkbox-desc-item" style="border: none; background: transparent; padding: 0;">
+                  <input type="checkbox" v-model="localSettings.gridCard.truncateFolder">
+                  <div class="checkbox-text">
+                    <span class="checkbox-title">Truncate Folder Path to Last Two Folders</span>
+                    <span class="checkbox-desc">Shortens paths to save space (e.g. Models/Anime/Style/Retro → Style/Retro)</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Action Buttons Bar Section -->
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Action Buttons Bar</h3>
+                <span class="variables-help">Quick actions and button placement</span>
+              </div>
+
+              <label class="checkbox-desc-item" style="margin-top: 10px; margin-bottom: 6px;">
+                <input type="checkbox" v-model="localSettings.gridCard.showActions">
+                <div class="checkbox-text">
+                  <span class="checkbox-title">Enable Action Buttons Bar</span>
+                  <span class="checkbox-desc">Displays quick one-click action buttons on each model card</span>
+                </div>
+              </label>
+
+              <template v-if="localSettings.gridCard.showActions">
+                <div class="checkbox-desc-grid" style="margin-top: 6px;">
+                  <label class="checkbox-desc-item">
+                    <input 
+                      type="checkbox" 
+                      :checked="localSettings.gridCard.actionsPosition === 'overlay'" 
+                      @change="localSettings.gridCard.actionsPosition = $event.target.checked ? 'overlay' : 'bottom'"
+                    >
+                    <div class="checkbox-text">
+                      <div class="checkbox-title-row">
+                        <span class="checkbox-title">Place on Image Overlay</span>
+                        <span class="preview-mini-action"><i class="fas fa-layer-group"></i> Overlay</span>
+                      </div>
+                      <span class="checkbox-desc">Semi-transparent buttons over bottom of image</span>
+                    </div>
+                  </label>
+
+                  <label class="checkbox-desc-item">
+                    <input type="checkbox" v-model="localSettings.gridCard.showCopyTriggerWords">
+                    <div class="checkbox-text">
+                      <div class="checkbox-title-row">
+                        <span class="checkbox-title">Copy Trigger Words</span>
+                        <span class="preview-mini-action"><i class="fas fa-magic" style="color: #9b59b6;"></i> <i class="fas fa-comment-dots" style="color: #3498db;"></i></span>
+                      </div>
+                      <span class="checkbox-desc">Activation words and prompt buttons</span>
+                    </div>
+                  </label>
+
+                  <label class="checkbox-desc-item">
+                    <input type="checkbox" v-model="localSettings.gridCard.showUrlButton">
+                    <div class="checkbox-text">
+                      <div class="checkbox-title-row">
+                        <span class="checkbox-title">Civitai URL Button</span>
+                        <span class="preview-mini-action"><i class="fas fa-external-link-alt" style="color: #3498db;"></i> Civitai</span>
+                      </div>
+                      <span class="checkbox-desc">Opens model page on Civitai</span>
+                    </div>
+                  </label>
+
+                  <label class="checkbox-desc-item">
+                    <input type="checkbox" v-model="localSettings.gridCard.showInfoButton">
+                    <div class="checkbox-text">
+                      <div class="checkbox-title-row">
+                        <span class="checkbox-title">Info / Details Button</span>
+                        <span class="preview-mini-action"><i class="fas fa-info-circle" style="color: #2ecc71;"></i> Details</span>
+                      </div>
+                      <span class="checkbox-desc">Opens full model details modal</span>
+                    </div>
+                  </label>
+                </div>
+              </template>
+            </div>
+
           </div>
           
           <!-- Formatting Tab -->
@@ -289,40 +580,104 @@
           </div>
           
           <!-- Scanner Tab -->
-          <div v-if="activeTab === 'scanner'" class="settings-section columns-grid">
-            <div class="setting-group" style="grid-column: 1 / -1;">
-              <label>Civitai API Key (Optional)</label>
-              <input type="password" v-model="localSettings.civitaiApiKey" class="form-control" placeholder="Enter your Civitai API Key">
-              <small>If provided, the app will attach your API token to Civitai requests (enabling download of restricted/early-access models and thumbnails).</small>
+          <div v-if="activeTab === 'scanner'" class="settings-section">
+            <!-- API Authentication & Rate Limiting -->
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Civitai Authentication & Rate Limiting</h3>
+                <span class="variables-help">API credentials and request delay throttling</span>
+              </div>
+
+              <div class="setting-row-2col" style="margin-top: 10px;">
+                <div class="setting-group">
+                  <div class="checkbox-title-row">
+                    <label style="margin: 0;"><i class="fas fa-key" style="color: #f1c40f;"></i> Civitai API Key (Optional)</label>
+                    <span class="preview-meta-tag"><i class="fas fa-shield-alt" style="color: #f1c40f;"></i> API Key</span>
+                  </div>
+                  <input type="password" v-model="localSettings.civitaiApiKey" class="form-control" placeholder="Enter your Civitai API Key">
+                  <small>Required to download restricted, early-access, or member-only model metadata & thumbnails</small>
+                </div>
+
+                <div class="setting-group">
+                  <div class="checkbox-title-row">
+                    <label style="margin: 0;"><i class="fas fa-stopwatch" style="color: #e67e22;"></i> Delay Between Requests</label>
+                    <span class="preview-meta-tag"><i class="fas fa-tachometer-alt" style="color: #e67e22;"></i> Rate Limit</span>
+                  </div>
+                  <input type="number" step="0.1" min="0" v-model="localSettings.scanSettings.delayBetweenRequests" class="form-control" placeholder="Seconds">
+                  <small>Throttles bulk scanning speed to avoid Civitai HTTP 429 rate limit errors (in seconds)</small>
+                </div>
+              </div>
             </div>
 
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="localSettings.scanSettings.skipExistingData"> Skip models with existing Civitai data
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="localSettings.scanSettings.skipNsfwPreviews"> Skip NSFW preview images
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="localSettings.scanSettings.downloadMaxSize"> Download full-size preview images
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="localSettings.scanSettings.fetchCreatorInfo"> Fetch creator info from API (slower)
-            </label>
-            
-            <div class="setting-group" style="margin-top: 20px;">
-              <label>Delay between requests (seconds)</label>
-              <input type="number" step="0.1" min="0" v-model="localSettings.scanSettings.delayBetweenRequests" class="form-control" style="width: 100px;">
-              <small>Controls how fast the bulk scanner hits the Civitai API to avoid rate limiting.</small>
+            <!-- Scanning Preferences -->
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Scanning Preferences</h3>
+                <span class="variables-help">Control which models to scan and what assets to download</span>
+              </div>
+
+              <div class="checkbox-desc-grid" style="margin-top: 10px;">
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.scanSettings.skipExistingData">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Skip Existing Data</span>
+                      <span class="preview-meta-tag"><i class="fas fa-forward" style="color: #3498db;"></i> Skip</span>
+                    </div>
+                    <span class="checkbox-desc">Only scan models that do not already have downloaded Civitai metadata</span>
+                  </div>
+                </label>
+
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.scanSettings.skipNsfwPreviews">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Skip NSFW Previews</span>
+                      <span class="preview-badge badge-nsfw"><i class="fas fa-ban"></i> Safe Only</span>
+                    </div>
+                    <span class="checkbox-desc">Prevents downloading preview images flagged with adult/NSFW content</span>
+                  </div>
+                </label>
+
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.scanSettings.downloadMaxSize">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Full-Size Previews</span>
+                      <span class="preview-meta-tag"><i class="fas fa-expand" style="color: #9b59b6;"></i> HD Images</span>
+                    </div>
+                    <span class="checkbox-desc">Downloads full resolution cover images instead of standard compressed thumbnails</span>
+                  </div>
+                </label>
+
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.scanSettings.fetchCreatorInfo">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Fetch Creator Info</span>
+                      <span class="preview-meta-tag"><i class="fas fa-user-circle" style="color: #2ecc71;"></i> Creator</span>
+                    </div>
+                    <span class="checkbox-desc">Pulls extended creator profile details and social links (slightly slower scan)</span>
+                  </div>
+                </label>
+              </div>
             </div>
-            
-            <div class="settings-header" style="grid-column: 1 / -1; margin-top: 15px; margin-bottom: 0;">
-              <h3 style="margin: 0;">Maintenance</h3>
-            </div>
-            <div class="setting-group" style="grid-column: 1 / -1;">
-              <button class="btn btn-secondary" @click="cleanJsonFiles" :disabled="cleaningJson">
-                <i class="fas fa-broom" :class="{'fa-spin': cleaningJson}"></i> {{ cleaningJson ? 'Cleaning...' : 'Clean JSON Files' }}
-              </button>
-              <small>Migrate any remaining .civitai.info files into standard .json metadata files and delete the old info files.</small>
+
+            <!-- Maintenance -->
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Library Maintenance</h3>
+                <span class="variables-help">Utilities for metadata cleanup and database consistency</span>
+              </div>
+
+              <div class="setting-group" style="margin-top: 10px;">
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                  <button class="btn btn-secondary" @click="cleanJsonFiles" :disabled="cleaningJson">
+                    <i class="fas fa-broom" :class="{'fa-spin': cleaningJson}"></i> {{ cleaningJson ? 'Cleaning...' : 'Clean JSON Files' }}
+                  </button>
+                  <small style="margin: 0; flex: 1;">Migrate any remaining legacy .civitai.info files into standard .json metadata files and delete the old info files.</small>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -419,14 +774,25 @@ onMounted(() => {
   
   // Grid card defaults
   const defaultGridCard = {
+    titleDisplay: 'modelName',
+    cardSize: 'medium',
+    showNsfwBadge: true,
+    showTestedBadge: true,
+    showSliderBadge: true,
+    badgeStyle: 'full',
     showBaseModel: true,
     showCategory: true,
+    showHighLow: true,
+    showSliderRange: true,
+    showFolder: true,
+    truncateFolder: false,
     showActions: true,
-    showCivitaiLink: true,
-    showNsfwBadge: true,
+    actionsPosition: 'bottom',
+    showCopyTriggerWords: true,
+    showUrlButton: true,
     showInfoButton: true
   };
-  localSettings.gridCard = JSON.parse(JSON.stringify(settings.gridCard || defaultGridCard));
+  localSettings.gridCard = Object.assign({}, defaultGridCard, settings.gridCard || {});
   
   localSettings.filenameFormats = JSON.parse(JSON.stringify(settings.filenameFormats || []));
   localSettings.modelTypeRoots = JSON.parse(JSON.stringify(settings.modelTypeRoots || []));
@@ -811,12 +1177,221 @@ const cleanJsonFiles = async () => {
   gap: 15px;
 }
 
+/* Clean Group Layouts without Card Backgrounds */
+.settings-group-clean {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 22px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings-group-clean:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.settings-header-clean {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-header-clean h3 {
+  margin: 0;
+  font-size: 1.05em;
+  font-weight: 600;
+  color: var(--color-text, #eee);
+  letter-spacing: 0.3px;
+}
+
+.settings-header-clean .variables-help {
+  font-size: 0.82em;
+  color: var(--color-text-secondary, #999);
+}
+
+.setting-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.checkbox-desc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px 16px;
+}
+
+.checkbox-desc-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  padding: 9px 12px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: all 0.2s ease;
+}
+
+.checkbox-desc-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.checkbox-desc-item:has(input:checked) {
+  background-color: rgba(52, 152, 219, 0.07);
+  border-color: rgba(52, 152, 219, 0.28);
+}
+
+.checkbox-desc-item input[type="checkbox"] {
+  margin-top: 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+  accent-color: var(--color-btn-primary, #3498db);
+}
+
+.checkbox-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+}
+
+.checkbox-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.checkbox-title {
+  font-size: 0.92em;
+  font-weight: 600;
+  color: var(--color-text, #eee);
+  line-height: 1.2;
+}
+
+.checkbox-desc {
+  font-size: 0.8em;
+  color: var(--color-text-secondary, #888);
+  line-height: 1.3;
+}
+
+/* Visual Settings Previews & Badges */
+.badge-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.preview-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.72em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
+}
+
+.preview-badge.badge-nsfw {
+  background-color: rgba(231, 76, 60, 0.95);
+  color: #ffffff;
+}
+
+.preview-badge.badge-slider {
+  background-color: rgba(155, 89, 182, 0.95);
+  color: #ffffff;
+}
+
+.preview-badge.badge-tested {
+  background-color: rgba(46, 204, 113, 0.95);
+  color: #ffffff;
+}
+
+.preview-mini-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.preview-mini-icon.badge-nsfw {
+  background-color: rgba(231, 76, 60, 0.95);
+}
+
+.preview-mini-icon.badge-slider {
+  background-color: rgba(155, 89, 182, 0.95);
+}
+
+.preview-mini-icon.badge-tested {
+  background-color: rgba(46, 204, 113, 0.95);
+}
+
+.preview-meta-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.75em;
+  font-weight: 600;
+  color: var(--color-text-secondary, #bbb);
+  flex-shrink: 0;
+}
+
+.preview-mini-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: rgba(35, 35, 35, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 0.75em;
+  font-weight: 500;
+  color: #ddd;
+  flex-shrink: 0;
+}
+
+.sub-setting-indent {
+  padding: 8px 14px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid var(--color-btn-primary, #3498db);
+  border-radius: 4px;
+  margin-top: 2px;
+}
+
+.setting-hint {
+  font-size: 0.85em;
+  color: var(--color-text-secondary, #888);
+  font-style: italic;
+}
+
 .checkbox-label {
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
   user-select: none;
+  font-size: 0.92em;
 }
 
 .columns-list {

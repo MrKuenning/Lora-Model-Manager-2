@@ -28,9 +28,49 @@
       
       <!-- Badges -->
       <div class="card-badges">
-        <div v-if="isNsfw && settings.gridCard.showNsfwBadge" class="card-badge badge-nsfw">NSFW</div>
-        <div v-if="isTested" class="icon-badge badge-tested" title="Tested"><i class="fas fa-check"></i></div>
-        <div v-if="isSlider" class="card-badge badge-slider" style="background: rgba(155, 89, 182, 0.85); color: #fff; font-weight: bold;" :title="'Slider Range: ' + sliderRangeText">Slider</div>
+        <!-- NSFW Badge -->
+        <template v-if="isNsfw && settings.gridCard?.showNsfwBadge !== false">
+          <div 
+            v-if="settings.gridCard?.badgeStyle === 'truncated'" 
+            class="icon-badge badge-nsfw" 
+            title="NSFW Content"
+          >
+            <i class="fas fa-ban"></i>
+          </div>
+          <div v-else class="card-badge badge-nsfw" title="NSFW Content">NSFW</div>
+        </template>
+
+        <!-- Tested Badge -->
+        <template v-if="isTested && settings.gridCard?.showTestedBadge !== false">
+          <div 
+            v-if="settings.gridCard?.badgeStyle === 'truncated'" 
+            class="icon-badge badge-tested" 
+            title="Tested Model"
+          >
+            <i class="fas fa-check"></i>
+          </div>
+          <div v-else class="card-badge badge-tested" title="Tested Model">
+            <i class="fas fa-check"></i> Tested
+          </div>
+        </template>
+
+        <!-- Slider Badge -->
+        <template v-if="isSlider && settings.gridCard?.showSliderBadge !== false">
+          <div 
+            v-if="settings.gridCard?.badgeStyle === 'truncated'" 
+            class="icon-badge badge-slider" 
+            :title="'Slider (' + sliderRangeText + ')'"
+          >
+            <i class="fas fa-arrows-alt-h"></i>
+          </div>
+          <div 
+            v-else 
+            class="card-badge badge-slider" 
+            :title="'Slider Range: ' + sliderRangeText"
+          >
+            Slider
+          </div>
+        </template>
       </div>
 
       <!-- Bulk Select Checkbox -->
@@ -42,8 +82,50 @@
         <i class="fas" :class="bulkStore.isSelected(model.id) ? 'fa-check-square' : 'fa-square'"></i>
       </div>
 
-      <!-- Info Overlay -->
-      <div class="info-overlay" v-if="settings.gridCard.showInfoButton">
+      <!-- Image Action Bar Overlay (when actionsPosition === 'overlay') -->
+      <div 
+        class="image-actions-overlay" 
+        v-if="!bulkStore.isBulkMode && settings.gridCard?.showActions && settings.gridCard?.actionsPosition === 'overlay'"
+        @click.stop
+      >
+        <button 
+          v-if="settings.gridCard?.showCopyTriggerWords" 
+          class="btn-overlay-action" 
+          @click.stop="copyActivationText" 
+          title="Copy Activation Text"
+        >
+          <i class="fas fa-magic"></i>
+        </button>
+        <button 
+          v-if="settings.gridCard?.showCopyTriggerWords" 
+          class="btn-overlay-action" 
+          @click.stop="copyExamplePrompt" 
+          title="Copy Example Prompt"
+        >
+          <i class="fas fa-comment-dots"></i>
+        </button>
+        <a 
+          v-if="(model.civitai_url || model.civitaiUrl) && settings.gridCard?.showUrlButton" 
+          :href="model.civitai_url || model.civitaiUrl" 
+          target="_blank" 
+          class="btn-overlay-action"
+          @click.stop
+          title="Open in Civitai"
+        >
+          <i class="fas fa-external-link-alt"></i>
+        </a>
+        <button 
+          v-if="settings.gridCard?.showInfoButton" 
+          class="btn-overlay-action" 
+          @click.stop="emit('open-model', model.id)" 
+          title="View Model Details"
+        >
+          <i class="fas fa-info-circle"></i>
+        </button>
+      </div>
+
+      <!-- Info Overlay (when actions are NOT on image overlay) -->
+      <div class="info-overlay" v-else-if="settings.gridCard?.showInfoButton">
         <button class="btn btn-icon" @click.stop="emit('open-model', model.id)" title="View Model Details">
           <i class="fas fa-info-circle"></i>
         </button>
@@ -54,40 +136,40 @@
       <h3 class="card-title" :title="settings.gridCard.titleDisplay === 'fileName' ? model.filename : model.name">{{ settings.gridCard.titleDisplay === 'fileName' ? getFilenameNoExt(model.filename) : model.name }}</h3>
       
       <div class="card-meta">
-        <span class="meta-tag" v-if="model.baseModel && settings.gridCard.showBaseModel" :title="'Base Model: ' + model.baseModel">
-          <i class="fas fa-cube"></i> {{ model.baseModel }}
-        </span>
-        <span class="meta-tag" v-if="model.category && settings.gridCard.showCategory" :title="'Category: ' + model.category">
-          <i class="fas fa-folder"></i> {{ model.category }}
-        </span>
-        <span class="meta-tag" v-if="(model.highLow || model.high_low) && settings.gridCard.showHighLow" :title="'High/Low: ' + (model.highLow || model.high_low)">
-          <i class="fas fa-layer-group"></i> {{ model.highLow || model.high_low }}
-        </span>
-        <span class="meta-tag" v-if="isSlider" :title="'Slider Range: ' + sliderRangeText">
+        <span class="meta-tag" v-if="isSlider && settings.gridCard?.showSliderRange !== false" :title="'Slider Range: ' + sliderRangeText">
           <i class="fas fa-sliders-h"></i> {{ sliderRangeText }}
         </span>
-        <span class="meta-tag" v-if="model.folder && settings.gridCard.showFolder" :title="'Folder: ' + model.folder">
-          <i class="fas fa-folder-open"></i> {{ model.folder }}
+        <span class="meta-tag" v-if="model.folder && settings.gridCard?.showFolder !== false" :title="'Folder: ' + model.folder">
+          <i class="fas fa-folder-open"></i> {{ displayedFolder }}
+        </span>
+        <span class="meta-tag" v-if="model.category && settings.gridCard?.showCategory !== false" :title="'Category: ' + model.category">
+          <i class="fas fa-folder"></i> {{ model.category }}
+        </span>
+        <span class="meta-tag" v-if="model.baseModel && settings.gridCard?.showBaseModel !== false" :title="'Base Model: ' + model.baseModel">
+          <i class="fas fa-cube"></i> {{ model.baseModel }}
+        </span>
+        <span class="meta-tag" v-if="(model.highLow || model.high_low) && settings.gridCard?.showHighLow !== false" :title="'High/Low: ' + (model.highLow || model.high_low)">
+          <i class="fas fa-layer-group"></i> {{ model.highLow || model.high_low }}
         </span>
       </div>
 
-      <!-- Quick action buttons -->
-      <div class="card-actions" v-if="!bulkStore.isBulkMode && settings.gridCard.showActions">
-        <button v-if="settings.gridCard.showCopyTriggerWords" class="btn btn-small btn-secondary" @click.stop="copyActivationText" title="Copy Activation Text">
+      <!-- Standard Quick action buttons (when actionsPosition !== 'overlay') -->
+      <div class="card-actions" v-if="!bulkStore.isBulkMode && settings.gridCard?.showActions && settings.gridCard?.actionsPosition !== 'overlay'">
+        <button v-if="settings.gridCard?.showCopyTriggerWords" class="btn btn-small btn-secondary" @click.stop="copyActivationText" title="Copy Activation Text">
           <i class="fas fa-magic"></i>
         </button>
-        <button v-if="settings.gridCard.showCopyTriggerWords" class="btn btn-small btn-secondary" @click.stop="copyExamplePrompt" title="Copy Example Prompt">
+        <button v-if="settings.gridCard?.showCopyTriggerWords" class="btn btn-small btn-secondary" @click.stop="copyExamplePrompt" title="Copy Example Prompt">
           <i class="fas fa-comment-dots"></i>
         </button>
         <a 
-          v-if="(model.civitai_url || model.civitaiUrl) && settings.gridCard.showUrlButton" 
+          v-if="(model.civitai_url || model.civitaiUrl) && settings.gridCard?.showUrlButton" 
           :href="model.civitai_url || model.civitaiUrl" 
           target="_blank" 
           class="btn btn-small btn-secondary civitai-link"
           @click.stop
           title="Open in Civitai"
         >
-          <img :src="'/assets/civitai-logo.png'" alt="C" class="civitai-icon" />
+          <i class="fas fa-external-link-alt civitai-icon"></i>
         </a>
       </div>
     </div>
@@ -138,6 +220,18 @@ const sliderRangeText = computed(() => {
   const minDesc = props.model.sliderMinDesc ? ` (${props.model.sliderMinDesc})` : '';
   const maxDesc = props.model.sliderMaxDesc ? ` (${props.model.sliderMaxDesc})` : '';
   return `${min}${minDesc} to ${max}${maxDesc}`;
+});
+
+const displayedFolder = computed(() => {
+  const folder = props.model.folder;
+  if (!folder) return '';
+  if (settings.gridCard?.truncateFolder) {
+    const parts = folder.replace(/\\/g, '/').split('/').filter(Boolean);
+    if (parts.length > 2) {
+      return parts.slice(-2).join('/');
+    }
+  }
+  return folder;
 });
 
 const toggleNsfwReveal = () => {
@@ -268,21 +362,26 @@ const copyExamplePrompt = () => {
 }
 
 .card-badge {
-  padding: 4px 8px;
+  padding: 3px 8px;
   border-radius: 4px;
-  font-size: 0.75em;
+  font-size: 0.72em;
   font-weight: bold;
+  letter-spacing: 0.3px;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .icon-badge {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: bold;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .badge-nsfw {
@@ -292,6 +391,11 @@ const copyExamplePrompt = () => {
 
 .badge-tested {
   background-color: rgba(46, 204, 113, 0.9);
+  color: white;
+}
+
+.badge-slider {
+  background-color: rgba(155, 89, 182, 0.9);
   color: white;
 }
 
@@ -334,6 +438,59 @@ const copyExamplePrompt = () => {
 
 .model-card:hover .info-overlay {
   opacity: 1;
+}
+
+/* Semi-transparent Image Action Bar Overlay */
+.image-actions-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 12px 10px 8px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.45) 70%, transparent 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.85;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 5;
+  box-sizing: border-box;
+}
+
+.model-card:hover .image-actions-overlay {
+  opacity: 1;
+}
+
+.btn-overlay-action {
+  background: rgba(35, 35, 35, 0.65);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.88em;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.btn-overlay-action:hover {
+  background: var(--color-btn-primary, #3498db);
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #fff;
+  transform: translateY(-2px) scale(1.08);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+}
+
+.btn-overlay-action:active {
+  transform: translateY(0) scale(1);
 }
 
 .card-content {

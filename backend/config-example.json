@@ -67,18 +67,24 @@
     "notes"
   ],
   "gridCard": {
+    "titleDisplay": "fileName",
     "cardSize": "small",
-    "showActions": false,
+    "showNsfwBadge": true,
+    "showTestedBadge": true,
+    "showSliderBadge": true,
+    "badgeStyle": "full",
     "showBaseModel": true,
     "showCategory": true,
-    "showCivitaiLink": true,
-    "showCopyTriggerWords": false,
-    "showFolder": true,
     "showHighLow": true,
-    "showInfoButton": true,
-    "showNsfwBadge": true,
+    "showSliderRange": true,
+    "showFolder": true,
+    "truncateFolder": false,
+    "showActions": false,
+    "actionsPosition": "bottom",
+    "showCopyTriggerWords": false,
     "showUrlButton": false,
-    "titleDisplay": "fileName"
+    "showCivitaiLink": true,
+    "showInfoButton": true
   },
   "filenameFormats": [
     {

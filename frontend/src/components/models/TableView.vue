@@ -93,7 +93,7 @@
               @click.stop
               title="Open in Civitai"
             >
-              <img :src="'/assets/civitai-logo.png'" alt="C" class="civitai-icon" @error="$event.target.outerHTML = '<i class=\'fas fa-external-link-alt\'></i>'" />
+              <i class="fas fa-external-link-alt"></i>
             </a>
           </td>
         </tr>

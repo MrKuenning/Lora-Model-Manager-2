@@ -30,14 +30,23 @@ export const useSettingsStore = defineStore('settings', {
     gridCard: {
       titleDisplay: 'modelName', // 'modelName' or 'fileName'
       cardSize: 'medium', // 'small', 'medium', 'large'
+      // Badges on image
+      showNsfwBadge: true,
+      showTestedBadge: true,
+      showSliderBadge: true,
+      badgeStyle: 'full', // 'full' (text) or 'truncated' (compact icons: ↔, ⊘, ✓)
+      // Meta below title
       showBaseModel: true,
       showCategory: true,
-      showFolder: true,
       showHighLow: true,
+      showSliderRange: true,
+      showFolder: true,
+      truncateFolder: false, // Truncate to last two folders in path
+      // Actions
       showActions: true,
+      actionsPosition: 'bottom', // 'bottom' (below card content) or 'overlay' (semi-transparent on bottom of image)
       showCopyTriggerWords: true,
       showUrlButton: true,
-      showNsfwBadge: true,
       showInfoButton: true
     },
     visibleColumns: {
