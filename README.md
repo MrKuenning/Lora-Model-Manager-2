@@ -72,9 +72,9 @@ Manage both LoRA and Checkpoint models from separate directories:
 Powerful buttons to help format and manage filenames:
 
 1. **Model Name**: Copy model name to filename field
-2. **Recommended**: Build filename from model name, type, version, and creator
+2. **Recommended**: Build filename from model name, type, version, and creator (supports **Snake Case** formatting)
 3. **Civitai Name**: Auto-populate filename from Civitai metadata
-4. **Clean**: Format filename with proper capitalization and spacing
+4. **Clean**: Format filename with proper capitalization and spacing (respects **Snake Case** setting)
 5. **Trim Name**: Remove base model and version suffixes from model name
 6. **Creator Suffix**: Append " - [creator name]" to filename
 7. **High/Low**: Swap High/Low variants for WAN 2.2 models
@@ -183,6 +183,11 @@ Organize and clean up folder navigation when moving models by mapping Base Model
 - **Smart Path Auto-complete**: Configured via a drop-down combo-box that fetches valid, actual relative folders from both your LoRA and Checkpoint directories.
 - **Dynamic Move Filtering**: When moving a model, the target location dropdown filters automatically to only show the configured root folder and its subdirectories.
 - **Bulk Operations Integration**: Filters the destination folder list in bulk move operations if all selected models share the same base model.
+
+### 🏷️ Filename Formatting & Snake Case
+Configure flexible naming conventions for your models in **Settings → File Names**:
+- **Custom Format Patterns by Base Model**: Define dynamic filename templates using variables such as `{modelname}`, `{version}`, `{highlow}`, `{category}`, and `{subcategory}` tailored to specific base model types.
+- **Snake Case Filenames**: Enable the **Snake Case** checkbox to automatically replace spaces with underscores (`_`) when generating recommended filenames and when using the filename Clean button, keeping filenames standardized and command-line friendly while preserving clean spacing in model display titles.
 
 ## Installation & Getting Started
 

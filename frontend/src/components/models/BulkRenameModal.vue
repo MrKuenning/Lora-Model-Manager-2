@@ -114,6 +114,9 @@ const generateRecommendedFilename = (model) => {
   n = n.replace(/^\s*-\s*/, ''); 
   n = n.replace(/\s*-\s*$/, ''); 
   n = n.trim();
+  if (settingsStore.filenameSnakeCase) {
+    n = n.replace(/\s+/g, '_');
+  }
   
   return n;
 };

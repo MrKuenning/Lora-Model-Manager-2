@@ -517,6 +517,27 @@
           
           <!-- Formatting Tab -->
           <div v-if="activeTab === 'formatting'" class="settings-section">
+            <!-- Filename Options -->
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Filename Options</h3>
+                <span class="variables-help">General formatting preferences for generated filenames</span>
+              </div>
+
+              <div class="checkbox-desc-grid" style="margin-top: 10px;">
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.filenameSnakeCase">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Snake Case</span>
+                      <span class="preview-meta-tag"><i class="fas fa-underline" style="color: #3498db;"></i> snake_case</span>
+                    </div>
+                    <span class="checkbox-desc">Use underscores instead of spaces</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
             <div class="settings-group-clean">
               <div class="settings-header-clean">
                 <h3>Filename Formatting Rules</h3>
@@ -932,6 +953,7 @@ const localSettings = reactive({
   columnOrder: [],
   gridCard: {},
   filenameFormats: [],
+  filenameSnakeCase: false,
   modelTypeRoots: [],
   trimNames: [],
   scanSettings: {}
@@ -948,6 +970,7 @@ onMounted(() => {
   localSettings.safeModeOnReload = settings.safeModeOnReload !== false; // Default true
   localSettings.nsfwBlurOverlay = settings.nsfwBlurOverlay !== false; // Default true
   localSettings.filterFoldersWithBaseModel = settings.filterFoldersWithBaseModel || false;
+  localSettings.filenameSnakeCase = settings.filenameSnakeCase || false;
   localSettings.modelsDirectory = settings.modelsDirectory;
   localSettings.checkpointsDirectory = settings.checkpointsDirectory;
   localSettings.defaultDownloadDirectory = settings.defaultDownloadDirectory;

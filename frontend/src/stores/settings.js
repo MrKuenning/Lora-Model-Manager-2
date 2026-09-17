@@ -66,6 +66,7 @@ export const useSettingsStore = defineStore('settings', {
       description: true
     },
     filenameFormats: [],
+    filenameSnakeCase: false,
     modelTypeRoots: [],
     trimNames: [
       'Pony', 'PXL', '[P]', '[Pony]', '[PXL]',

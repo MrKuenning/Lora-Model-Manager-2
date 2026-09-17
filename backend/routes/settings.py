@@ -44,7 +44,8 @@ def _load_settings():
                 "negativeWords": True,
                 "authorsWords": True,
                 "description": True
-            }
+            },
+            "filenameSnakeCase": False
         }
         _save_settings(default_settings)
         return default_settings
@@ -74,6 +75,7 @@ def _save_settings(data):
             "columnOrder",
             "gridCard",
             "filenameFormats",
+            "filenameSnakeCase",
             "modelTypeRoots",
             "scanSettings"
         ]

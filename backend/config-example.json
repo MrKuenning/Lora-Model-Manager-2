@@ -176,6 +176,7 @@
       "format": "[Z] {modelname} {version}"
     }
   ],
+  "filenameSnakeCase": false,
   "modelTypeRoots": [
     {
       "baseModel": "Flux.1 D",

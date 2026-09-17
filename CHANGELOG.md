@@ -1,5 +1,15 @@
 # Lora Model Manager - Changelog
 
+### 09/16/2026 - v2.2.6
+
+**Added**
+- **Snake Case Filename Option (File Names Settings)**:
+  - Added a new **Snake Case** setting under the **File Names** tab in Settings with description *"Use underscores instead of spaces"*.
+  - When enabled, all recommended filenames generated via format rules replace spaces with underscores (`_`).
+  - Integrated with **Bulk Rename** modal (`BulkRenameModal.vue`) to format batch rename proposals with underscores.
+  - Integrated with the **Clean** button for filenames in the Model Details view (`ModelModal.vue`) so cleaning a filename respects Snake Case while keeping the Model Name Clean button focused on human-readable titles with spaces.
+  - Persisted setting across backend configuration (`config.json`), settings API, and Pinia frontend store.
+
 ### 09/09/2026 - v2.2.5
 
 **Added**

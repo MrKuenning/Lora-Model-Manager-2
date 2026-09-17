@@ -1653,6 +1653,9 @@ const generateRecommendedFilename = () => {
   result = result.replace(/\{subcategory\}/gi, form.subcategory || '');
   
   result = result.replace(/\s+/g, ' ').trim();
+  if (settingsStore.filenameSnakeCase) {
+    result = result.replace(/\s+/g, '_');
+  }
   return result;
 };
 
@@ -1687,6 +1690,9 @@ const cleanFilename = () => {
   n = n.replace(/^\s*-\s*/, ''); 
   n = n.replace(/\s*-\s*$/, ''); 
   n = n.trim();
+  if (settingsStore.filenameSnakeCase) {
+    n = n.replace(/\s+/g, '_');
+  }
   newFilenameTemp.value = n;
 };
 
