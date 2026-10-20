@@ -383,14 +383,24 @@ def sync_models(models_dir, location='loras', force=False):
                     except Exception:
                         pass
 
+                relative_folder = os.path.relpath(root, models_dir).replace("\\", "/")
+                if relative_folder == ".":
+                    relative_folder = ""
+
                 # Check if we need to sync this model
                 if not force:
                     existing = cursor.execute(
-                        "SELECT last_synced FROM models WHERE id = ? AND location = ?",
+                        "SELECT last_synced, folder, path FROM models WHERE id = ? AND location = ?",
                         (model_id, location)
                     ).fetchone()
 
-                    if existing and existing['last_synced'] and existing['last_synced'] >= latest_mtime:
+                    if (
+                        existing
+                        and existing['last_synced']
+                        and existing['last_synced'] >= latest_mtime
+                        and existing['folder'] == relative_folder
+                        and existing['path'] == file_path
+                    ):
                         continue  # Skip, already up to date
 
                 # Parse and upsert
@@ -486,7 +496,7 @@ def _upsert_model(cursor, model_data, location):
             example_prompt=excluded.example_prompt, example_prompt_2=excluded.example_prompt_2,
             tags=excluded.tags, civitai_name=excluded.civitai_name,
             civitai_url=excluded.civitai_url, creator=excluded.creator,
-            sha256=excluded.sha256, model_version=excluded.model_version,
+            sha256=CASE WHEN excluded.sha256 != '' THEN excluded.sha256 ELSE models.sha256 END, model_version=excluded.model_version,
             is_slider=excluded.is_slider, slider_min=excluded.slider_min,
             slider_max=excluded.slider_max, slider_min_desc=excluded.slider_min_desc,
             slider_max_desc=excluded.slider_max_desc, preview_url=excluded.preview_url,

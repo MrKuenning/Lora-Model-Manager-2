@@ -1,5 +1,25 @@
 # Lora Model Manager - Changelog
 
+### 10/20/2026 - v2.2.7
+
+**Fixed**
+- **Folder Rename & Move Detection in Incremental Sync (Refresh)**:
+  - Enhanced the SQLite sync engine in `backend/database.py` to compare relative folder paths and full file paths alongside file modification timestamps (`mtime`).
+  - Fixed an issue where renaming a folder or changing its case on Windows (which does not alter file `mtime`) caused models inside it to be skipped during sync and appear missing in the UI.
+  - Hitting **Refresh** or loading the library now immediately detects renamed folders and moved models, updating their SQLite database records, folder classifications, and preview image URLs in a single fast transaction without requiring a slow full re-scan of untouched models.
+  - Added a fallback in model upsert to preserve existing SHA256 hashes if a sidecar metadata file does not explicitly define one.
+
+- **Case-Insensitive Folder Root Matching (Move & Bulk Move)**:
+  - Updated `availableMoveFolders` in `ModelModal.vue` and `availableFolders` in `BulkMoveModal.vue` to match base model root paths case-insensitively with slash normalization.
+  - If a base model root is defined in Settings with differing case (e.g., `TREE` vs. `Tree` or `Comfy/Moss` vs. `Comfy/MOSS`), target folders and all their nested subfolders (`Comfy/MOSS/MZ`) now properly display in the Move destination dropdown.
+  - Preserves the exact filesystem casing in dropdown options and avoids duplicate entries.
+  - Single-model move dialog now initializes target selection case-insensitively with the model's current folder.
+
+- **Case-Insensitive Folder Filtering & Live Counts**:
+  - Updated `filteredModels` in Pinia models store (`models.js`) to filter by folder path case-insensitively and normalize forward/backward slashes.
+  - Updated `folderCounts` to map folder paths case-insensitively to the canonical folders returned from the filesystem, ensuring sidebar badge counts remain accurate under case variations.
+  - Updated `fetchFolders` to automatically realign `currentFolder` with the filesystem casing if a folder was renamed on disk.
+
 ### 09/16/2026 - v2.2.6
 
 **Added**

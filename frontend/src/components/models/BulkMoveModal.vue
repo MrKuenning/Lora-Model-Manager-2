@@ -168,12 +168,18 @@ const availableFolders = computed(() => {
   if (selectedModels.value.length > 0) {
     for (const m of selectedModels.value) {
       const baseModel = m.baseModel || m.base_model || '';
-      const matchedRoot = roots.find(r => r.baseModel && r.baseModel.toLowerCase() === baseModel.toLowerCase());
-      const rootPath = matchedRoot ? matchedRoot.rootFolder : null;
+      const matchedRoot = roots.find(r => r.baseModel && r.baseModel.trim().toLowerCase() === baseModel.trim().toLowerCase());
+      const rootPath = matchedRoot && matchedRoot.rootFolder ? matchedRoot.rootFolder.trim() : null;
       
       if (commonRootPath === null && !hasConflict) {
         commonRootPath = rootPath; // First model's root
-      } else if (commonRootPath !== rootPath) {
+      } else if (rootPath) {
+        const normCommon = (commonRootPath || '').replace(/\\/g, '/').toLowerCase();
+        const normCurrent = rootPath.replace(/\\/g, '/').toLowerCase();
+        if (normCommon !== normCurrent) {
+          hasConflict = true;
+        }
+      } else if (commonRootPath !== null && rootPath === null) {
         hasConflict = true;
       }
     }
@@ -182,9 +188,17 @@ const availableFolders = computed(() => {
   let folderPaths = (modelsStore.folders || []).map(f => f.path);
   
   if (commonRootPath && !hasConflict) {
-    folderPaths = folderPaths.filter(f => f === commonRootPath || f.startsWith(commonRootPath + '/') || f.startsWith(commonRootPath + '\\'));
-    if (!folderPaths.includes(commonRootPath)) {
-      folderPaths.unshift(commonRootPath);
+    const rawRoot = commonRootPath.replace(/\\/g, '/').replace(/\/+$/, '');
+    const rootLower = rawRoot.toLowerCase();
+
+    folderPaths = folderPaths.filter(f => {
+      const normF = (f || '').replace(/\\/g, '/').toLowerCase();
+      return normF === rootLower || normF.startsWith(rootLower + '/');
+    });
+
+    const exactOrCasedRoot = folderPaths.find(f => (f || '').replace(/\\/g, '/').toLowerCase() === rootLower);
+    if (!exactOrCasedRoot) {
+      folderPaths.unshift(rawRoot);
     }
   } else {
     if (!folderPaths.includes('')) {

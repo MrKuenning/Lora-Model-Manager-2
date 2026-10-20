@@ -1030,16 +1030,22 @@ const filenameNoExt = computed(() => {
 const availableMoveFolders = computed(() => {
   const baseModel = form.baseModel || (model.value ? (model.value.base_model || model.value.baseModel) : '') || '';
   const roots = settingsStore.modelTypeRoots || [];
-  const matchedRoot = roots.find(r => r.baseModel && r.baseModel.toLowerCase() === baseModel.toLowerCase());
+  const matchedRoot = roots.find(r => r.baseModel && r.baseModel.trim().toLowerCase() === baseModel.trim().toLowerCase());
   
   let folderPaths = (modelsStore.folders || []).map(f => f.path);
   
-  if (matchedRoot && matchedRoot.rootFolder) {
-    const rootPath = matchedRoot.rootFolder;
-    folderPaths = folderPaths.filter(f => f === rootPath || f.startsWith(rootPath + '/') || f.startsWith(rootPath + '\\'));
+  if (matchedRoot && matchedRoot.rootFolder && matchedRoot.rootFolder.trim()) {
+    const rawRoot = matchedRoot.rootFolder.trim().replace(/\\/g, '/').replace(/\/+$/, '');
+    const rootLower = rawRoot.toLowerCase();
     
-    if (!folderPaths.includes(rootPath)) {
-      folderPaths.unshift(rootPath);
+    folderPaths = folderPaths.filter(f => {
+      const normF = (f || '').replace(/\\/g, '/').toLowerCase();
+      return normF === rootLower || normF.startsWith(rootLower + '/');
+    });
+    
+    const exactOrCasedRoot = folderPaths.find(f => (f || '').replace(/\\/g, '/').toLowerCase() === rootLower);
+    if (!exactOrCasedRoot) {
+      folderPaths.unshift(rawRoot);
     }
   } else {
     if (!folderPaths.includes('')) {
@@ -1713,9 +1719,12 @@ const appendCreatorSuffix = () => {
 const startMove = () => {
   movingFile.value = true;
   
-  // Set default to current folder, or root if current folder isn't in available list
-  if (availableMoveFolders.value.includes(model.value.folder)) {
-    targetMoveFolder.value = model.value.folder;
+  // Set default to current folder, or root if current folder isn't in available list (case-insensitive check)
+  const currentFolderNorm = (model.value?.folder || '').toLowerCase().replace(/\\/g, '/');
+  const matchedFolder = availableMoveFolders.value.find(f => (f || '').toLowerCase().replace(/\\/g, '/') === currentFolderNorm);
+  
+  if (matchedFolder !== undefined) {
+    targetMoveFolder.value = matchedFolder;
   } else if (availableMoveFolders.value.length > 0) {
     targetMoveFolder.value = availableMoveFolders.value[0];
   } else {

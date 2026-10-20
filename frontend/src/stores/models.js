@@ -49,15 +49,21 @@ export const useModelsStore = defineStore('models', {
       }
 
       const counts = { immediate: {}, nested: {} };
+      const pathToCanonical = new Map();
       state.folders.forEach(f => {
         counts.immediate[f.path] = 0;
         counts.nested[f.path] = 0;
+        pathToCanonical.set((f.path || '').toLowerCase().replace(/\\/g, '/'), f.path);
       });
       counts.immediate[''] = 0;
       counts.nested[''] = 0;
+      pathToCanonical.set('', '');
 
       result.forEach(m => {
-        const f = m.folder || '';
+        const rawFolder = (m.folder || '').replace(/\\/g, '/');
+        const lowerFolder = rawFolder.toLowerCase();
+        const f = pathToCanonical.has(lowerFolder) ? pathToCanonical.get(lowerFolder) : rawFolder;
+
         if (counts.immediate[f] !== undefined) {
           counts.immediate[f]++;
         } else {
@@ -67,9 +73,12 @@ export const useModelsStore = defineStore('models', {
 
         counts.nested['']++;
         let currentPath = '';
-        const parts = f.split(/[\/\\]/).filter(p => p);
+        let currentLowerPath = '';
+        const parts = rawFolder.split('/').filter(p => p);
         for (let i = 0; i < parts.length; i++) {
-          currentPath = currentPath ? `${currentPath}/${parts[i]}` : parts[i];
+          currentLowerPath = currentLowerPath ? `${currentLowerPath}/${parts[i].toLowerCase()}` : parts[i].toLowerCase();
+          const canonicalPart = pathToCanonical.get(currentLowerPath);
+          currentPath = canonicalPart !== undefined ? canonicalPart : (currentPath ? `${currentPath}/${parts[i]}` : parts[i]);
           if (counts.nested[currentPath] !== undefined) {
             counts.nested[currentPath]++;
           } else {
@@ -88,12 +97,19 @@ export const useModelsStore = defineStore('models', {
     filteredModels: (state) => {
       let result = state.models;
 
-      // 1. Filter by folder
+      // 1. Filter by folder (case-insensitive and slash-normalized)
       if (state.currentFolder) {
+        const target = state.currentFolder.toLowerCase().replace(/\\/g, '/');
         if (state.isRecursive) {
-          result = result.filter(m => m.folder === state.currentFolder || m.folder.startsWith(state.currentFolder + '/') || m.folder.startsWith(state.currentFolder + '\\'));
+          result = result.filter(m => {
+            const f = (m.folder || '').toLowerCase().replace(/\\/g, '/');
+            return f === target || f.startsWith(target + '/');
+          });
         } else {
-          result = result.filter(m => (m.folder || '') === state.currentFolder);
+          result = result.filter(m => {
+            const f = (m.folder || '').toLowerCase().replace(/\\/g, '/');
+            return f === target;
+          });
         }
       } else {
         if (!state.isRecursive) {
@@ -278,6 +294,13 @@ export const useModelsStore = defineStore('models', {
     async fetchFolders() {
       try {
         this.folders = await api.getFolders(this.currentLocation);
+        if (this.currentFolder) {
+          const normCurrent = this.currentFolder.toLowerCase().replace(/\\/g, '/');
+          const matched = this.folders.find(f => (f.path || '').toLowerCase().replace(/\\/g, '/') === normCurrent);
+          if (matched && matched.path !== this.currentFolder) {
+            this.currentFolder = matched.path;
+          }
+        }
       } catch (err) {
         console.error("Failed to load folders", err);
       }
