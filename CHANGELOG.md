@@ -1,5 +1,22 @@
 # Lora Model Manager - Changelog
 
+### 10/30/2026 - v2.2.8
+
+**Added**
+- **Online Availability Checking (Civitai & CivArchive)**:
+  - Added tracking fields in model JSON sidecars and SQLite DB: `civitai_available` and `civarchive_available` (`true`, `false`, or blank/untested).
+  - Prioritized fallback check logic: checks Civitai first; if found (`true`), marks Civitai available and stops. If removed (`false` / 404), automatically falls back to check CivArchive.
+  - Automatically records online availability status upon initial metadata scrapes (`fetch-by-hash`, `civarchive/fetch-by-hash`, `fetch-by-url`).
+  - Added a **Check Online Availability** button and status pill in the Model Card details modal (`Scrape metadata` tab and `MODEL INFO` box).
+  - Added a bulk **Check Online Availability** scan action in Metadata Import (`CivitaiScanView.vue`), automatically skipping any models already marked unavailable on both sites.
+- **Online Availability Badges & Settings**:
+  - Added color-coded badges on Grid Card previews:
+    - Civitai Online (`CI` / `Civitai`) in light blue.
+    - CivArchive Online (`CA` / `Archive`) in purple.
+    - Offline / Removed from both (`Offline` / broken-link icon) in red.
+    - Models not yet checked display no badge.
+  - Added an **Online Availability Badge** toggle under **Settings -> Grid View -> Image Badges**.
+
 ### 10/20/2026 - v2.2.7
 
 **Fixed**

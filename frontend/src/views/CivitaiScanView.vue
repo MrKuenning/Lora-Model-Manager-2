@@ -82,6 +82,16 @@
                   <button class="btn btn-secondary" @click="regenerateAllHashes"><i class="fas fa-sync-alt"></i> Regenerate All</button>
                 </div>
               </div>
+
+              <div class="action-col" style="grid-column: 1 / -1;">
+                <h3>Check Online Availability</h3>
+                <p>Check if models are still available on Civitai or CivArchive. Skips models already marked removed from both.</p>
+                <div class="btn-row">
+                  <button class="btn btn-secondary" @click="checkOnlineAvailability">
+                    <i class="fas fa-globe"></i> Check Online Availability ({{ availabilityScanTargetsCount }})
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -169,6 +179,16 @@ const missingMetadata = computed(() => getMissingMetadataModels().length);
 const missingThumbnails = computed(() => getMissingThumbnailModels().length);
 const missingHashes = computed(() => getMissingHashModels().length);
 
+const getAvailabilityScanModels = () => modelsStore.models.filter(m => {
+  const ci = m.civitaiAvailable !== undefined ? m.civitaiAvailable : m.civitai_available;
+  const ca = m.civarchiveAvailable !== undefined ? m.civarchiveAvailable : m.civarchive_available;
+  const ciFalse = ci === false || String(ci).toLowerCase() === 'false';
+  const caFalse = ca === false || String(ca).toLowerCase() === 'false';
+  return !(ciFalse && caFalse);
+});
+
+const availabilityScanTargetsCount = computed(() => getAvailabilityScanModels().length);
+
 const progressPercentage = computed(() => {
   if (currentQueueLength.value === 0) return 0;
   return Math.round((currentIndex.value / currentQueueLength.value) * 100);
@@ -233,7 +253,10 @@ const runScanQueue = async (tasks) => {
       successCount++;
     } catch (err) {
       errorCount++;
-      addLog(`ERROR: ${task.actionName} failed for ${task.model.filename}.`, 'error');
+      const detail = err?.response?.status === 404
+        ? 'Backend route not found — please restart the Lora Manager server'
+        : (err?.response?.data?.message || err?.message || '');
+      addLog(`ERROR: ${task.actionName} failed for ${task.model.filename}${detail ? ` (${detail})` : ''}.`, 'error');
       
       // Track metadata failures specifically
       if (task.actionName === 'Fetch Metadata') {
@@ -374,6 +397,26 @@ const regenerateAllHashes = () => {
       if (res && res.status === 'success' && !res.logs) {
         addLog(`Hash regenerated successfully for ${m.filename}`, 'success');
       }
+    }
+  }));
+  runScanQueue(tasks);
+};
+
+const checkOnlineAvailability = () => {
+  const targets = getAvailabilityScanModels();
+  const tasks = targets.map(model => ({
+    model,
+    actionName: 'Check Online Availability',
+    actionFn: async (m) => {
+      const res = await api.civitaiCheckAvailability(m.path, false);
+      if (res && res.logs) {
+        res.logs.forEach(log => {
+          const msg = typeof log === 'object' ? log.message : log;
+          const type = typeof log === 'object' ? log.type : 'info';
+          addLog(msg, type);
+        });
+      }
+      if (res && res.status === 'error') throw new Error(res.message);
     }
   }));
   runScanQueue(tasks);

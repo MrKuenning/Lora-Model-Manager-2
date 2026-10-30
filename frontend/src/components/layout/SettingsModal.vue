@@ -244,6 +244,9 @@
                         <span class="preview-mini-icon badge-nsfw"><i class="fas fa-ban"></i></span>
                         <span class="preview-mini-icon badge-slider"><i class="fas fa-arrows-alt-h"></i></span>
                         <span class="preview-mini-icon badge-tested"><i class="fas fa-check"></i></span>
+                        <span class="preview-mini-icon badge-civitai">CI</span>
+                        <span class="preview-mini-icon badge-civarchive">CA</span>
+                        <span class="preview-mini-icon badge-offline"><i class="fas fa-unlink"></i></span>
                       </div>
                     </div>
                     <span class="checkbox-desc">Show compact circular icons instead of wide text banners</span>
@@ -283,6 +286,42 @@
                       <span class="preview-badge badge-tested"><i class="fas fa-check"></i> Tested</span>
                     </div>
                     <span class="checkbox-desc">Green indicator on models verified and marked as tested</span>
+                  </div>
+                </label>
+
+                <!-- Civitai Available Badge -->
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.gridCard.showCivitaiBadge">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Civitai Online Badge</span>
+                      <span class="preview-badge badge-civitai">Civitai</span>
+                    </div>
+                    <span class="checkbox-desc">Light blue indicator when model is available on Civitai (CI)</span>
+                  </div>
+                </label>
+
+                <!-- CivArchive Available Badge -->
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.gridCard.showCivArchiveBadge">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">CivArchive Online Badge</span>
+                      <span class="preview-badge badge-civarchive">Archive</span>
+                    </div>
+                    <span class="checkbox-desc">Purple indicator when removed from Civitai but available on CivArchive (CA)</span>
+                  </div>
+                </label>
+
+                <!-- Not Available Online Badge -->
+                <label class="checkbox-desc-item">
+                  <input type="checkbox" v-model="localSettings.gridCard.showOfflineBadge">
+                  <div class="checkbox-text">
+                    <div class="checkbox-title-row">
+                      <span class="checkbox-title">Not Available Online Badge</span>
+                      <span class="preview-badge badge-offline">Offline</span>
+                    </div>
+                    <span class="checkbox-desc">Red indicator when model has been removed from both Civitai and CivArchive</span>
                   </div>
                 </label>
               </div>
@@ -997,6 +1036,10 @@ onMounted(() => {
     showNsfwBadge: true,
     showTestedBadge: true,
     showSliderBadge: true,
+    showAvailabilityBadge: true,
+    showCivitaiBadge: true,
+    showCivArchiveBadge: true,
+    showOfflineBadge: true,
     badgeStyle: 'full',
     showBaseModel: true,
     showCategory: true,
@@ -1654,6 +1697,21 @@ const cleanJsonFiles = async () => {
   color: #ffffff;
 }
 
+.preview-badge.badge-civitai {
+  background-color: rgba(52, 152, 219, 0.95);
+  color: #ffffff;
+}
+
+.preview-badge.badge-civarchive {
+  background-color: rgba(142, 68, 173, 0.95);
+  color: #ffffff;
+}
+
+.preview-badge.badge-offline {
+  background-color: rgba(192, 57, 43, 0.95);
+  color: #ffffff;
+}
+
 .preview-mini-icon {
   width: 18px;
   height: 18px;
@@ -1662,6 +1720,7 @@ const cleanJsonFiles = async () => {
   align-items: center;
   justify-content: center;
   font-size: 9px;
+  font-weight: 700;
   color: #fff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
@@ -1676,6 +1735,20 @@ const cleanJsonFiles = async () => {
 
 .preview-mini-icon.badge-tested {
   background-color: rgba(46, 204, 113, 0.95);
+}
+
+.preview-mini-icon.badge-civitai {
+  background-color: rgba(52, 152, 219, 0.95);
+  font-size: 8px;
+}
+
+.preview-mini-icon.badge-civarchive {
+  background-color: rgba(142, 68, 173, 0.95);
+  font-size: 8px;
+}
+
+.preview-mini-icon.badge-offline {
+  background-color: rgba(192, 57, 43, 0.95);
 }
 
 .preview-meta-tag {

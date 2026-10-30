@@ -194,6 +194,16 @@
                   <i class="fas fa-edit edit-icon" @click="promptEditField('civitaiUrl', 'Civitai URL')"></i>
                 </div>
               </div>
+              <div class="info-row">
+                <label>Online Status:</label>
+                <div class="info-val with-edit">
+                  <span v-if="onlineStatusInfo.badge" class="online-status-pill" :class="onlineStatusInfo.cls">
+                    <i class="fas" :class="onlineStatusInfo.icon"></i> {{ onlineStatusInfo.text }}
+                  </span>
+                  <span v-else style="color: #777;">Not Checked</span>
+                  <i class="fas fa-sync-alt edit-icon" :class="{ 'fa-spin': isCheckingOnline }" @click="checkOnlineAvailability" title="Check if still available online"></i>
+                </div>
+              </div>
               
 
             </div>
@@ -603,6 +613,15 @@
                 <button class="btn btn-secondary btn-large" @click="promptCivitaiUrl">
                   <i class="fas fa-link fa-2x"></i> 
                   <span><strong>Fetch by URL</strong><br>Manually link this model to a Civitai page.</span>
+                </button>
+
+                <!-- Row 3 -->
+                <button class="btn btn-secondary btn-large" style="grid-column: 1 / -1;" @click="checkOnlineAvailability" :disabled="isCheckingOnline">
+                  <i class="fas fa-2x" :class="isCheckingOnline ? 'fa-spinner fa-spin' : 'fa-globe'"></i>
+                  <span>
+                    <strong>Check Online Availability</strong><br>
+                    Verify if this model is still available on Civitai or CivArchive ({{ onlineStatusInfo.text }}).
+                  </span>
                 </button>
               </div>
             </div>
@@ -1884,6 +1903,61 @@ const downloadThumbnails = async () => {
   }
 };
 
+const isCheckingOnline = ref(false);
+
+const onlineStatusInfo = computed(() => {
+  if (!model.value) return { badge: false, text: 'Not Checked', cls: '', icon: '' };
+  const ci = model.value.civitaiAvailable !== undefined ? model.value.civitaiAvailable : model.value.civitai_available;
+  const ca = model.value.civarchiveAvailable !== undefined ? model.value.civarchiveAvailable : model.value.civarchive_available;
+
+  if (ci === true || String(ci).toLowerCase() === 'true') {
+    return { badge: true, text: 'Civitai Online', cls: 'status-civitai', icon: 'fa-check-circle' };
+  }
+  const ciFalse = ci === false || String(ci).toLowerCase() === 'false';
+  const caTrue = ca === true || String(ca).toLowerCase() === 'true';
+  const caFalse = ca === false || String(ca).toLowerCase() === 'false';
+
+  if (caTrue) {
+    return { badge: true, text: 'CivArchive Only', cls: 'status-civarchive', icon: 'fa-archive' };
+  }
+  if (ciFalse && caFalse) {
+    return { badge: true, text: 'Not Available Online', cls: 'status-offline', icon: 'fa-unlink' };
+  }
+  return { badge: false, text: 'Not Checked', cls: '', icon: '' };
+});
+
+const checkOnlineAvailability = async () => {
+  if (!model.value || isCheckingOnline.value) return;
+  if (saveTimeout) clearTimeout(saveTimeout);
+  isCheckingOnline.value = true;
+  toast.showToast('Checking online availability...', 'info');
+  try {
+    const res = await api.civitaiCheckAvailability(model.value.path, true);
+    if (res && res.status === 'error') {
+      toast.showToast(res.message || 'Failed to check availability', 'error');
+    } else if (res) {
+      if (res.civitai_available === true) {
+        toast.showToast('Available on Civitai!', 'success');
+      } else if (res.civarchive_available === true) {
+        toast.showToast('Removed from Civitai, available on CivArchive!', 'info');
+      } else {
+        toast.showToast('Not available on Civitai or CivArchive', 'warning');
+      }
+      await loadModel();
+      modelsStore.fetchModels();
+    }
+  } catch (err) {
+    if (err?.response?.status === 404) {
+      toast.showToast('Please restart the Lora Manager server to enable availability checking', 'error');
+    } else {
+      const detail = err?.response?.data?.message || err?.message || '';
+      toast.showToast(detail ? `Failed to check online availability: ${detail}` : 'Failed to check online availability', 'error');
+    }
+  } finally {
+    isCheckingOnline.value = false;
+  }
+};
+
 // JSON
 const resetRawJson = () => {
   if (model.value) {
@@ -2235,6 +2309,30 @@ const getFileIcon = (filename) => {
 }
 .edit-icon { color: #666; cursor: pointer; }
 .edit-icon:hover { color: #fff; }
+.online-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+.online-status-pill.status-civitai {
+  background: rgba(52, 152, 219, 0.2);
+  color: #5dade2;
+  border: 1px solid rgba(52, 152, 219, 0.45);
+}
+.online-status-pill.status-civarchive {
+  background: rgba(142, 68, 173, 0.25);
+  color: #c39bd3;
+  border: 1px solid rgba(142, 68, 173, 0.5);
+}
+.online-status-pill.status-offline {
+  background: rgba(192, 57, 43, 0.25);
+  color: #ec7063;
+  border: 1px solid rgba(192, 57, 43, 0.5);
+}
 .info-row.stacked { margin-top: 5px; }
 
 .weight-control { display: flex; align-items: center; gap: 10px; }

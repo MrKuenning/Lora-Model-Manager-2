@@ -292,21 +292,23 @@ def _parse_civarchive_html(html):
     match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html)
     if not match:
         print("Could not find __NEXT_DATA__ in CivArchive response")
-        return None
+        return {}
         
-    next_data = json.loads(match.group(1))
-    
     try:
+        next_data = json.loads(match.group(1))
         page_props = next_data['props']['pageProps']
-        if 'model' in page_props:
+        if 'model' in page_props and page_props['model']:
             raw_model = page_props['model']
         elif 'models' in page_props and isinstance(page_props['models'], list) and len(page_props['models']) > 0:
             raw_model = page_props['models'][0]
         else:
             raise KeyError("Neither 'model' nor 'models' found")
             
-        raw_version = raw_model.get('version', {})
-    except (KeyError, TypeError) as e:
+        if not isinstance(raw_model, dict):
+            raise TypeError("raw_model is not a dict")
+            
+        raw_version = raw_model.get('version') or {}
+    except (KeyError, TypeError, AttributeError, ValueError) as e:
         print(f"Could not find model/version in CivArchive JSON: {e}")
         return {}
         
@@ -394,7 +396,7 @@ def scrape_civarchive_by_hash(file_hash):
     try:
         url = f"https://civitaiarchive.com/sha256/{file_hash}"
         print(f"Fetching from CivArchive: {url}")
-        response = requests.get(url, headers=get_civitai_headers(), timeout=10, allow_redirects=True)
+        response = requests.get(url, headers=DEFAULT_HEADERS, timeout=10, allow_redirects=True)
         
         if response.status_code == 404:
             print(f"Model not found on CivArchive for hash: {file_hash}")
@@ -421,7 +423,7 @@ def scrape_civarchive_by_url(url):
     """
     try:
         print(f"Fetching from CivArchive URL: {url}")
-        response = requests.get(url, headers=get_civitai_headers(), timeout=10)
+        response = requests.get(url, headers=DEFAULT_HEADERS, timeout=10)
         
         if response.status_code == 404:
             print(f"Model not found on CivArchive for URL: {url}")
@@ -450,7 +452,10 @@ def fetch_model_info_by_id(model_id):
         url = f"{CIVITAI_API_URLS['model_id']}{model_id}"
         response = requests.get(url, headers=get_civitai_headers(), timeout=10)
         
-        if not response.ok:
+        if response.status_code == 404:
+            print(f"Model not found on Civitai: {model_id}")
+            return {}
+        elif not response.ok:
             print(f"Civitai API error {response.status_code}: {response.text}")
             return None
             
@@ -590,6 +595,8 @@ def create_json_from_api_data(model_path, api_data, use_api_for_creator=True, ex
             'baseModel': '',
             'base_model_type': '',
             'category': '',
+            'civarchive_available': '',
+            'civitai_available': '',
             'description': '',
             'example prompt 1': '',
             'example prompt 2': '',
@@ -620,6 +627,11 @@ def create_json_from_api_data(model_path, api_data, use_api_for_creator=True, ex
                 'url': ''
             }
         }
+        
+        if api_data.get('isCivArchive'):
+            mapped_data['civarchive_available'] = True
+        else:
+            mapped_data['civitai_available'] = True
         
         # --- Extract data from API response ---
         
@@ -768,6 +780,11 @@ def create_json_from_api_data(model_path, api_data, use_api_for_creator=True, ex
                 for field in fields_to_preserve:
                     if field in existing_data and existing_data[field] is not None and existing_data[field] != '':
                         mapped_data[field] = existing_data[field]
+
+                # Preserve availability fields if not explicitly set by the new API data
+                for avail_field in ('civitai_available', 'civarchive_available'):
+                    if mapped_data.get(avail_field) == '' and avail_field in existing_data:
+                        mapped_data[avail_field] = existing_data[avail_field]
                 
                 # If API didn't provide a base model, fall back to existing if available
                 if not mapped_data.get('base model') or mapped_data.get('base model') == 'Unknown':
@@ -839,6 +856,182 @@ def save_civitai_info(model_path, model_info):
         True on success, False on error
     """
     return create_json_from_api_data(model_path, model_info)
+
+
+def save_availability_to_json(model_path, civitai_avail=None, civarchive_avail=None):
+    """
+    Save Civitai and/or CivArchive online availability status to the model's JSON file.
+    Values can be True, False, or '' (blank/unknown). If None is passed, that field is not modified.
+    """
+    try:
+        base_path = os.path.splitext(model_path)[0]
+        json_path = f"{base_path}.json"
+
+        existing_data = load_json_robust(json_path)
+        if existing_data is None and os.path.exists(json_path):
+            print(f"CRITICAL: Failed to read existing JSON at {json_path}. Aborting availability update.")
+            return False
+
+        if existing_data is None:
+            existing_data = {}
+
+        if civitai_avail is not None:
+            existing_data['civitai_available'] = civitai_avail
+        if civarchive_avail is not None:
+            existing_data['civarchive_available'] = civarchive_avail
+
+        sorted_data = {k: existing_data[k] for k in sorted(existing_data.keys())}
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(sorted_data, f, indent=4)
+
+        return True
+    except Exception as e:
+        print(f"Error saving availability to JSON: {e}")
+        return False
+
+
+def check_model_online_availability(model_path, force_all=False):
+    """
+    Check if a model is still available online on Civitai (primary) and CivArchive (fallback).
+    
+    Logic:
+    1. If civitai_available is not False (or force_all=True), check Civitai first.
+       - If found on Civitai: set civitai_available = True and stop!
+       - If 404 on Civitai: set civitai_available = False, then proceed to check CivArchive.
+    2. If civitai_available is False:
+       - Check CivArchive (if civarchive_available is not False or force_all=True).
+       - If found on CivArchive: set civarchive_available = True.
+       - If 404 on CivArchive: set civarchive_available = False.
+    """
+    logs = []
+    base_path = os.path.splitext(model_path)[0]
+    json_path = f"{base_path}.json"
+    filename = os.path.basename(model_path)
+
+    json_data = load_json_robust(json_path) or {}
+    file_hash = json_data.get('sha256', '')
+    wcd = json_data.get('web_civitai_data', {})
+    civitai_url = wcd.get('url') or json_data.get('url', '')
+    version_id = wcd.get('file_id') or json_data.get('file_id', '')
+    model_id = wcd.get('model_id') or json_data.get('model_id', '')
+
+    def _norm_avail(val):
+        if val is True or str(val).lower() == 'true':
+            return True
+        if val is False or str(val).lower() == 'false':
+            return False
+        return ''
+
+    civitai_avail = _norm_avail(json_data.get('civitai_available', ''))
+    civarchive_avail = _norm_avail(json_data.get('civarchive_available', ''))
+
+    # Ensure we have a hash if we need to query by hash
+    if not file_hash and os.path.exists(model_path):
+        logs.append({'message': f"Generating SHA256 hash for {filename}...", 'type': 'info'})
+        file_hash = generate_sha256(model_path)
+        if file_hash:
+            save_sha256_to_json(model_path, file_hash)
+            logs.append({'message': f"Hash generated ({file_hash[:10]}...)", 'type': 'success'})
+        else:
+            logs.append({'message': f"Could not generate hash for {filename}", 'type': 'error'})
+
+    # Step 1: Check Civitai if not already marked False (or if force_all)
+    if force_all or civitai_avail is not False:
+        logs.append({'message': f"Checking Civitai availability for {filename}...", 'type': 'info'})
+        civitai_res = None
+        if file_hash:
+            civitai_res = fetch_model_info_by_hash(file_hash)
+        elif version_id:
+            civitai_res = fetch_model_info_by_version_id(version_id)
+        elif civitai_url and 'civitai.com' in civitai_url:
+            m_id, v_id = parse_civitai_url(civitai_url)
+            if v_id:
+                civitai_res = fetch_model_info_by_version_id(v_id)
+            elif m_id:
+                civitai_res = fetch_model_info_by_id(m_id)
+        elif model_id:
+            civitai_res = fetch_model_info_by_id(model_id)
+
+        if civitai_res is None:
+            logs.append({'message': "Failed to reach Civitai API (network/rate-limit error).", 'type': 'error'})
+            return {
+                'status': 'error',
+                'message': 'Failed to connect to Civitai API',
+                'civitai_available': civitai_avail,
+                'civarchive_available': civarchive_avail,
+                'logs': logs
+            }
+        elif isinstance(civitai_res, dict) and len(civitai_res) > 0:
+            civitai_avail = True
+            save_availability_to_json(model_path, civitai_avail=True)
+            logs.append({'message': f"{filename} is available on Civitai!", 'type': 'success'})
+            return {
+                'status': 'success',
+                'message': 'Available on Civitai',
+                'civitai_available': civitai_avail,
+                'civarchive_available': civarchive_avail,
+                'logs': logs
+            }
+        else:
+            # 404 Not Found on Civitai
+            civitai_avail = False
+            save_availability_to_json(model_path, civitai_avail=False)
+            logs.append({'message': f"Not found on Civitai (removed). Checking CivArchive...", 'type': 'warning'})
+
+    # Step 2: Civitai is False, so check CivArchive fallback
+    if force_all or civarchive_avail is not False:
+        logs.append({'message': f"Checking CivArchive availability for {filename}...", 'type': 'info'})
+        archive_res = None
+        if file_hash:
+            archive_res = scrape_civarchive_by_hash(file_hash)
+        if not archive_res and civitai_url and ('civarchive.com' in civitai_url or 'civitaiarchive.com' in civitai_url):
+            archive_res = scrape_civarchive_by_url(civitai_url)
+        if not archive_res and model_id and version_id:
+            archive_url = f"https://civitaiarchive.com/models/{model_id}?modelVersionId={version_id}"
+            archive_res = scrape_civarchive_by_url(archive_url)
+        elif not archive_res and model_id:
+            archive_url = f"https://civitaiarchive.com/models/{model_id}"
+            archive_res = scrape_civarchive_by_url(archive_url)
+
+        if archive_res is None:
+            logs.append({'message': "Could not verify CivArchive status (no hash/ID or connection issue).", 'type': 'warning'})
+            return {
+                'status': 'success',
+                'message': 'Removed from Civitai (CivArchive check inconclusive)',
+                'civitai_available': civitai_avail,
+                'civarchive_available': civarchive_avail,
+                'logs': logs
+            }
+        elif isinstance(archive_res, dict) and len(archive_res) > 0:
+            civarchive_avail = True
+            save_availability_to_json(model_path, civitai_avail=False, civarchive_avail=True)
+            logs.append({'message': f"{filename} is available on CivArchive!", 'type': 'success'})
+            return {
+                'status': 'success',
+                'message': 'Available on CivArchive (Removed from Civitai)',
+                'civitai_available': civitai_avail,
+                'civarchive_available': civarchive_avail,
+                'logs': logs
+            }
+        else:
+            civarchive_avail = False
+            save_availability_to_json(model_path, civitai_avail=False, civarchive_avail=False)
+            logs.append({'message': f"{filename} is NOT available on Civitai or CivArchive.", 'type': 'warning'})
+            return {
+                'status': 'success',
+                'message': 'Not available online (Removed from both)',
+                'civitai_available': civitai_avail,
+                'civarchive_available': civarchive_avail,
+                'logs': logs
+            }
+
+    return {
+        'status': 'success',
+        'message': 'Already marked unavailable on both platforms',
+        'civitai_available': civitai_avail,
+        'civarchive_available': civarchive_avail,
+        'logs': logs
+    }
 
 
 def create_dummy_info_file(model_path):

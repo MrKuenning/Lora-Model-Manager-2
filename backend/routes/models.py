@@ -168,6 +168,16 @@ def save_model(model_id):
             if 'civitaiUrl' in data: json_data['web_civitai_data']['url'] = data['civitaiUrl']
             if 'all_trigger_words' in data: json_data['web_civitai_data']['civitai text'] = data['all_trigger_words']
 
+        # Online Availability fields
+        if 'civitaiAvailable' in data or 'civitai_available' in data:
+            val = data.get('civitaiAvailable', data.get('civitai_available'))
+            if val is not None:
+                json_data['civitai_available'] = val
+        if 'civarchiveAvailable' in data or 'civarchive_available' in data:
+            val = data.get('civarchiveAvailable', data.get('civarchive_available'))
+            if val is not None:
+                json_data['civarchive_available'] = val
+
         # Write to JSON file
         with open(json_path, 'w') as f:
             json.dump(json_data, f, indent=4)

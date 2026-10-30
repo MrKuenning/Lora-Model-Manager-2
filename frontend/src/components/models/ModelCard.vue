@@ -71,6 +71,49 @@
             Slider
           </div>
         </template>
+
+        <!-- Online Availability Badge -->
+        <template v-if="availabilityStatus">
+          <!-- Civitai Available -->
+          <template v-if="availabilityStatus === 'civitai' && settings.gridCard?.showCivitaiBadge !== false && settings.gridCard?.showAvailabilityBadge !== false">
+            <div 
+              v-if="settings.gridCard?.badgeStyle === 'truncated'" 
+              class="icon-badge badge-civitai" 
+              title="Available on Civitai"
+            >
+              CI
+            </div>
+            <div v-else class="card-badge badge-civitai" title="Available on Civitai">
+              Civitai
+            </div>
+          </template>
+          <!-- CivArchive Available (Removed from Civitai) -->
+          <template v-else-if="availabilityStatus === 'civarchive' && settings.gridCard?.showCivArchiveBadge !== false && settings.gridCard?.showAvailabilityBadge !== false">
+            <div 
+              v-if="settings.gridCard?.badgeStyle === 'truncated'" 
+              class="icon-badge badge-civarchive" 
+              title="Available on CivArchive (Removed from Civitai)"
+            >
+              CA
+            </div>
+            <div v-else class="card-badge badge-civarchive" title="Available on CivArchive (Removed from Civitai)">
+              Archive
+            </div>
+          </template>
+          <!-- Offline / Removed from both -->
+          <template v-else-if="availabilityStatus === 'offline' && settings.gridCard?.showOfflineBadge !== false && settings.gridCard?.showAvailabilityBadge !== false">
+            <div 
+              v-if="settings.gridCard?.badgeStyle === 'truncated'" 
+              class="icon-badge badge-offline" 
+              title="Not Available Online (Removed from Civitai & CivArchive)"
+            >
+              <i class="fas fa-unlink"></i>
+            </div>
+            <div v-else class="card-badge badge-offline" title="Not Available Online (Removed from Civitai & CivArchive)">
+              Offline
+            </div>
+          </template>
+        </template>
       </div>
 
       <!-- Bulk Select Checkbox -->
@@ -214,6 +257,27 @@ const isNsfw = computed(() => {
 });
 const isTested = computed(() => props.model.tested === true);
 const isSlider = computed(() => props.model.isSlider === true || props.model.slider === true);
+
+const availabilityStatus = computed(() => {
+  const ci = props.model.civitaiAvailable !== undefined ? props.model.civitaiAvailable : props.model.civitai_available;
+  const ca = props.model.civarchiveAvailable !== undefined ? props.model.civarchiveAvailable : props.model.civarchive_available;
+
+  if (ci === true || String(ci).toLowerCase() === 'true') {
+    return 'civitai';
+  }
+  const ciFalse = ci === false || String(ci).toLowerCase() === 'false';
+  const caTrue = ca === true || String(ca).toLowerCase() === 'true';
+  const caFalse = ca === false || String(ca).toLowerCase() === 'false';
+
+  if (caTrue) {
+    return 'civarchive';
+  }
+  if (ciFalse && caFalse) {
+    return 'offline';
+  }
+  return '';
+});
+
 const sliderRangeText = computed(() => {
   const min = props.model.sliderMin !== undefined && props.model.sliderMin !== null ? props.model.sliderMin : -3;
   const max = props.model.sliderMax !== undefined && props.model.sliderMax !== null ? props.model.sliderMax : 3;
@@ -396,6 +460,21 @@ const copyExamplePrompt = () => {
 
 .badge-slider {
   background-color: rgba(155, 89, 182, 0.9);
+  color: white;
+}
+
+.badge-civitai {
+  background-color: rgba(52, 152, 219, 0.92);
+  color: white;
+}
+
+.badge-civarchive {
+  background-color: rgba(142, 68, 173, 0.92);
+  color: white;
+}
+
+.badge-offline {
+  background-color: rgba(192, 57, 43, 0.92);
   color: white;
 }
 

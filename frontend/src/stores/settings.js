@@ -34,6 +34,10 @@ export const useSettingsStore = defineStore('settings', {
       showNsfwBadge: true,
       showTestedBadge: true,
       showSliderBadge: true,
+      showAvailabilityBadge: true,
+      showCivitaiBadge: true,
+      showCivArchiveBadge: true,
+      showOfflineBadge: true,
       badgeStyle: 'full', // 'full' (text) or 'truncated' (compact icons: ↔, ⊘, ✓)
       // Meta below title
       showBaseModel: true,

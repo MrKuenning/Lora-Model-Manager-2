@@ -75,21 +75,29 @@ def fetch_by_hash():
         logs.append({'message': "Gathering Metadata...", 'type': 'info'})
         model_info = civitai_handler.fetch_model_info_by_hash(file_hash)
 
-        if not model_info:
+        civitai_found = bool(model_info)
+        if model_info == {}:
+            civitai_handler.save_availability_to_json(model_path, civitai_avail=False)
             logs.append({'message': "Not found on Civitai. Checking CivArchive...", 'type': 'warning'})
             model_info = civitai_handler.scrape_civarchive_by_hash(file_hash)
+            if model_info == {}:
+                civitai_handler.save_availability_to_json(model_path, civitai_avail=False, civarchive_avail=False)
 
         if model_info is None:
             logs.append({'message': "Failed to connect to Civitai / CivArchive APIs.", 'type': 'error'})
             return jsonify({'status': 'error', 'message': 'Failed to connect to APIs', 'logs': logs})
 
         if not model_info:
+            civitai_handler.save_sha256_to_json(model_path, file_hash)
+            _sync_model_path_to_db(model_path)
             logs.append({'message': f"Metadata not found on Civitai or CivArchive", 'type': 'error'})
             return jsonify({'status': 'not_found', 'message': 'Model not found on Civitai or CivArchive', 'logs': logs})
 
         # 3. JSON created successfully
         success = civitai_handler.save_civitai_info(model_path, model_info)
         civitai_handler.save_sha256_to_json(model_path, file_hash)
+        if not civitai_found:
+            civitai_handler.save_availability_to_json(model_path, civitai_avail=False, civarchive_avail=True)
 
         if not success:
             logs.append({'message': "Failed to save JSON.", 'type': 'error'})
@@ -152,6 +160,9 @@ def fetch_civarchive_by_hash():
             return jsonify({'status': 'error', 'message': 'Failed to connect to CivArchive', 'logs': logs})
 
         if not model_info:
+            civitai_handler.save_sha256_to_json(model_path, file_hash)
+            civitai_handler.save_availability_to_json(model_path, civarchive_avail=False)
+            _sync_model_path_to_db(model_path)
             logs.append({'message': "Model not found on CivArchive.", 'type': 'error'})
             return jsonify({'status': 'not_found', 'message': 'Model not found on CivArchive', 'logs': logs})
 
@@ -577,4 +588,24 @@ def save_civitai_info():
             return jsonify({'status': 'error', 'message': str(e)}), 500
 
     except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@civitai_bp.route('/api/civitai/check-availability', methods=['POST'])
+def check_availability():
+    """Check if a model is still available online on Civitai or CivArchive."""
+    try:
+        data = request.get_json() or {}
+        model_path = data.get('modelPath')
+        force_all = data.get('forceAll', False)
+
+        if not model_path:
+            return jsonify({'status': 'error', 'message': 'Missing modelPath'}), 400
+
+        result = civitai_handler.check_model_online_availability(model_path, force_all=force_all)
+        _sync_model_path_to_db(model_path)
+
+        return jsonify(result)
+    except Exception as e:
+        print(f"Error in check_availability: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500

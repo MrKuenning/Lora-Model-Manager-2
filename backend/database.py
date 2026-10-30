@@ -633,6 +633,17 @@ def _row_to_api_dict(row):
             except (json.JSONDecodeError, TypeError):
                 d[json_field] = [] if json_field != 'json_data' and json_field != 'civitai_data' else {}
 
+    def _parse_avail(val):
+        if val is True or str(val).lower() == 'true':
+            return True
+        if val is False or str(val).lower() == 'false':
+            return False
+        return ''
+
+    json_obj = d.get('json_data', {}) if isinstance(d.get('json_data'), dict) else {}
+    civitai_avail = _parse_avail(json_obj.get('civitai_available', json_obj.get('civitai availability', '')))
+    civarchive_avail = _parse_avail(json_obj.get('civarchive_available', json_obj.get('civarchive availability', '')))
+
     # Map to the API format the frontend expects
     return {
         'id': d['id'],
@@ -666,6 +677,12 @@ def _row_to_api_dict(row):
         'civitai_url': d.get('civitai_url', ''),
         'creator': d.get('creator', ''),
         'modelVersion': d.get('model_version', ''),
+        
+        # Online Availability fields
+        'civitaiAvailable': civitai_avail,
+        'civitai_available': civitai_avail,
+        'civarchiveAvailable': civarchive_avail,
+        'civarchive_available': civarchive_avail,
         
         # Slider fields
         'isSlider': bool(d.get('is_slider', 0)) or bool(d.get('json_data', {}).get('slider', False)),

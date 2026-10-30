@@ -72,6 +72,7 @@ export const api = {
   civitaiCreatePlaceholder: (modelPath) => apiClient.post('/civitai/create-placeholder', { modelPath }).then(res => res.data),
   civitaiGenerateHash: (modelPath, skipIfExists = false) => apiClient.post('/civitai/generate-hash', { modelPath, skipIfExists }).then(res => res.data),
   civitaiFindDuplicates: (location) => apiClient.post('/civitai/find-duplicates', { location }).then(res => res.data),
+  civitaiCheckAvailability: (modelPath, forceAll = false) => apiClient.post('/civitai/check-availability', { modelPath, forceAll }).then(res => res.data),
   
   // Helper for generating local asset URLs
   getAssetUrl: (path, cacheBuster = '') => {

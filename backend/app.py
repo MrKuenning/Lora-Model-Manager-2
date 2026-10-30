@@ -112,8 +112,12 @@ def create_app():
             if path and os.path.exists(full_path) and os.path.isfile(full_path):
                 return send_from_directory(frontend_dist, path)
 
-            # Fall back to index.html for SPA routing
-            return send_from_directory(frontend_dist, 'index.html')
+            # Fall back to index.html for SPA routing (disable caching so new builds load immediately)
+            resp = send_from_directory(frontend_dist, 'index.html')
+            resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+            resp.headers['Pragma'] = 'no-cache'
+            resp.headers['Expires'] = '0'
+            return resp
 
     return app
 
