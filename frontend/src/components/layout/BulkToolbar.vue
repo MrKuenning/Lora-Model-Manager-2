@@ -6,7 +6,19 @@
       </div>
       
       <div class="toolbar-actions">
-        <button class="btn btn-secondary" @click="bulkStore.clearSelection()">
+        <button 
+          class="btn btn-secondary" 
+          :disabled="modelsStore.filteredModels.length === 0 || allFilteredSelected" 
+          @click="bulkStore.selectAll(modelsStore.filteredModels)"
+          title="Select all models matching current filters"
+        >
+          <i class="fas fa-check-double"></i> Select All ({{ modelsStore.filteredModels.length }})
+        </button>
+        <button 
+          class="btn btn-secondary" 
+          :disabled="!bulkStore.hasSelection" 
+          @click="bulkStore.clearSelection()"
+        >
           Clear Selection
         </button>
         <button class="btn btn-primary" :disabled="!bulkStore.hasSelection" @click="emit('open-move')">
@@ -30,10 +42,18 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { useBulkStore } from '../../stores/bulk';
+import { useModelsStore } from '../../stores/models';
 
 const emit = defineEmits(['open-edit', 'open-move', 'open-rename', 'trigger-delete']);
 const bulkStore = useBulkStore();
+const modelsStore = useModelsStore();
+
+const allFilteredSelected = computed(() => {
+  const list = modelsStore.filteredModels;
+  return list.length > 0 && list.every(m => bulkStore.isSelected(m.id));
+});
 </script>
 
 <style scoped>
