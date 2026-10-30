@@ -41,10 +41,10 @@
           v-for="model in modelsList" 
           :key="model.id"
           :class="{ selected: bulkStore.isSelected(model.id) }"
-          @click="handleClick(model.id)"
+          @click="handleClick(model.id, $event)"
         >
           <td class="col-checkbox" v-if="bulkStore.isBulkMode">
-            <input type="checkbox" :checked="bulkStore.isSelected(model.id)" @click.stop="bulkStore.toggleSelection(model.id)">
+            <input type="checkbox" :checked="bulkStore.isSelected(model.id)" @click.stop="handleCheckboxClick(model.id, $event)">
           </td>
           
           <template v-for="col in activeColumns" :key="col">
@@ -214,9 +214,19 @@ const getSortIcon = (column) => {
   return 'fa-sort';
 };
 
-const handleClick = (id) => {
+const handleCheckboxClick = (id, event) => {
+  if (event?.shiftKey) {
+    window.getSelection()?.removeAllRanges();
+  }
+  bulkStore.toggleSelection(id, event, props.modelsList);
+};
+
+const handleClick = (id, event) => {
   if (bulkStore.isBulkMode) {
-    bulkStore.toggleSelection(id);
+    if (event?.shiftKey) {
+      window.getSelection()?.removeAllRanges();
+    }
+    bulkStore.toggleSelection(id, event, props.modelsList);
   } else {
     emit('open-model', id);
   }

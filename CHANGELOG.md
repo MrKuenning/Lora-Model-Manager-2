@@ -1,5 +1,15 @@
 # Lora Model Manager - Changelog
 
+### 10/30/2026 - v2.2.9
+
+**Added**
+- **Bulk Edit Filter-Based Select All**:
+  - Added a **Select All (N)** button to the Bulk Edit floating toolbar that instantly selects all models matching current active filters (search query, base model filters, folder navigation, and SafeMode).
+  - Dynamically displays the live count of matching models and disables itself once all filtered models are selected.
+- **Shift + Click Multi-Select Range Selection**:
+  - Added contiguous range selection across both Grid View and Table View.
+  - Holding Shift and clicking any model card or checkbox selects (or deselects) all models in between, respecting the active visual sorting and grouping hierarchy.
+
 ### 10/30/2026 - v2.2.8
 
 **Added**

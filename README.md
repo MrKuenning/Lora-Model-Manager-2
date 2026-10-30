@@ -111,6 +111,7 @@ Dedicated Civitai Scan page with powerful tools:
 - **Manual URL Matching**: Enter Civitai URL when hash matching fails
 - **Download Thumbnails**: Download preview images from Civitai
 - **Fix Thumbnail Names**: Standardize thumbnail filenames
+- **Check Online Availability**: Audit availability of models online, checking Civitai first with automated fallback to CivArchive if removed from Civitai (404)
 - **Dummy JSON Files**: Create marker files for unmatched models
 
 ### 📝 Model-Specific Actions
@@ -126,7 +127,9 @@ Action buttons in the model popup for single-model operations:
 
 Perform batch operations on multiple models at once or clean up your collection:
 
-1. **Bulk Selection Mode**: Click **Bulk** in the header to select multiple cards:
+1. **Bulk Selection Mode**: Click **Bulk Edit** in the header to select multiple cards:
+   - **Select All (N)**: One-click selection of all models currently displayed under the active search query, base model filters, folder, and SafeMode state
+   - **Shift + Click Range Selection**: Select or deselect any contiguous series of models in line by holding Shift and clicking the start and end cards or checkboxes in either Grid View or Table View
    - **Move**: Batch move selected models to an existing folder, a base model root, or create a new subfolder on the fly
    - **Edit**: Update Category, Subcategory, Version, or High/Low for all selected models
    - **Rename**: Preview and apply recommended standardized filenames across selections

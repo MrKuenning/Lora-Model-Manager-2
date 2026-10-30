@@ -120,7 +120,7 @@
       <div 
         class="bulk-checkbox"
         :class="{ checked: bulkStore.isSelected(model.id) }"
-        @click.stop="bulkStore.toggleSelection(model.id)"
+        @click.stop="handleCheckboxClick($event)"
       >
         <i class="fas" :class="bulkStore.isSelected(model.id) ? 'fa-check-square' : 'fa-square'"></i>
       </div>
@@ -309,9 +309,29 @@ const handleImageError = (e) => {
   }
 };
 
-const handleClick = () => {
+const getOrderedModels = () => {
+  if (modelsStore.groupBy === 'none') {
+    return modelsStore.filteredModels;
+  }
+  return Object.values(modelsStore.groupedModels).flat();
+};
+
+const handleCheckboxClick = (event) => {
+  if (event?.shiftKey) {
+    window.getSelection()?.removeAllRanges();
+  }
+  if (!bulkStore.isBulkMode) {
+    bulkStore.isBulkMode = true;
+  }
+  bulkStore.toggleSelection(props.model.id, event, getOrderedModels());
+};
+
+const handleClick = (event) => {
   if (bulkStore.isBulkMode) {
-    bulkStore.toggleSelection(props.model.id);
+    if (event?.shiftKey) {
+      window.getSelection()?.removeAllRanges();
+    }
+    bulkStore.toggleSelection(props.model.id, event, getOrderedModels());
   } else {
     emit('open-model', props.model.id);
   }
