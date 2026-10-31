@@ -401,8 +401,11 @@ def scrape_civarchive_by_hash(file_hash):
         if response.status_code == 404:
             print(f"Model not found on CivArchive for hash: {file_hash}")
             return {}
+        elif response.status_code == 500 and ('Model not found' in response.text or 'prisma' in response.text or 'findUnique' in response.text or 'civitAIModel' in response.text):
+            print(f"Model not found on CivArchive (500 not-found) for hash: {file_hash}")
+            return {}
         elif not response.ok:
-            print(f"CivArchive error {response.status_code}: {response.text}")
+            print(f"CivArchive error {response.status_code}: {response.text[:200]}")
             return None
             
         return _parse_civarchive_html(response.text)
@@ -428,8 +431,11 @@ def scrape_civarchive_by_url(url):
         if response.status_code == 404:
             print(f"Model not found on CivArchive for URL: {url}")
             return {}
+        elif response.status_code == 500 and ('Model not found' in response.text or 'prisma' in response.text or 'findUnique' in response.text or 'civitAIModel' in response.text or 'out of range' in response.text):
+            print(f"Model not found on CivArchive (500 not-found) for URL: {url}")
+            return {}
         elif not response.ok:
-            print(f"CivArchive error {response.status_code}: {response.text}")
+            print(f"CivArchive error {response.status_code}: {response.text[:200]}")
             return None
             
         return _parse_civarchive_html(response.text)
@@ -982,22 +988,59 @@ def check_model_online_availability(model_path, force_all=False):
     if force_all or civarchive_avail is not False:
         logs.append({'message': f"Checking CivArchive availability for {filename}...", 'type': 'info'})
         archive_res = None
-        if file_hash:
-            archive_res = scrape_civarchive_by_hash(file_hash)
-        if not archive_res and civitai_url and ('civarchive.com' in civitai_url or 'civitaiarchive.com' in civitai_url):
-            archive_res = scrape_civarchive_by_url(civitai_url)
-        if not archive_res and model_id and version_id:
-            archive_url = f"https://civitaiarchive.com/models/{model_id}?modelVersionId={version_id}"
-            archive_res = scrape_civarchive_by_url(archive_url)
-        elif not archive_res and model_id:
-            archive_url = f"https://civitaiarchive.com/models/{model_id}"
-            archive_res = scrape_civarchive_by_url(archive_url)
+        has_identifier = False
 
-        if archive_res is None:
-            logs.append({'message': "Could not verify CivArchive status (no hash/ID or connection issue).", 'type': 'warning'})
+        if file_hash:
+            has_identifier = True
+            hash_res = scrape_civarchive_by_hash(file_hash)
+            if hash_res is not None and len(hash_res) > 0:
+                archive_res = hash_res
+            elif hash_res == {}:
+                archive_res = {}
+
+        # If not found by hash, try direct civarchive URL or model_id/version_id
+        if archive_res != {} and (not archive_res or len(archive_res) == 0):
+            if civitai_url and ('civarchive.com' in civitai_url or 'civitaiarchive.com' in civitai_url):
+                has_identifier = True
+                url_res = scrape_civarchive_by_url(civitai_url)
+                if url_res is not None and len(url_res) > 0:
+                    archive_res = url_res
+                elif url_res == {} and archive_res is None:
+                    archive_res = {}
+
+        if (archive_res is None or (archive_res != {} and len(archive_res) == 0)):
+            if model_id and version_id:
+                has_identifier = True
+                archive_url = f"https://civitaiarchive.com/models/{model_id}?modelVersionId={version_id}"
+                id_res = scrape_civarchive_by_url(archive_url)
+                if id_res is not None and len(id_res) > 0:
+                    archive_res = id_res
+                elif id_res == {} and archive_res is None:
+                    archive_res = {}
+            elif model_id:
+                has_identifier = True
+                archive_url = f"https://civitaiarchive.com/models/{model_id}"
+                id_res = scrape_civarchive_by_url(archive_url)
+                if id_res is not None and len(id_res) > 0:
+                    archive_res = id_res
+                elif id_res == {} and archive_res is None:
+                    archive_res = {}
+
+        if not has_identifier:
+            logs.append({'message': f"Cannot check CivArchive for {filename} (no SHA256 hash or model ID).", 'type': 'warning'})
             return {
                 'status': 'success',
-                'message': 'Removed from Civitai (CivArchive check inconclusive)',
+                'message': 'Cannot check CivArchive (no hash or ID)',
+                'civitai_available': civitai_avail,
+                'civarchive_available': civarchive_avail,
+                'logs': logs
+            }
+
+        if archive_res is None:
+            logs.append({'message': f"Could not reach CivArchive for {filename} (connection issue).", 'type': 'warning'})
+            return {
+                'status': 'success',
+                'message': 'Removed from Civitai (CivArchive connection issue)',
                 'civitai_available': civitai_avail,
                 'civarchive_available': civarchive_avail,
                 'logs': logs
