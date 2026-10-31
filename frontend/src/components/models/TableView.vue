@@ -260,9 +260,10 @@ const handleImageError = (e, model) => {
 .table-view {
   width: 100%;
   overflow-x: auto;
-  background-color: var(--color-bg-secondary);
+  background-color: var(--color-card-bg, var(--color-bg-secondary));
+  border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
-  box-shadow: var(--shadow-standard);
+  box-shadow: var(--shadow-card, var(--shadow-standard));
   margin-bottom: 40px;
 }
 

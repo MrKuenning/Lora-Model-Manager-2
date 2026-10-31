@@ -1,9 +1,9 @@
 <template>
-  <div class="modal-overlay" @click.self="emit('close')">
+  <div class="modal-overlay" @click.self="cancelModal">
     <div class="modal-content settings-modal">
       <div class="modal-header">
         <h2><i class="fas fa-cog"></i> Settings</h2>
-        <button class="btn btn-icon" @click="emit('close')"><i class="fas fa-times"></i></button>
+        <button class="btn btn-icon" @click="cancelModal"><i class="fas fa-times"></i></button>
       </div>
       
       <div class="modal-body" v-if="!settings.loading">
@@ -22,6 +22,78 @@
         <div class="settings-content">
           <!-- General Tab -->
           <div v-if="activeTab === 'general'" class="settings-section">
+            <!-- Interface Theme -->
+            <div class="settings-group-clean">
+              <div class="settings-header-clean">
+                <h3>Interface Theme</h3>
+                <span class="variables-help">Select the visual appearance of the application</span>
+              </div>
+              
+              <div class="theme-selection-grid" style="margin-top: 10px;">
+                <!-- Slate Theme Option -->
+                <div 
+                  class="theme-card" 
+                  :class="{ active: (localSettings.theme || 'slate').toLowerCase() === 'slate' }"
+                  @click="selectTheme('slate')"
+                >
+                  <div class="theme-card-preview slate-theme-preview">
+                    <div class="preview-mini-header">
+                      <span class="preview-dot dot-slate"></span>
+                      <span class="preview-bar bar-header"></span>
+                    </div>
+                    <div class="preview-mini-body">
+                      <div class="preview-mini-sidebar"></div>
+                      <div class="preview-mini-content">
+                        <div class="preview-mini-card"></div>
+                        <div class="preview-mini-card"></div>
+                        <div class="preview-mini-card"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="theme-card-details">
+                    <div class="theme-title-row">
+                      <span class="theme-name"><i class="fas fa-palette" style="color: #94a3b8;"></i> Slate</span>
+                      <span class="theme-check-badge" v-if="(localSettings.theme || 'slate').toLowerCase() === 'slate'">
+                        <i class="fas fa-check-circle"></i> Active
+                      </span>
+                    </div>
+                    <p class="theme-description">Clean neutral grey aesthetic with flat, borderless buttons.</p>
+                  </div>
+                </div>
+
+                <!-- Midnight Theme Option -->
+                <div 
+                  class="theme-card" 
+                  :class="{ active: (localSettings.theme || '').toLowerCase() === 'midnight' }"
+                  @click="selectTheme('midnight')"
+                >
+                  <div class="theme-card-preview midnight-theme-preview">
+                    <div class="preview-mini-header">
+                      <span class="preview-dot dot-midnight"></span>
+                      <span class="preview-bar bar-header"></span>
+                    </div>
+                    <div class="preview-mini-body">
+                      <div class="preview-mini-sidebar"></div>
+                      <div class="preview-mini-content">
+                        <div class="preview-mini-card"></div>
+                        <div class="preview-mini-card"></div>
+                        <div class="preview-mini-card"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="theme-card-details">
+                    <div class="theme-title-row">
+                      <span class="theme-name"><i class="fas fa-moon" style="color: #38bdf8;"></i> Midnight</span>
+                      <span class="theme-check-badge" v-if="(localSettings.theme || '').toLowerCase() === 'midnight'">
+                        <i class="fas fa-check-circle"></i> Active
+                      </span>
+                    </div>
+                    <p class="theme-description">Deep obsidian navy aesthetic with vibrant cyan outlines on hover.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Server & Startup -->
             <div class="settings-group-clean">
               <div class="settings-header-clean">
@@ -937,7 +1009,7 @@
       </div>
       
       <div class="modal-footer">
-        <button class="btn btn-secondary" @click="emit('close')">Cancel</button>
+        <button class="btn btn-secondary" @click="cancelModal">Cancel</button>
         <button class="btn btn-primary" @click="save" :disabled="saving">
           <i class="fas fa-save" v-if="!saving"></i>
           <i class="fas fa-spinner fa-spin" v-else></i> 
@@ -964,6 +1036,16 @@ const activeTab = ref('general');
 const saving = ref(false);
 const newTrimName = ref('');
 
+const selectTheme = (themeName) => {
+  localSettings.theme = themeName;
+  settings.applyTheme(themeName);
+};
+
+const cancelModal = () => {
+  settings.applyTheme(settings.theme);
+  emit('close');
+};
+
 const RESTRICTED_PORTS = [
   1, 7, 9, 11, 13, 15, 17, 19, 20, 21, 22, 23, 25, 37, 42, 43, 53, 69, 77, 79, 87, 95, 101, 102, 103, 104, 109, 110, 111, 113, 115, 117, 119, 123, 135, 137, 139, 143, 161, 179, 389, 427, 465, 512, 513, 514, 515, 526, 530, 531, 532, 540, 548, 554, 563, 587, 601, 636, 989, 990, 993, 995, 1719, 1720, 1723, 2049, 3659, 4045, 5060, 5061, 6000, 6566, 6665, 6666, 6667, 6668, 6669, 6697, 10080
 ];
@@ -976,7 +1058,7 @@ const isRestrictedPort = (port) => {
 const localSettings = reactive({
   port: 8080,
   autoOpenBrowser: true,
-  theme: 'dark',
+  theme: 'slate',
   defaultView: 'grid',
   defaultSort: 'name-asc',
   safeModeDefault: true,
@@ -1002,7 +1084,7 @@ onMounted(() => {
   // Initialize local copy
   localSettings.port = settings.port || 8080;
   localSettings.autoOpenBrowser = settings.autoOpenBrowser !== false; // Default true
-  localSettings.theme = settings.theme;
+  localSettings.theme = (settings.theme || 'slate').toLowerCase() === 'midnight' ? 'midnight' : 'slate';
   localSettings.defaultView = settings.defaultView;
   localSettings.defaultSort = settings.defaultSort;
   localSettings.safeModeDefault = settings.safeModeDefault !== false; // Default true
@@ -1992,5 +2074,190 @@ const cleanJsonFiles = async () => {
   color: #c0392b;
   opacity: 1;
   transform: scale(1.15);
+}
+
+/* Theme Selection Styles */
+.theme-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+@media (max-width: 650px) {
+  .theme-selection-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.theme-card {
+  background: var(--color-bg-primary);
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  padding: 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.theme-card:hover {
+  border-color: var(--color-text-link);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.theme-card.active {
+  border-color: #38bdf8;
+  background: var(--color-bg-secondary);
+  box-shadow: 0 0 0 1px #38bdf8, 0 4px 15px rgba(56, 189, 248, 0.25);
+}
+
+.theme-card-preview {
+  height: 90px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Slate Mockup */
+.slate-theme-preview {
+  background: #1e1e1e;
+}
+.slate-theme-preview .preview-mini-header {
+  height: 20px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #444;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  gap: 6px;
+}
+.slate-theme-preview .dot-slate {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3498db;
+}
+.slate-theme-preview .bar-header {
+  height: 4px;
+  width: 40px;
+  background: #555;
+  border-radius: 2px;
+}
+.slate-theme-preview .preview-mini-body {
+  flex: 1;
+  display: flex;
+  padding: 6px;
+  gap: 6px;
+  background: #1e1e1e;
+}
+.slate-theme-preview .preview-mini-sidebar {
+  width: 25px;
+  background: #262626;
+  border-radius: 3px;
+  border: 1px solid #383838;
+}
+.slate-theme-preview .preview-mini-content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.slate-theme-preview .preview-mini-card {
+  background: #2d2d2d;
+  border: 1px solid #444;
+  border-radius: 3px;
+}
+
+/* Midnight Mockup */
+.midnight-theme-preview {
+  background: radial-gradient(ellipse 100% 50% at 50% 0%, rgba(14, 116, 144, 0.25), transparent 70%), #0a0e17;
+}
+.midnight-theme-preview .preview-mini-header {
+  height: 20px;
+  background: #0c101a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  gap: 6px;
+}
+.midnight-theme-preview .dot-midnight {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 6px #38bdf8;
+}
+.midnight-theme-preview .bar-header {
+  height: 4px;
+  width: 40px;
+  background: #244775;
+  border-radius: 2px;
+}
+.midnight-theme-preview .preview-mini-body {
+  flex: 1;
+  display: flex;
+  padding: 6px;
+  gap: 6px;
+}
+.midnight-theme-preview .preview-mini-sidebar {
+  width: 25px;
+  background: #0e131d;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.midnight-theme-preview .preview-mini-content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.midnight-theme-preview .preview-mini-card {
+  background: #161c26;
+  border: 1px solid #38bdf8;
+  box-shadow: 0 0 4px rgba(56, 189, 248, 0.4);
+  border-radius: 3px;
+}
+
+.theme-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.theme-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.theme-name {
+  font-weight: 700;
+  font-size: 1.05em;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-check-badge {
+  color: #10b981;
+  font-size: 0.85em;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.theme-description {
+  margin: 0;
+  font-size: 0.84em;
+  color: var(--color-text-secondary);
+  line-height: 1.35;
 }
 </style>

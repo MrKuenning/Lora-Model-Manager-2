@@ -540,7 +540,7 @@ const flatFolders = computed(() => {
 <style scoped>
 .sidebar {
   width: 280px;
-  background-color: var(--color-bg-secondary);
+  background-color: var(--color-sidebar-bg, var(--color-bg-secondary));
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
@@ -559,7 +559,7 @@ const flatFolders = computed(() => {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--color-border);
-  background-color: var(--color-bg-secondary);
+  background-color: var(--color-sidebar-bg, var(--color-bg-secondary));
   flex-shrink: 0;
 }
 
@@ -648,9 +648,9 @@ const flatFolders = computed(() => {
 }
 
 .flat-view li.active {
-  background-color: var(--color-bg-tertiary);
-  color: var(--color-btn-primary);
-  border-left: 3px solid var(--color-btn-primary);
+  background-color: var(--sidebar-active-bg, var(--color-bg-tertiary));
+  color: var(--color-accent-title, var(--color-btn-primary));
+  border-left: 3px solid var(--color-accent-title, var(--color-btn-primary));
   padding-left: 7px;
 }
 
@@ -674,13 +674,13 @@ const flatFolders = computed(() => {
 }
 
 .folder-count {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-muted);
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
   border-radius: 12px;
   padding: 2px 8px;
   font-size: 0.8em;
   font-weight: normal;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-subtle, var(--color-border));
   flex-shrink: 0;
 }
 
@@ -704,7 +704,7 @@ const flatFolders = computed(() => {
 .sidebar-footer {
   padding: 10px;
   border-top: 1px solid var(--color-border);
-  background-color: var(--color-bg-secondary);
+  background-color: var(--color-sidebar-bg, var(--color-bg-secondary));
   flex-shrink: 0;
 }
 

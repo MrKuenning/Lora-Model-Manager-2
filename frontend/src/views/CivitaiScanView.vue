@@ -1391,8 +1391,8 @@ const sortDownloadedModels = async () => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: radial-gradient(ellipse 100% 50% at 50% 0%, rgba(14, 116, 144, 0.15), transparent 70%), #0a0e17;
-  color: #e2e8f0;
+  background: var(--app-background);
+  color: var(--color-text);
   overflow-y: auto;
 }
 
@@ -1401,54 +1401,17 @@ const sortDownloadedModels = async () => {
 }
 
 .civitai-scan-view::-webkit-scrollbar-track {
-  background: #0a0e17;
+  background: var(--scrollbar-track);
 }
 
 .civitai-scan-view::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: var(--scrollbar-thumb);
   border-radius: 5px;
-  border: 2px solid #0a0e17;
+  border: 2px solid var(--scrollbar-track);
 }
 
 .civitai-scan-view::-webkit-scrollbar-thumb:hover {
-  background: #334155;
-}
-
-/* Align AppHeader seamlessly with the deep navy theme */
-.civitai-scan-view :deep(.app-header) {
-  background: #0c101a;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.civitai-scan-view :deep(.app-header .btn-secondary) {
-  background: #181d26;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #cbd5e1;
-}
-
-.civitai-scan-view :deep(.app-header .btn-secondary:hover) {
-  background: #232a37;
-  border-color: #38bdf8;
-  color: #ffffff;
-}
-
-.civitai-scan-view :deep(.app-header .view-toggles) {
-  background: #11151c;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.civitai-scan-view :deep(.app-header .view-toggles .btn.active) {
-  background: #1e293b;
-  color: #38bdf8;
-}
-
-.civitai-scan-view :deep(.app-header .location-tab) {
-  color: #94a3b8;
-}
-
-.civitai-scan-view :deep(.app-header .location-tab.active) {
-  background: #0284c7;
-  color: #ffffff;
+  background: var(--scrollbar-thumb-hover);
 }
 
 .scan-container {
@@ -1475,9 +1438,9 @@ const sortDownloadedModels = async () => {
 }
 
 .btn-back-manager {
-  background: #181d26;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #cbd5e1;
+  background: var(--color-btn-secondary);
+  border: 1px solid var(--color-btn-secondary-border, transparent);
+  color: var(--color-text);
   padding: 8px 16px;
   border-radius: 8px;
   font-weight: 600;
@@ -1491,11 +1454,11 @@ const sortDownloadedModels = async () => {
 }
 
 .btn-back-manager:hover {
-  background: #232a37;
-  border-color: #38bdf8;
+  background: var(--color-btn-secondary-hover);
+  border-color: var(--color-btn-secondary-hover-border, transparent);
+  box-shadow: var(--color-btn-secondary-hover-shadow, none);
   color: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(56, 189, 248, 0.25);
 }
 
 .scan-header {
@@ -1506,7 +1469,7 @@ const sortDownloadedModels = async () => {
   font-size: 2.2em;
   font-weight: 800;
   margin: 0 0 6px 0;
-  color: #38bdf8;
+  color: var(--color-accent-title);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1563,25 +1526,26 @@ const sortDownloadedModels = async () => {
 }
 
 .stat-box {
-  background: #11151c;
+  background: var(--color-card-bg-subtle);
   border-radius: 8px;
   padding: 12px 14px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   text-align: left;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border);
   border-top: 3px solid #3b82f6;
   min-height: 72px;
   cursor: default;
   user-select: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), var(--shadow-card);
   transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
 .stat-box:hover {
   transform: translateY(-1px);
-  border-color: rgba(255, 255, 255, 0.16);
+  border-color: var(--card-hover-border, var(--color-border-hover));
+  box-shadow: var(--card-hover-shadow, var(--shadow-hover));
 }
 
 .stat-box-total { border-top-color: #38bdf8; }
@@ -1590,19 +1554,19 @@ const sortDownloadedModels = async () => {
 .stat-box-meta.has-missing { 
   border-top-color: #ef4444; 
   border-color: rgba(239, 68, 68, 0.35);
-  background: linear-gradient(180deg, rgba(239, 68, 68, 0.12) 0%, #11151c 100%); 
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.12) 0%, var(--color-card-bg-subtle) 100%); 
 }
 .stat-box-thumbs { border-top-color: #475569; }
 .stat-box-thumbs.has-missing { 
   border-top-color: #f59e0b; 
   border-color: rgba(245, 158, 11, 0.35);
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.12) 0%, #11151c 100%); 
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.12) 0%, var(--color-card-bg-subtle) 100%); 
 }
 .stat-box-hashes { border-top-color: #475569; }
 .stat-box-hashes.has-missing { 
   border-top-color: #ef4444; 
   border-color: rgba(239, 68, 68, 0.35);
-  background: linear-gradient(180deg, rgba(239, 68, 68, 0.12) 0%, #11151c 100%); 
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.12) 0%, var(--color-card-bg-subtle) 100%); 
 }
 .stat-box-online { border-top-color: #10b981; }
 .stat-box-offline.has-offline { border-top-color: #ef4444; }
@@ -1689,9 +1653,9 @@ const sortDownloadedModels = async () => {
 
 .state-path-text {
   font-size: 0.8em;
-  color: #94a3b8;
-  background: #11151c;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--color-text-secondary);
+  background: var(--color-card-bg-subtle);
+  border: 1px solid var(--color-border);
   padding: 4px 10px;
   border-radius: 6px;
   max-width: 320px;
@@ -1705,8 +1669,8 @@ const sortDownloadedModels = async () => {
 
 .state-switch-tabs {
   display: flex;
-  background: #11151c;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-card-bg-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 20px;
   padding: 3px;
   gap: 4px;
@@ -1719,7 +1683,7 @@ const sortDownloadedModels = async () => {
   font-weight: 600;
   border: none;
   background: transparent;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -1728,12 +1692,12 @@ const sortDownloadedModels = async () => {
 }
 
 .state-switch-tab:hover:not(.active) {
-  color: #f1f5f9;
+  color: var(--color-text);
   background: rgba(255, 255, 255, 0.04);
 }
 
 .state-switch-tab.active {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  background: var(--color-btn-primary);
   color: white;
   font-weight: 700;
   box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4);
@@ -1752,31 +1716,31 @@ const sortDownloadedModels = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #181d26;
+  background: var(--color-card-bg);
   padding: 20px 24px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
 }
 
 .header-titles h3 {
   margin: 0 0 6px 0;
   font-size: 1.5em;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--color-text);
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
 .header-titles h3 i {
-  color: #38bdf8;
+  color: var(--color-text-link);
 }
 
 .header-titles .subtitle {
   margin: 0;
   font-size: 0.95em;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
 }
 
 /* Metric Cards Grid */
@@ -1787,22 +1751,22 @@ const sortDownloadedModels = async () => {
 }
 
 .metric-card {
-  background: #11151c;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-card-bg-subtle);
+  border: 1px solid var(--color-border);
   border-top: 3px solid #475569;
   border-radius: 10px;
   padding: 18px 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-card);
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .metric-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.16);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  border-color: var(--color-border-hover);
+  box-shadow: var(--shadow-hover);
 }
 
 .metric-card-total { border-top-color: #38bdf8; }
@@ -1873,14 +1837,14 @@ const sortDownloadedModels = async () => {
 
 /* Library Table Container */
 .library-table-container {
-  background: #181d26;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 22px;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-card);
 }
 
 .table-toolbar {
@@ -1889,14 +1853,14 @@ const sortDownloadedModels = async () => {
   align-items: center;
   flex-wrap: wrap;
   gap: 15px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--color-border);
   padding-bottom: 16px;
 }
 
 .table-tabs {
   display: flex;
-  background: #11151c;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-card-bg-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 4px;
   gap: 4px;
@@ -1907,7 +1871,7 @@ const sortDownloadedModels = async () => {
   border: none;
   padding: 8px 16px;
   border-radius: 6px;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   font-weight: 600;
   font-size: 0.88em;
   cursor: pointer;
@@ -1918,12 +1882,12 @@ const sortDownloadedModels = async () => {
 }
 
 .table-tab:hover:not(.active) {
-  color: #f1f5f9;
+  color: var(--color-text);
   background: rgba(255, 255, 255, 0.04);
 }
 
 .table-tab.active {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  background: var(--color-btn-primary);
   color: white;
   font-weight: 700;
   box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4);
@@ -1939,24 +1903,24 @@ const sortDownloadedModels = async () => {
 .table-search .search-icon {
   position: absolute;
   left: 12px;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   font-size: 0.9em;
 }
 
 .table-search-input {
   width: 100%;
   padding: 9px 32px 9px 34px;
-  background-color: #11151c;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--color-console-bg);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  color: #f1f5f9;
+  color: var(--color-text);
   font-size: 0.9em;
   outline: none;
   transition: all 0.2s ease;
 }
 
 .table-search-input:focus {
-  border-color: #38bdf8;
+  border-color: var(--color-text-link);
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
 }
 
@@ -1965,13 +1929,13 @@ const sortDownloadedModels = async () => {
   right: 10px;
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   cursor: pointer;
   padding: 4px;
 }
 
 .table-search .clear-search-btn:hover {
-  color: #f1f5f9;
+  color: var(--color-text);
 }
 
 /* Data Table */
@@ -1990,12 +1954,12 @@ const sortDownloadedModels = async () => {
 .library-data-table th, 
 .library-data-table td {
   padding: 12px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .library-data-table th {
-  background: #11151c;
-  color: #94a3b8;
+  background: var(--color-card-bg-subtle);
+  color: var(--color-text-secondary);
   font-size: 0.76em;
   font-weight: 700;
   text-transform: uppercase;
@@ -2004,7 +1968,7 @@ const sortDownloadedModels = async () => {
   position: sticky;
   top: 0;
   z-index: 5;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 2px solid var(--color-border);
 }
 
 .library-data-table th.sortable {
@@ -2014,7 +1978,7 @@ const sortDownloadedModels = async () => {
 
 .library-data-table th.sortable:hover {
   color: #ffffff;
-  background: #1a202c;
+  background: var(--color-bg-hover);
 }
 
 .library-data-table tbody tr {
@@ -2022,14 +1986,14 @@ const sortDownloadedModels = async () => {
 }
 
 .library-data-table tbody tr:hover {
-  background-color: rgba(56, 189, 248, 0.04);
+  background-color: var(--color-bg-hover);
 }
 
 .table-total-row {
-  background: #11151c;
+  background: var(--color-card-bg-subtle);
   font-weight: 700;
-  border-top: 2px solid rgba(255, 255, 255, 0.1);
-  color: #f1f5f9;
+  border-top: 2px solid var(--color-border);
+  color: var(--color-text);
 }
 
 .text-right { text-align: right; }
@@ -2074,10 +2038,10 @@ const sortDownloadedModels = async () => {
 .storage-bar {
   flex: 1;
   height: 8px;
-  background: #0d1117;
+  background: var(--color-console-bg);
   border-radius: 4px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .storage-bar-fill {
@@ -2242,21 +2206,21 @@ const sortDownloadedModels = async () => {
 }
 
 .online-detail-card {
-  background: #11151c;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-card-bg-subtle);
+  border: 1px solid var(--color-border);
   border-left: 3px solid #38bdf8;
   border-radius: 10px;
   padding: 20px;
   display: flex;
   gap: 15px;
   align-items: flex-start;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-card);
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .online-detail-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.16);
+  border-color: var(--color-border-hover);
 }
 
 .online-detail-card.card-ci { border-left-color: #38bdf8; }
@@ -2278,20 +2242,20 @@ const sortDownloadedModels = async () => {
   margin: 0 0 4px 0;
   font-size: 1.05em;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--color-text);
 }
 
 .online-detail-card .detail-count {
   font-size: 1.8em;
   font-weight: 800;
-  color: #f1f5f9;
+  color: var(--color-text);
   margin-bottom: 6px;
 }
 
 .online-detail-card .detail-body p {
   margin: 0;
   font-size: 0.85em;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   line-height: 1.4;
 }
 
@@ -2302,11 +2266,11 @@ const sortDownloadedModels = async () => {
 }
 
 .action-group.all-in-one {
-  background: #181d26;
+  background: var(--color-card-bg);
   padding: 22px 25px;
   border-radius: 12px;
-  border: 1px solid rgba(52, 152, 219, 0.35);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
   text-align: left;
   display: flex;
   flex-direction: column;
@@ -2327,13 +2291,13 @@ const sortDownloadedModels = async () => {
 .action-group h3 {
   margin: 0;
   font-size: 1.3em;
-  color: #f1f5f9;
+  color: var(--color-text);
 }
 
 .btn-primary-scan {
-  background: linear-gradient(135deg, #3498db 0%, #2475a8 100%);
+  background: var(--color-btn-primary-bg, var(--color-btn-primary));
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--color-btn-primary-border, transparent);
   padding: 12px 24px;
   border-radius: 8px;
   font-size: 1.1em;
@@ -2343,14 +2307,15 @@ const sortDownloadedModels = async () => {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   transition: all 0.2s ease;
 }
 
 .btn-primary-scan:hover {
-  background: linear-gradient(135deg, #42a5f5 0%, #2980b9 100%);
+  background: var(--color-btn-primary-hover-bg, var(--color-btn-primary-hover));
+  border-color: var(--color-btn-primary-hover-border, transparent);
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(52, 152, 219, 0.5);
+  box-shadow: var(--color-btn-primary-hover-shadow, 0 6px 18px rgba(0, 0, 0, 0.4));
 }
 
 .btn-primary-scan:active {
@@ -2365,11 +2330,11 @@ const sortDownloadedModels = async () => {
 }
 
 .action-col {
-  background: #181d26;
+  background: var(--color-card-bg);
   padding: 18px 20px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -2388,7 +2353,7 @@ const sortDownloadedModels = async () => {
 .card-header-bar h3 {
   margin: 0;
   font-size: 1.1em;
-  color: #f1f5f9;
+  color: var(--color-text);
   font-weight: 600;
 }
 
@@ -2413,7 +2378,7 @@ const sortDownloadedModels = async () => {
   margin: 0;
   font-size: 0.86em;
   line-height: 1.45;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   background: rgba(0, 0, 0, 0.22);
   padding: 8px 12px;
   border-radius: 6px;
@@ -2440,19 +2405,19 @@ const sortDownloadedModels = async () => {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: linear-gradient(180deg, #2b3342 0%, #202633 100%);
-  color: #e2e8f0;
-  border: 1px solid #3e4859;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+  background: var(--color-btn-action-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-btn-action-border, transparent);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
   transition: all 0.15s ease;
 }
 
 .btn-action:hover {
-  background: linear-gradient(180deg, #384255 0%, #283040 100%);
-  border-color: #60a5fa;
+  background: var(--color-btn-action-hover-bg);
+  border-color: var(--color-btn-action-hover-border, transparent);
   color: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--color-btn-action-hover-shadow, none);
 }
 
 .btn-action:active {
@@ -2483,14 +2448,14 @@ const sortDownloadedModels = async () => {
   grid-column: 1 / -1;
   padding: 11px 20px;
   font-size: 0.95em;
-  background: linear-gradient(180deg, #1e3a5f 0%, #152943 100%);
-  border-color: rgba(56, 189, 248, 0.4);
+  background: var(--color-btn-action-bg);
+  border: 1px solid var(--color-btn-action-border, transparent);
 }
 
 .btn-availability-primary:hover:not(:disabled) {
-  background: linear-gradient(180deg, #244775 0%, #1a3353 100%);
-  border-color: #38bdf8;
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.35);
+  background: var(--color-btn-action-hover-bg);
+  border-color: var(--color-btn-action-hover-border, transparent);
+  box-shadow: var(--color-btn-action-hover-shadow, none);
 }
 
 @media (max-width: 900px) {
@@ -2505,10 +2470,10 @@ const sortDownloadedModels = async () => {
 }
 
 .active-scan-box {
-  background: #181d26;
+  background: var(--color-card-bg);
   padding: 35px 25px;
   border-radius: 12px;
-  border: 1px solid rgba(56, 189, 248, 0.35);
+  border: 1px solid var(--color-border-hover);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
   text-align: center;
   display: flex;
@@ -2521,7 +2486,7 @@ const sortDownloadedModels = async () => {
   margin: 0;
   font-size: 1.25em;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--color-text);
 }
 
 .btn-large {
@@ -2540,10 +2505,10 @@ const sortDownloadedModels = async () => {
 .progress-bar {
   width: 100%;
   height: 14px;
-  background-color: #0d1117;
+  background-color: var(--color-console-bg);
   border-radius: 7px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
@@ -2563,21 +2528,21 @@ const sortDownloadedModels = async () => {
 
 /* Resolution Section */
 .resolution-section {
-  background: #181d26;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: var(--color-card-bg);
+  border: 1px solid rgba(245, 158, 11, 0.35);
   border-radius: 12px;
   padding: 22px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-card);
 }
 
 .resolution-section h3 {
   margin: 0 0 8px 0;
   font-size: 1.25em;
-  color: #f1f5f9;
+  color: var(--color-text);
 }
 
 .resolution-section p {
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   font-size: 0.9em;
   margin: 0 0 16px 0;
 }
@@ -2594,15 +2559,15 @@ const sortDownloadedModels = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #11151c;
+  background: var(--color-card-bg-subtle);
   padding: 14px 18px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border);
 }
 
 .failed-model-name {
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--color-text);
   flex: 1;
   word-break: break-all;
   margin-right: 20px;
@@ -2616,9 +2581,9 @@ const sortDownloadedModels = async () => {
 
 .failed-model-actions input {
   width: 320px;
-  background: #0d1117;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #fff;
+  background: var(--color-console-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
   border-radius: 6px;
   padding: 8px 12px;
   outline: none;
@@ -2627,17 +2592,17 @@ const sortDownloadedModels = async () => {
 }
 
 .failed-model-actions input:focus {
-  border-color: #38bdf8;
+  border-color: var(--color-text-link);
   box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
 }
 
 /* Log Section */
 .log-section {
-  background: #181d26;
+  background: var(--color-card-bg);
   padding: 18px 20px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
   height: 700px;
   max-height: 700px;
   min-height: 0;
@@ -2652,7 +2617,7 @@ const sortDownloadedModels = async () => {
   align-items: center;
   padding-bottom: 12px;
   margin-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .log-header-left {
@@ -2662,14 +2627,14 @@ const sortDownloadedModels = async () => {
 }
 
 .terminal-icon {
-  color: #38bdf8;
+  color: var(--color-text-link);
   font-size: 0.95em;
 }
 
 .log-title {
   font-weight: 700;
   font-size: 0.92em;
-  color: #f1f5f9;
+  color: var(--color-text);
   text-transform: uppercase;
   letter-spacing: 0.6px;
 }
@@ -2696,14 +2661,14 @@ const sortDownloadedModels = async () => {
 
 .console-status-text {
   font-size: 0.78em;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
 .btn-clear-logs {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #94a3b8;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
   padding: 4px 10px;
   border-radius: 6px;
   font-size: 0.78em;
@@ -2724,8 +2689,8 @@ const sortDownloadedModels = async () => {
 .log-container {
   flex: 1;
   min-height: 0;
-  background-color: #0d1117;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background-color: var(--color-console-bg);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
   padding: 14px 16px;
   overflow-y: auto;
@@ -2742,18 +2707,18 @@ const sortDownloadedModels = async () => {
 }
 
 .log-container::-webkit-scrollbar-track {
-  background: #0d1117;
+  background: var(--color-console-bg);
   border-radius: 4px;
 }
 
 .log-container::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .log-container::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: var(--scrollbar-thumb-hover);
 }
 
 .log-entry {

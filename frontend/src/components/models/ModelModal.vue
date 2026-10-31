@@ -2049,13 +2049,14 @@ const getFileIcon = (filename) => {
   width: 98%;
   max-width: 1600px;
   height: 95vh;
-  background-color: #2b2b2b;
+  background-color: var(--color-card-bg, var(--color-bg-secondary));
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   box-shadow: 0 10px 50px rgba(0, 0, 0, 0.8);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  color: #e0e0e0;
+  color: var(--color-text);
 }
 
 /* Header */
@@ -2064,26 +2065,26 @@ const getFileIcon = (filename) => {
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
-  background-color: #222;
-  border-bottom: 1px solid #444;
+  background-color: var(--color-header-bg, var(--color-bg-secondary));
+  border-bottom: 1px solid var(--color-border);
 }
 
 .modal-header h2 {
   margin: 0;
   font-size: 1.2em;
   font-weight: 600;
-  color: white;
+  color: var(--color-text);
 }
 
-.file-bracket { color: #aaa; }
-.base-model-light { color: #777; font-weight: 400; margin-left: 10px; }
+.file-bracket { color: var(--color-text-muted); }
+.base-model-light { color: var(--color-text-secondary); font-weight: 400; margin-left: 10px; }
 
 .header-actions {
   display: flex;
   gap: 15px;
 }
-.header-actions .btn-icon { color: #aaa; }
-.header-actions .btn-icon:hover { color: white; }
+.header-actions .btn-icon { color: var(--color-text-secondary); }
+.header-actions .btn-icon:hover { color: var(--color-text); }
 
 .model-details-layout {
   display: flex;
@@ -2094,10 +2095,10 @@ const getFileIcon = (filename) => {
 /* Left Column */
 .left-column {
   width: 320px;
-  background-color: #333;
+  background-color: var(--color-sidebar-bg, var(--color-bg-secondary));
   padding: 15px;
   overflow-y: auto;
-  border-right: 1px solid #444;
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -2112,14 +2113,18 @@ const getFileIcon = (filename) => {
 .main-image-container {
   width: 100%;
   aspect-ratio: 3/4;
-  background-color: #222;
+  background-color: var(--color-bg-image);
   border-radius: 8px;
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  border: 2px solid transparent;
+  border: 1px solid var(--color-border);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.main-image-container:hover { border-color: #555; }
+.main-image-container:hover {
+  border-color: var(--card-hover-border, var(--color-border-hover));
+  box-shadow: var(--card-hover-shadow, none);
+}
 
 .drop-overlay {
   position: absolute;
@@ -2131,22 +2136,22 @@ const getFileIcon = (filename) => {
   border-radius: 6px;
   font-size: 0.82em;
   font-weight: 500;
-  color: #e0e0e0;
+  color: var(--color-text);
   z-index: 2;
   display: flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--color-btn-secondary-border, rgba(255, 255, 255, 0.15));
   cursor: pointer;
   transition: all 0.2s ease;
   user-select: none;
 }
 .drop-overlay:hover {
-  background: rgba(52, 152, 219, 0.8);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: var(--color-btn-primary);
+  border-color: var(--color-btn-primary-hover-border, transparent);
   color: #fff;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--color-btn-primary-hover-shadow, 0 4px 12px rgba(0, 0, 0, 0.4));
 }
 .drop-overlay:active {
   transform: translateY(0);
@@ -2164,7 +2169,7 @@ const getFileIcon = (filename) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .thumbnail-strip {
@@ -2180,16 +2185,24 @@ const getFileIcon = (filename) => {
   object-fit: cover;
   cursor: pointer;
   border: 2px solid transparent;
+  transition: all 0.2s ease;
 }
-.thumb.active { border-color: #3498db; }
+.thumb.active {
+  border-color: var(--color-accent-title, var(--color-btn-primary));
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+}
 
 .add-thumb {
-  background: #222;
+  background: var(--color-bg-tertiary);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #666;
-  border: 1px dashed #555;
+  color: var(--color-text-muted);
+  border: 1px dashed var(--color-border);
+}
+.add-thumb:hover {
+  border-color: var(--color-accent-title, var(--color-btn-primary));
+  color: var(--color-text);
 }
 
 .main-image-container .image-hover-actions {
@@ -2218,27 +2231,27 @@ const getFileIcon = (filename) => {
 .image-hover-actions .btn-primary:hover {
   background-color: rgba(52, 152, 219, 0.9);
 }
-.btn-danger { background-color: #e74c3c; color: white; }
-.btn-danger:hover { background-color: #c0392b; }
+.btn-danger { background-color: var(--color-btn-danger); color: white; border-color: var(--color-btn-danger-border, transparent); }
+.btn-danger:hover { background-color: var(--color-btn-danger-hover); border-color: var(--color-btn-danger-hover-border, transparent); }
 .btn-success { background-color: var(--color-btn-success); color: white; }
 .btn-success:hover { background-color: var(--color-btn-success-hover); }
 
 /* Info Box */
 .info-box {
-  background-color: #2b2b2b;
-  border: 1px solid #444;
-  border-radius: 4px;
+  background-color: var(--color-card-bg-subtle, var(--color-bg-primary));
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
   overflow: hidden;
   flex-shrink: 0;
 }
 
 .info-box-header {
-  background-color: #222;
+  background-color: var(--color-bg-tertiary);
   padding: 8px 12px;
   font-size: 0.85em;
   font-weight: bold;
-  color: #aaa;
-  border-bottom: 1px solid #444;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .info-box-content {
@@ -2249,19 +2262,19 @@ const getFileIcon = (filename) => {
 }
 
 .info-row { display: flex; flex-direction: column; font-size: 0.85em; }
-.info-row label { color: #888; margin-bottom: 2px; }
+.info-row label { color: var(--color-text-secondary); margin-bottom: 2px; }
 .info-val { 
-  color: #ddd; 
+  color: var(--color-text); 
   word-break: break-all;
   overflow-wrap: anywhere;
 }
 .info-val a {
-  color: #4a90e2;
+  color: var(--color-text-link);
   text-decoration: none;
 }
 .info-val a:hover {
   text-decoration: underline;
-  color: #6eb0ff;
+  color: var(--color-text-link-hover);
 }
 .info-val span {
   word-break: break-all;
@@ -2275,7 +2288,7 @@ const getFileIcon = (filename) => {
   flex-wrap: wrap;
 }
 .info-link {
-  color: #4a90e2;
+  color: var(--color-text-link);
   text-decoration: none;
   cursor: pointer;
   word-break: break-word;
@@ -2283,7 +2296,7 @@ const getFileIcon = (filename) => {
 }
 .info-link:hover {
   text-decoration: underline;
-  color: #6eb0ff;
+  color: var(--color-text-link-hover);
 }
 .info-count-badge {
   display: inline-flex;
@@ -2293,22 +2306,22 @@ const getFileIcon = (filename) => {
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 10px;
-  background: rgba(74, 144, 226, 0.15);
-  color: #79b8ff;
-  border: 1px solid rgba(74, 144, 226, 0.35);
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--color-text-link);
+  border: 1px solid rgba(56, 189, 248, 0.35);
   cursor: pointer;
   line-height: 1.3;
   user-select: none;
   transition: all 0.15s ease;
 }
 .info-count-badge:hover {
-  background: rgba(74, 144, 226, 0.3);
+  background: rgba(56, 189, 248, 0.3);
   color: #ffffff;
-  border-color: rgba(74, 144, 226, 0.6);
+  border-color: rgba(56, 189, 248, 0.6);
   transform: scale(1.05);
 }
-.edit-icon { color: #666; cursor: pointer; }
-.edit-icon:hover { color: #fff; }
+.edit-icon { color: var(--color-text-muted); cursor: pointer; }
+.edit-icon:hover { color: var(--color-text); }
 .online-status-pill {
   display: inline-flex;
   align-items: center;
@@ -2337,13 +2350,13 @@ const getFileIcon = (filename) => {
 
 .weight-control { display: flex; align-items: center; gap: 10px; }
 .weight-slider { flex: 1; }
-.weight-input { width: 50px; background: #111; border: 1px solid #444; color: white; padding: 2px 5px; }
+.weight-input { width: 50px; background: var(--color-bg-input, #111); border: 1px solid var(--color-border); color: var(--color-text); padding: 2px 5px; }
 
 .inline-edit-input {
   flex: 1;
-  background: #111;
-  border: 1px solid #444;
-  color: white;
+  background: var(--color-bg-input, #111);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
   padding: 2px 5px;
   border-radius: 3px;
   width: 100%;
@@ -2362,23 +2375,24 @@ const getFileIcon = (filename) => {
 
 .tabs-header {
   display: flex;
-  background-color: #222;
-  border-bottom: 1px solid #444;
+  background-color: var(--color-header-bg, var(--color-bg-secondary));
+  border-bottom: 1px solid var(--color-border);
 }
 .tabs-header button {
   padding: 15px 25px;
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
-  color: #888;
+  color: var(--color-text-secondary);
   font-size: 1em;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
-.tabs-header button:hover { color: white; }
+.tabs-header button:hover { color: var(--color-text); }
 .tabs-header button.active {
-  color: #3498db;
-  border-bottom-color: #3498db;
+  color: var(--color-accent-title, var(--color-btn-primary));
+  border-bottom-color: var(--color-accent-title, var(--color-btn-primary));
 }
 
 .tab-content {
@@ -2388,6 +2402,7 @@ const getFileIcon = (filename) => {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  background-color: var(--color-card-bg, var(--color-bg-secondary));
 }
 
 .form-section {
@@ -2398,23 +2413,28 @@ const getFileIcon = (filename) => {
 .section-title {
   font-weight: bold;
   font-size: 1em;
-  color: #fff;
-  border-bottom: 1px solid #444;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
   padding-bottom: 5px;
 }
 
 .form-group { display: flex; flex-direction: column; gap: 5px; }
-.form-group label { font-size: 0.85em; color: #aaa; display: flex; align-items: center; gap: 5px; }
+.form-group label { font-size: 0.85em; color: var(--color-text-secondary); display: flex; align-items: center; gap: 5px; }
 .form-control {
-  background-color: #222;
-  border: 1px solid #444;
-  color: #eee;
+  background-color: var(--color-bg-input, #222);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
   padding: 8px 12px;
   border-radius: 4px;
   font-family: inherit;
   font-size: 0.9em;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.form-control:focus { border-color: #3498db; outline: none; }
+.form-control:focus {
+  border-color: var(--input-focus-border, var(--color-btn-primary));
+  outline: none;
+  box-shadow: var(--input-focus-shadow, none);
+}
 textarea.form-control { 
   height: 56px; 
   min-height: 56px;
@@ -2427,17 +2447,22 @@ textarea.form-control {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  background-color: #222;
-  border: 1px solid #444;
+  background-color: var(--color-bg-input, #222);
+  border: 1px solid var(--color-border);
   padding: 5px;
   border-radius: 4px;
   height: 60px;
   overflow-y: auto;
   align-items: flex-start;
   cursor: text;
+  transition: border-color 0.2s ease;
+}
+.tag-cloud-container:focus-within {
+  border-color: var(--input-focus-border, var(--color-btn-primary));
+  box-shadow: var(--input-focus-shadow, none);
 }
 .tag-pill {
-  background: #3498db;
+  background: var(--color-btn-primary);
   color: #fff;
   padding: 2px 8px;
   border-radius: 12px;
@@ -2459,7 +2484,7 @@ textarea.form-control {
   min-width: 120px;
   background: transparent;
   border: none;
-  color: #eee;
+  color: var(--color-text);
   outline: none;
   font-family: inherit;
   font-size: 0.9em;
@@ -2474,7 +2499,7 @@ textarea.form-control {
 
 .filename-input-group { display: flex; }
 .filename-input-group input { flex: 1; border-radius: 4px 0 0 4px; }
-.file-ext { background: #333; border: 1px solid #444; border-left: none; padding: 8px; color: #888; border-radius: 0 4px 4px 0; font-size: 0.9em; }
+.file-ext { background: var(--color-bg-tertiary); border: 1px solid var(--color-border); border-left: none; padding: 8px; color: var(--color-text-secondary); border-radius: 0 4px 4px 0; font-size: 0.9em; }
 
 .identity-buttons {
   grid-column: 1 / -1;
@@ -2492,50 +2517,54 @@ textarea.form-control {
 
 .btn-micro {
   font-size: 0.75rem;
-  padding: 3px 8px;
-  background-color: var(--color-bg-tertiary);
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
+  padding: 4px 10px;
+  background-color: var(--color-btn-secondary);
+  color: var(--color-text);
+  border: 1px solid var(--color-btn-secondary-border, transparent);
   border-radius: var(--border-radius-sm);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
+  font-weight: 600;
 }
 
 .btn-micro:hover {
-  background-color: var(--color-btn-primary);
+  background-color: var(--color-btn-secondary-hover);
+  border-color: var(--color-btn-secondary-hover-border, transparent);
+  box-shadow: var(--color-btn-secondary-hover-shadow, none);
   color: #fff;
-  border-color: var(--color-btn-primary);
 }
 
 .btn-micro.btn-danger {
-  background-color: #e74c3c;
+  background-color: var(--color-btn-danger);
   color: white;
-  border-color: #c0392b;
+  border-color: var(--color-btn-danger-border, transparent);
 }
 .btn-micro.btn-danger:hover {
-  background-color: #c0392b;
+  background-color: var(--color-btn-danger-hover);
+  border-color: var(--color-btn-danger-hover-border, transparent);
+  box-shadow: var(--color-btn-danger-hover-shadow, none);
 }
 
 .btn-micro.btn-success {
   background-color: var(--color-btn-success);
   color: white;
-  border-color: var(--color-btn-success-hover);
+  border-color: transparent;
 }
 .btn-micro.btn-success:hover {
   background-color: var(--color-btn-success-hover);
 }
 
 .label-with-actions { display: flex; justify-content: space-between; align-items: center; }
-.label-with-actions .actions { display: flex; gap: 10px; color: #888; }
+.label-with-actions .actions { display: flex; gap: 10px; color: var(--color-text-muted); }
 .label-with-actions .actions i { cursor: pointer; }
-.label-with-actions .actions i:hover { color: #fff; }
+.label-with-actions .actions i:hover { color: var(--color-text); }
 
 /* Civitai Tab */
 .civitai-tab {
   align-items: center;
 }
 .help-text {
-  color: #aaa;
+  color: var(--color-text-secondary);
   margin: 0 0 10px 0;
 }
 .action-grid-large {
@@ -2551,23 +2580,25 @@ textarea.form-control {
   gap: 15px;
   padding: 30px;
   text-align: center;
-  background-color: #222;
-  border: 1px solid #444;
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
+  transition: all 0.2s ease;
 }
 .btn-large:hover {
-  background-color: #333;
-  border-color: #555;
+  background-color: var(--color-bg-hover);
+  border-color: var(--card-hover-border, var(--color-border-hover));
+  box-shadow: var(--card-hover-shadow, none);
   transform: translateY(-2px);
 }
 .btn-large span {
   font-size: 0.9em;
-  color: #888;
+  color: var(--color-text-secondary);
   line-height: 1.4;
 }
 .btn-large strong {
   font-size: 1.2em;
-  color: #fff;
+  color: var(--color-text);
 }
 .btn-danger.btn-large {
   background-color: rgba(231, 76, 60, 0.1);
@@ -2623,6 +2654,14 @@ textarea.form-control {
   padding: 20px;
   resize: none;
   min-height: 500px;
+  background-color: var(--color-bg-input, var(--color-bg-primary));
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  outline: none;
+}
+.json-editor:focus {
+  border-color: var(--input-focus-border, var(--color-btn-primary));
+  box-shadow: var(--input-focus-shadow, none);
 }
 
 /* Full Size Image Carousel Lightbox */
@@ -2704,8 +2743,9 @@ textarea.form-control {
 }
 
 .carousel-action-btn:hover {
-  background: rgba(60, 60, 60, 0.95);
-  border-color: #3498db;
+  background: var(--color-btn-secondary-hover);
+  border-color: var(--color-btn-secondary-hover-border, #3498db);
+  box-shadow: var(--color-btn-secondary-hover-shadow, none);
   color: #fff;
   transform: scale(1.08);
 }
@@ -2762,10 +2802,10 @@ textarea.form-control {
 }
 
 .carousel-nav-btn:hover {
-  background: rgba(52, 152, 219, 0.85);
-  border-color: #3498db;
+  background: var(--color-btn-primary);
+  border-color: var(--color-btn-primary-hover-border, #3498db);
   transform: scale(1.12);
-  box-shadow: 0 4px 16px rgba(52, 152, 219, 0.4);
+  box-shadow: var(--color-btn-primary-hover-shadow, 0 4px 16px rgba(52, 152, 219, 0.4));
 }
 
 .carousel-bottom-filmstrip {

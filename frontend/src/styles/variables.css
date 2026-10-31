@@ -1,38 +1,20 @@
-/* CSS Variables */
+/* ==========================================================================
+   CSS Variables & Multi-Theme Architecture (Slate & Midnight)
+   ========================================================================== */
+
+/* Shared Base Variables across all themes */
 :root {
-    /* Colors */
-    --color-text: #e0e0e0;
-    --color-text-secondary: #777;
-    --color-text-link: #3498db;
-    --color-text-link-hover: #2980b9;
-
-    --color-bg-primary: #1e1e1e;
-    --color-bg-secondary: #2d2d2d;
-    --color-bg-tertiary: #333;
-    --color-bg-hover: #3d3d3d;
-    --color-bg-hover-light: #4d4d4d;
-    --color-bg-image: #222;
-
-    --color-border: #444;
-
-    --color-btn-primary: #3498db;
-    --color-btn-primary-hover: #2980b9;
-    --color-btn-secondary: #3d3d3d;
-    --color-btn-secondary-hover: #4d4d4d;
-    --color-btn-success: #2ecc71;
-    --color-btn-success-hover: #27ae60;
-    --color-btn-warning: #e67e22;
-    --color-btn-warning-hover: #d35400;
-
     /* Shadows */
     --shadow-standard: 0 2px 10px rgba(0, 0, 0, 0.3);
-    --shadow-hover: 0 5px 15px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 5px 15px rgba(0, 0, 0, 0.2);
     --shadow-focus: 0 0 4px rgba(0, 0, 0, 0.3);
-    --shadow-modal: 0 5px 15px rgba(0, 0, 0, 0.5);
+    --shadow-modal: 0 8px 30px rgba(0, 0, 0, 0.6);
 
     /* Border Radius */
+    --border-radius-xs: 4px;
     --border-radius-sm: 6px;
     --border-radius-md: 10px;
+    --border-radius-lg: 12px;
 
     /* Spacing */
     --spacing-xs: 5px;
@@ -55,5 +37,197 @@
 
     /* Font Families */
     --font-family-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    --font-family-mono: 'Courier New', Consolas, monospace;
+    --font-family-mono: 'Consolas', 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+/* ==========================================================================
+   1. SLATE THEME (Clean Neutral Grey)
+   ========================================================================== */
+:root,
+[data-theme="slate"],
+body.theme-slate,
+body.dark {
+    --theme-name: 'slate';
+
+    /* App & Page Backgrounds */
+    --app-background: #1e1e1e;
+    --color-bg-primary: #1e1e1e;
+    --color-bg-secondary: #2d2d2d;
+    --color-bg-tertiary: #333333;
+    --color-bg-hover: #3d3d3d;
+    --color-bg-hover-light: #4d4d4d;
+    --color-bg-image: #222222;
+    --color-bg-input: #262626;
+
+    /* Semantic Surfaces */
+    --color-header-bg: #2d2d2d;
+    --color-sidebar-bg: #262626;
+    --color-card-bg: #2d2d2d;
+    --color-card-bg-subtle: #262626;
+    --color-console-bg: #181818;
+    --color-inset-bg: #1a1a1a;
+
+    /* Borders */
+    --color-border: #444444;
+    --color-border-subtle: #363636;
+    --color-border-hover: #5a5a5a;
+    --color-border-accent: #3498db;
+
+    /* Typography */
+    --color-text: #e0e0e0;
+    --color-text-secondary: #999999;
+    --color-text-muted: #777777;
+    --color-text-link: #3498db;
+    --color-text-link-hover: #2980b9;
+    --color-accent-title: #3498db;
+
+    /* Buttons & Interactive Elements */
+    --color-btn-primary: #3498db;
+    --color-btn-primary-bg: #3498db;
+    --color-btn-primary-hover: #2980b9;
+    --color-btn-primary-hover-bg: #2980b9;
+    --color-btn-primary-border: transparent;
+    --color-btn-primary-hover-border: transparent;
+    --color-btn-primary-hover-shadow: none;
+
+    --color-btn-secondary: #383838;
+    --color-btn-secondary-hover: #4d4d4d;
+    --color-btn-secondary-border: transparent;
+    --color-btn-secondary-hover-border: transparent;
+    --color-btn-secondary-hover-shadow: none;
+
+    --color-btn-action-bg: #383838;
+    --color-btn-action-hover-bg: #4d4d4d;
+    --color-btn-action-border: transparent;
+    --color-btn-action-hover-border: transparent;
+    --color-btn-action-hover-shadow: none;
+
+    --color-btn-success: #2ecc71;
+    --color-btn-success-hover: #27ae60;
+    --color-btn-warning: #e67e22;
+    --color-btn-warning-hover: #d35400;
+    --color-btn-danger: #e74c3c;
+    --color-btn-danger-hover: #c0392b;
+    --color-btn-danger-border: transparent;
+    --color-btn-danger-hover-border: transparent;
+    --color-btn-danger-hover-shadow: none;
+
+    /* Toggles & Tabs */
+    --toggle-active-bg: #444444;
+    --toggle-active-color: #ffffff;
+    --toggle-active-border: transparent;
+    --toggle-active-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+
+    --tab-active-bg: #3498db;
+    --tab-active-border: transparent;
+    --tab-active-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    --sidebar-active-bg: #333333;
+
+    /* Shadows, Card Hovers & Focus */
+    --shadow-card: 0 2px 6px rgba(0, 0, 0, 0.25);
+    --shadow-accent-glow: none;
+    --card-hover-border: #555555;
+    --card-hover-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --input-focus-border: #3498db;
+    --input-focus-shadow: none;
+
+    /* Scrollbars */
+    --scrollbar-track: #1e1e1e;
+    --scrollbar-thumb: #3d3d3d;
+    --scrollbar-thumb-hover: #4d4d4d;
+}
+
+/* ==========================================================================
+   2. MIDNIGHT THEME (Modern Oceanic Obsidian & Deep Blue)
+   ========================================================================== */
+[data-theme="midnight"],
+body.theme-midnight {
+    --theme-name: 'midnight';
+
+    /* App & Page Backgrounds with Ambient Radial Cyan Glow (Rich Underwater Depth) */
+    --app-background: radial-gradient(ellipse 120% 65% at 50% -5%, rgba(14, 116, 144, 0.22) 0%, rgba(15, 23, 42, 0.88) 50%, #090e17 100%), #090e17;
+    --color-bg-primary: #0a101d;
+    --color-bg-secondary: #0f1726;
+    --color-bg-tertiary: #162033;
+    --color-bg-hover: #1e2c45;
+    --color-bg-hover-light: #253654;
+    --color-bg-image: #0c1320;
+    --color-bg-input: #0c1320;
+
+    /* Semantic Surfaces (Elevated Deep Marine Slate, Soft & Balanced) */
+    --color-header-bg: #0d1422;
+    --color-sidebar-bg: #0c1320;
+    --color-card-bg: #131c2d;
+    --color-card-bg-subtle: #0f1827;
+    --color-console-bg: #090e17;
+    --color-inset-bg: #080c14;
+
+    /* Borders (Gentle Oceanic Cyan-Slate Translucent Outlines) */
+    --color-border: rgba(56, 189, 248, 0.12);
+    --color-border-subtle: rgba(255, 255, 255, 0.06);
+    --color-border-hover: rgba(56, 189, 248, 0.45);
+    --color-border-accent: #38bdf8;
+
+    /* Typography (Calm Slate-White & Inviting Cool Slate, No Harsh Glare) */
+    --color-text: #e2e8f0;
+    --color-text-secondary: #94a3b8;
+    --color-text-muted: #64748b;
+    --color-text-link: #38bdf8;
+    --color-text-link-hover: #7dd3fc;
+    --color-accent-title: #38bdf8;
+
+    /* Buttons & Interactive Elements (Midnight: Crisp Cyan Outline & Glow on Hover) */
+    --color-btn-primary: #0284c7;
+    --color-btn-primary-bg: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
+    --color-btn-primary-hover: #0ea5e9;
+    --color-btn-primary-hover-bg: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%);
+    --color-btn-primary-border: rgba(56, 189, 248, 0.35);
+    --color-btn-primary-hover-border: #38bdf8;
+    --color-btn-primary-hover-shadow: 0 0 0 1px #38bdf8, 0 0 14px rgba(56, 189, 248, 0.45);
+
+    --color-btn-secondary: #141d2c;
+    --color-btn-secondary-hover: #1e2a3e;
+    --color-btn-secondary-border: rgba(56, 189, 248, 0.18);
+    --color-btn-secondary-hover-border: #38bdf8;
+    --color-btn-secondary-hover-shadow: 0 0 0 1px #38bdf8, 0 4px 12px rgba(56, 189, 248, 0.28);
+
+    --color-btn-action-bg: #141d2c;
+    --color-btn-action-hover-bg: #1e2a3e;
+    --color-btn-action-border: rgba(56, 189, 248, 0.18);
+    --color-btn-action-hover-border: #38bdf8;
+    --color-btn-action-hover-shadow: 0 0 0 1px #38bdf8, 0 4px 12px rgba(56, 189, 248, 0.3);
+
+    --color-btn-success: #10b981;
+    --color-btn-success-hover: #059669;
+    --color-btn-warning: #f59e0b;
+    --color-btn-warning-hover: #d97706;
+    --color-btn-danger: #dc2626;
+    --color-btn-danger-hover: #ef4444;
+    --color-btn-danger-border: rgba(239, 68, 68, 0.4);
+    --color-btn-danger-hover-border: #fca5a5;
+    --color-btn-danger-hover-shadow: 0 0 0 1px #ef4444, 0 0 12px rgba(239, 68, 68, 0.4);
+
+    /* Toggles & Tabs */
+    --toggle-active-bg: #162238;
+    --toggle-active-color: #38bdf8;
+    --toggle-active-border: #38bdf8;
+    --toggle-active-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+
+    --tab-active-bg: #0284c7;
+    --tab-active-border: #38bdf8;
+    --tab-active-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    --sidebar-active-bg: rgba(56, 189, 248, 0.12);
+
+    /* Shadows, Card Hovers & Focus */
+    --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.35);
+    --shadow-accent-glow: 0 0 12px rgba(56, 189, 248, 0.25);
+    --card-hover-border: #38bdf8;
+    --card-hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 16px rgba(56, 189, 248, 0.25);
+    --input-focus-border: #38bdf8;
+    --input-focus-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+
+    /* Scrollbars */
+    --scrollbar-track: #0a0e17;
+    --scrollbar-thumb: #1e293b;
+    --scrollbar-thumb-hover: #334155;
 }

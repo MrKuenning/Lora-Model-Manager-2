@@ -21,6 +21,12 @@ See the full changelog at [CHANGELOG.md](CHANGELOG.md)
 
 ## Features
 
+### 🎨 Dual Interface Themes (Slate & Midnight)
+Easily customize the look and feel of your workspace with two built-in visual themes selectable in **Settings → General**:
+- **Slate Theme**: The classic, calm, neutral grey aesthetic with flat, borderless buttons and gentle contrast for long sessions.
+- **Midnight Theme**: A modern deep oceanic obsidian aesthetic with ambient radial cyan-blue gradient depth, layered marine surfaces (`#131c2d`, `#0d1422`), soft slate typography (`#e2e8f0`), and vibrant electric cyan outlines on button hover.
+- **Unified Consistency**: Themes apply seamlessly across the main model grid, folder sidebar, table view, Civitai metadata scan dashboard, and the full model details modal.
+
 ### 📊 Multiple View Modes
 - **Grid View**: Visual card-based layout with thumbnails
 <img src="https://github.com/user-attachments/assets/51202028-c057-44d2-8934-35c3136aeb93" width="500" />

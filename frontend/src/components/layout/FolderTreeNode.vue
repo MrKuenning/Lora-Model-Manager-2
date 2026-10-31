@@ -111,12 +111,13 @@ export default {
 }
 
 .tree-node.active > .node-content {
-  background-color: var(--color-bg-tertiary);
-  color: var(--color-btn-primary);
+  background-color: var(--sidebar-active-bg, var(--color-bg-tertiary));
+  color: var(--color-accent-title, var(--color-btn-primary));
   font-weight: bold;
-  border-left: 3px solid var(--color-btn-primary);
+  border-left: 3px solid var(--color-accent-title, var(--color-btn-primary));
   /* Adjust padding to account for the border */
   padding-left: calc(v-bind('`${depth * 15 + 10}px`') - 3px);
+  border-radius: 0 6px 6px 0;
 }
 
 .toggle-icon {
@@ -136,13 +137,13 @@ export default {
 }
 
 .folder-count {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-muted);
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
   border-radius: 12px;
   padding: 2px 8px;
   font-size: 0.8em;
   font-weight: normal;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-subtle, var(--color-border));
 }
 
 .nested {

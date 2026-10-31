@@ -369,27 +369,27 @@ const copyExamplePrompt = () => {
 
 <style scoped>
 .model-card {
-  background-color: var(--color-bg-secondary);
+  background-color: var(--color-card-bg, var(--color-bg-secondary));
   border-radius: var(--border-radius-md);
   overflow: hidden;
-  box-shadow: var(--shadow-standard);
-  transition: var(--transition-standard);
+  box-shadow: var(--shadow-card, var(--shadow-standard));
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   flex-direction: column;
   position: relative;
   cursor: pointer;
-  border: 2px solid transparent;
+  border: 1px solid var(--color-border);
 }
 
 .model-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-hover);
-  border-color: var(--color-border);
+  transform: translateY(-4px);
+  box-shadow: var(--card-hover-shadow, var(--shadow-hover));
+  border-color: var(--card-hover-border, var(--color-border));
 }
 
 .model-card.selected {
-  border-color: var(--color-btn-primary);
-  box-shadow: 0 0 0 2px var(--color-btn-primary), var(--shadow-hover);
+  border-color: var(--color-accent-title, var(--color-btn-primary));
+  box-shadow: 0 0 0 2px var(--color-accent-title, var(--color-btn-primary)), var(--card-hover-shadow, var(--shadow-hover));
 }
 
 .card-image-container {
@@ -451,8 +451,9 @@ const copyExamplePrompt = () => {
   font-size: 0.72em;
   font-weight: bold;
   letter-spacing: 0.3px;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .icon-badge {
@@ -464,8 +465,9 @@ const copyExamplePrompt = () => {
   justify-content: center;
   font-size: 11px;
   font-weight: bold;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .badge-nsfw {
@@ -562,9 +564,9 @@ const copyExamplePrompt = () => {
 }
 
 .btn-overlay-action {
-  background: rgba(35, 35, 35, 0.65);
+  background: var(--color-btn-secondary, rgba(35, 35, 35, 0.75));
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid var(--color-btn-secondary-border, rgba(255, 255, 255, 0.2));
   color: #fff;
   width: 32px;
   height: 32px;
@@ -581,11 +583,11 @@ const copyExamplePrompt = () => {
 }
 
 .btn-overlay-action:hover {
-  background: var(--color-btn-primary, #3498db);
-  border-color: rgba(255, 255, 255, 0.6);
+  background: var(--color-btn-secondary-hover, #4d4d4d);
+  border-color: var(--color-btn-secondary-hover-border, transparent);
+  box-shadow: var(--color-btn-secondary-hover-shadow, 0 4px 10px rgba(0, 0, 0, 0.6));
   color: #fff;
   transform: translateY(-2px) scale(1.08);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
 }
 
 .btn-overlay-action:active {
@@ -619,6 +621,8 @@ const copyExamplePrompt = () => {
 
 .meta-tag {
   background-color: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-subtle, transparent);
   padding: 3px 8px;
   border-radius: 12px;
   display: inline-flex;

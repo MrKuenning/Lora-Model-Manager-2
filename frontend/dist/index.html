@@ -7,8 +7,16 @@
     <title>Lora Model Manager</title>
     <!-- FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script type="module" crossorigin src="/assets/index-H5XgpZep.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-Du9DBGek.css">
+    <script>
+      (function() {
+        try {
+          var theme = localStorage.getItem('theme') || 'slate';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-C5n5ZIuc.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D_4VCPIe.css">
   </head>
   <body>
     <div id="app"></div>

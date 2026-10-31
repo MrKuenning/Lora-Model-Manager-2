@@ -10,7 +10,7 @@ export const useSettingsStore = defineStore('settings', {
     defaultDownloadDirectory: '',
     defaultSortingDirectory: '',
     civitaiApiKey: '',
-    theme: 'dark',
+    theme: 'slate',
     defaultView: 'grid',
     defaultSort: 'name-asc',
     safeModeDefault: true,
@@ -109,6 +109,20 @@ export const useSettingsStore = defineStore('settings', {
   }),
 
   actions: {
+    applyTheme(themeName) {
+      const t = (themeName || '').toLowerCase().trim();
+      const normalized = t === 'midnight' ? 'midnight' : 'slate';
+      this.theme = normalized;
+      if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-theme', normalized);
+        document.body.setAttribute('data-theme', normalized);
+        document.body.className = `theme-${normalized}`;
+      }
+      try {
+        localStorage.setItem('theme', normalized);
+      } catch (e) {}
+    },
+
     async fetchSettings() {
       this.loading = true;
       try {
@@ -142,7 +156,7 @@ export const useSettingsStore = defineStore('settings', {
         Object.assign(this, data);
         
         // Apply theme to document
-        document.body.className = this.theme;
+        this.applyTheme(this.theme);
       } catch (err) {
         console.error("Failed to load settings", err);
       } finally {
@@ -186,7 +200,9 @@ export const useSettingsStore = defineStore('settings', {
         }
         await api.saveSettings(newSettings);
         Object.assign(this, newSettings);
-        document.body.className = this.theme;
+        if (newSettings.theme) {
+          this.applyTheme(newSettings.theme);
+        }
         return true;
       } catch (err) {
         console.error("Failed to save settings", err);

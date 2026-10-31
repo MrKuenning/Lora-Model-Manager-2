@@ -104,9 +104,10 @@ const bulkStore = useBulkStore();
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-md) var(--spacing-xl);
-  background-color: var(--color-bg-secondary);
+  background-color: var(--color-header-bg, var(--color-bg-secondary));
   border-bottom: 1px solid var(--color-border);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  backdrop-filter: blur(10px);
 }
 
 .header-left, .header-right {
@@ -152,9 +153,10 @@ const bulkStore = useBulkStore();
 }
 
 .view-toggles .btn.active {
-  background: var(--color-bg-hover);
-  color: var(--color-text);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  background: var(--toggle-active-bg, var(--color-bg-hover));
+  color: var(--toggle-active-color, var(--color-text));
+  border: 1px solid var(--toggle-active-border, transparent);
+  box-shadow: var(--toggle-active-shadow, 0 1px 3px rgba(0,0,0,0.2));
 }
 
 .location-toggle {
@@ -172,14 +174,15 @@ const bulkStore = useBulkStore();
   font-weight: 500;
   transition: all 0.2s ease;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
 }
 
 .location-tab.active {
-  background-color: var(--color-btn-primary);
+  background: var(--tab-active-bg, var(--color-btn-primary));
   color: white;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  border-color: var(--tab-active-border, transparent);
+  box-shadow: var(--tab-active-shadow, 0 2px 5px rgba(0,0,0,0.2));
 }
 
 .safemode-toggle {

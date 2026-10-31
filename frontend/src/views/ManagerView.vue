@@ -299,12 +299,14 @@ watch(() => models.sortBy, (newSort) => {
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
+  background: var(--app-background, var(--color-bg-primary));
 }
 
 .main-content-wrapper {
   display: flex;
   flex: 1;
   overflow: hidden;
+  background: transparent;
 }
 
 .content-area {
@@ -312,16 +314,17 @@ watch(() => models.sortBy, (newSort) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: var(--color-bg-primary);
+  background-color: transparent;
 }
 
 .controls-bar {
   padding: 15px 20px;
-  background-color: var(--color-bg-secondary);
+  background-color: var(--color-header-bg, var(--color-bg-secondary));
   border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   gap: 15px;
+  backdrop-filter: blur(10px);
 }
 
 .search-container {
@@ -345,6 +348,13 @@ watch(() => models.sortBy, (newSort) => {
   background-color: var(--color-bg-tertiary);
   color: var(--color-text);
   font-size: 1em;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--input-focus-border, var(--color-btn-primary));
+  box-shadow: var(--input-focus-shadow, none);
 }
 
 .search-actions {
@@ -536,9 +546,10 @@ watch(() => models.sortBy, (newSort) => {
 }
 
 .size-btn.active {
-  background: var(--color-btn-primary);
+  background: var(--tab-active-bg, var(--color-btn-primary));
   color: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--tab-active-border, transparent);
+  box-shadow: var(--tab-active-shadow, 0 1px 3px rgba(0, 0, 0, 0.3));
 }
 
 .form-select {
@@ -549,10 +560,12 @@ watch(() => models.sortBy, (newSort) => {
   border-radius: var(--border-radius-sm);
   font-size: 0.9em;
   outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .form-select:focus {
-  border-color: var(--color-btn-primary);
+  border-color: var(--input-focus-border, var(--color-btn-primary));
+  box-shadow: var(--input-focus-shadow, none);
 }
 
 /* Custom Dropdown */
@@ -576,10 +589,11 @@ watch(() => models.sortBy, (newSort) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: border-color 0.2s ease;
 }
 
 .dropdown-header:hover {
-  border-color: var(--color-btn-primary);
+  border-color: var(--input-focus-border, var(--color-btn-primary));
 }
 
 .dropdown-list {

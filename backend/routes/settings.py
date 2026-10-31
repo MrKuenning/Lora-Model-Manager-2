@@ -24,7 +24,7 @@ def _load_settings():
             "checkpointsDirectory": "",
             "defaultDownloadDirectory": "",
             "defaultSortingDirectory": "",
-            "theme": "dark",
+            "theme": "slate",
             "defaultView": "grid",
             "defaultSort": "name-asc",
             "filterFoldersWithBaseModel": False,

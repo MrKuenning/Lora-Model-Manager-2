@@ -1,5 +1,22 @@
 # Lora Model Manager - Changelog
 
+### 10/31/2026 - v2.3.0
+
+**Added**
+- **Dual Interface Theme System (Slate & Midnight)**:
+  - Added an **Interface Theme** selector in **Settings → General** featuring interactive visual mockup cards and instant real-time live preview.
+  - **Slate Theme**: Clean, calm, and neutral grey aesthetic of the classic manager interface with flat, borderless buttons and balanced contrast.
+  - **Midnight Theme**: Modern deep oceanic obsidian aesthetic with ambient radial cyan-blue underwater gradient, layered marine surfaces (`#131c2d`, `#0d1422`, `#0c1320`), soft slate typography (`#e2e8f0` / `#94a3b8`), and glowing cyan button outlines on mouseover.
+  - Zero-flicker early theme bootstrap in `index.html` via `localStorage` alongside persistent configuration in `config.json`.
+- **Theme-Aware Interactive Controls & Button Hover States**:
+  - Differentiated button hover styling: Midnight buttons illuminate with a crisp electric cyan outline (`border: 1px solid #38bdf8; box-shadow: 0 0 0 1px #38bdf8...`) on hover, while Slate buttons transition to flat lighter grey with no border or outline.
+  - Applied across action buttons, header navigation controls, primary buttons, micro-toggles, and overlay image actions.
+- **Comprehensive View & Modal Theming**:
+  - **Main Manager Page**: Allowed the ambient background gradient to breathe through the model card grid with transparent content wrappers, soft-toned card surfaces, and refined tag chips.
+  - **Model Details Modal & Carousel**: Refactored the detail modal, preview image container, sidebars, tabs, form inputs, and JSON editor to dynamically reflect the active theme.
+  - **Folder Sidebar**: Themed active folder highlights with translucent cyan pill accents in Midnight and classic flat accents in Slate.
+  - **Scan Page**: Refactored stat boxes, metric cards, action cards, and fixed-height scrollable console to unified theme variables.
+
 ### 10/30/2026 - v2.2.9
 
 **Added**
