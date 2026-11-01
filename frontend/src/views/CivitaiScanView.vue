@@ -4,40 +4,12 @@
     
     <div class="scan-container">
       <div class="scan-header-wrapper">
-        <div class="back-btn-container">
-          <button class="btn btn-back-manager" @click="$router.push('/')">
-            <i class="fas fa-arrow-left"></i> Back to Manager
-          </button>
-        </div>
         <div class="scan-header">
-          <h2><i class="fas fa-radar"></i> Metadata Import &mdash; {{ isLoras ? 'LoRAs' : 'Checkpoints' }}</h2>
+          <h2><i class="fas fa-radar"></i> Manage Library &mdash; {{ isLoras ? 'LoRAs' : 'Checkpoints' }}</h2>
           <p class="subtitle">Scan, download missing metadata, and inspect library analytics for your local {{ isLoras ? 'LoRA' : 'Checkpoint' }} collection.</p>
-        </div>
-        <div class="library-state-indicator">
-          <div class="state-badge-pill" :class="modelsStore.currentLocation">
-            <i class="fas" :class="isLoras ? 'fa-layer-group' : 'fa-cube'"></i>
-            <span class="state-title">{{ isLoras ? 'LoRAs Library' : 'Checkpoints Library' }}</span>
-          </div>
-          <div class="state-path-text" :title="activeDirectoryPath">
-            <i class="fas fa-folder"></i> <span>{{ activeDirectoryPath || 'No directory configured' }}</span>
-          </div>
-          <div class="state-switch-tabs">
-            <button 
-              class="state-switch-tab" 
-              :class="{ active: isLoras }"
-              @click="modelsStore.setLocation('loras')"
-              title="Switch to LoRAs Library"
-            >
-              <i class="fas fa-layer-group"></i> LoRAs
-            </button>
-            <button 
-              class="state-switch-tab" 
-              :class="{ active: !isLoras }"
-              @click="modelsStore.setLocation('checkpoints')"
-              title="Switch to Checkpoints Library"
-            >
-              <i class="fas fa-cube"></i> Checkpoints
-            </button>
+          <div class="header-path-pill" :title="activeDirectoryPath">
+            <i class="fas fa-folder-open"></i>
+            <span>{{ activeDirectoryPath || 'No directory configured' }}</span>
           </div>
         </div>
       </div>
@@ -1426,49 +1398,25 @@ const sortDownloadedModels = async () => {
 }
 
 .scan-header-wrapper {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 20px;
   padding-bottom: 5px;
-}
-
-.back-btn-container {
-  justify-self: start;
-}
-
-.btn-back-manager {
-  background: var(--color-btn-secondary);
-  border: 1px solid var(--color-btn-secondary-border, transparent);
-  color: var(--color-text);
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9em;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.btn-back-manager:hover {
-  background: var(--color-btn-secondary-hover);
-  border-color: var(--color-btn-secondary-hover-border, transparent);
-  box-shadow: var(--color-btn-secondary-hover-shadow, none);
-  color: #ffffff;
-  transform: translateY(-1px);
+  width: 100%;
 }
 
 .scan-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
+  gap: 6px;
 }
 
 .scan-header h2 {
   font-size: 2.2em;
   font-weight: 800;
-  margin: 0 0 6px 0;
+  margin: 0;
   color: var(--color-accent-title);
   display: flex;
   align-items: center;
@@ -1478,7 +1426,7 @@ const sortDownloadedModels = async () => {
 }
 
 .subtitle {
-  color: #94a3b8;
+  color: var(--color-text-secondary, #94a3b8);
   font-size: 0.96em;
   margin: 0;
 }
@@ -1622,85 +1570,39 @@ const sortDownloadedModels = async () => {
 .text-purple { color: #9b59b6; }
 .text-muted { color: var(--color-text-secondary, #888); }
 
-/* Library State Indicator in Header */
-.library-state-indicator {
-  justify-self: end;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.state-badge-pill {
+/* Header Active Directory Path Badge */
+.header-path-pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 0.9em;
-  background: rgba(56, 189, 248, 0.12);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-.state-badge-pill.checkpoints {
-  background: rgba(168, 85, 247, 0.12);
-  color: #a855f7;
-  border-color: rgba(168, 85, 247, 0.3);
-}
-
-.state-path-text {
-  font-size: 0.8em;
+  font-size: 0.84em;
   color: var(--color-text-secondary);
-  background: var(--color-card-bg-subtle);
+  background: var(--color-bg-tertiary);
   border: 1px solid var(--color-border);
-  padding: 4px 10px;
-  border-radius: 6px;
-  max-width: 320px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  max-width: 600px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.state-switch-tabs {
-  display: flex;
-  background: var(--color-card-bg-subtle);
-  border: 1px solid var(--color-border);
-  border-radius: 20px;
-  padding: 3px;
-  gap: 4px;
-}
-
-.state-switch-tab {
-  padding: 4px 14px;
-  border-radius: 16px;
-  font-size: 0.82em;
-  font-weight: 600;
-  border: none;
-  background: transparent;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
   transition: all 0.2s ease;
+  margin-top: 4px;
 }
 
-.state-switch-tab:hover:not(.active) {
+.header-path-pill i {
+  color: var(--color-btn-primary);
+}
+
+.header-path-pill:hover {
+  border-color: var(--color-btn-secondary-hover-border, var(--color-border-hover));
   color: var(--color-text);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-bg-hover);
 }
 
-.state-switch-tab.active {
-  background: var(--color-btn-primary);
-  color: white;
-  font-weight: 700;
-  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4);
+[data-theme="midnight"] .header-path-pill:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
 }
 
 /* Library Info Section */

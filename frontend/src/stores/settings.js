@@ -10,6 +10,7 @@ export const useSettingsStore = defineStore('settings', {
     defaultDownloadDirectory: '',
     defaultSortingDirectory: '',
     civitaiApiKey: '',
+    isSettingsOpen: false,
     theme: 'slate',
     defaultView: 'grid',
     defaultSort: 'name-asc',
@@ -208,6 +209,14 @@ export const useSettingsStore = defineStore('settings', {
         console.error("Failed to save settings", err);
         return false;
       }
+    },
+
+    openSettings() {
+      this.isSettingsOpen = true;
+    },
+
+    closeSettings() {
+      this.isSettingsOpen = false;
     },
 
     async setCardSize(size) {

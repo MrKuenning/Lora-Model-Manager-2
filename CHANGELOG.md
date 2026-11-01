@@ -1,5 +1,26 @@
 # Lora Model Manager - Changelog
 
+### 11/01/2026 - v2.3.1
+
+**Added & Refined**
+- **Dynamic Top-Level Navigation**:
+  - Added primary navigation tabs (**Models** and **Manage Library**) in the global application header with active theme-matching highlights (Slate solid blue, Midnight glowing cyan).
+  - Context-aware header controls: Manager-only tools (Grid/Table view toggles, Bulk Edit, Duplicates) automatically hide when on the Manage Library page, keeping the header clean and uncluttered.
+- **Unified Feature Naming ("Manage Library")**:
+  - Replaced legacy "Civitai Scan" references with **"Manage Library"**, reflecting its full scope across metadata scraping (Civitai & CivArchive), thumbnail downloading, SHA256 hashing, file sorting, and library health metrics.
+- **Cleaned Up Manage Library Header**:
+  - Removed redundant in-page location switchers and duplicate status pills.
+  - Centered page title and subtitle with an interactive active directory path pill (`📁 path`) equipped with path truncation protection and hover animations.
+  - Removed the floating in-page "Back to Manager" button in favor of the clean top header navigation.
+- **Global Settings Modal**:
+  - Relocated `SettingsModal` to the top-level application root (`App.vue`) driven by Pinia settings state (`isSettingsOpen`).
+  - The settings gear icon in the header now opens settings reliably from any route or view without markup duplication.
+
+**Fixed**
+- **Grid Filter Dropdown Z-Index Stacking**:
+  - Resolved an issue where the custom Base Model multi-select dropdown was drawing behind model cards and image badges on the grid.
+  - Established proper CSS stacking contexts across the layout hierarchy (`z-index: 70` on `.app-header`, `z-index: 50` on `.controls-bar`, and `z-index: 60` on `.custom-dropdown`).
+
 ### 10/31/2026 - v2.3.0
 
 **Added**

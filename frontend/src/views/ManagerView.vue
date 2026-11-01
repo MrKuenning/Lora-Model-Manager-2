@@ -1,6 +1,6 @@
 <template>
   <div class="app-wrapper">
-    <AppHeader @open-settings="showSettings = true" @open-duplicates="showBulkDuplicates = true" />
+    <AppHeader @open-duplicates="showBulkDuplicates = true" />
     
     <div class="main-content-wrapper">
       <FolderSidebar />
@@ -178,7 +178,6 @@
     </div>
     
     <!-- Modals -->
-    <SettingsModal v-if="showSettings" @close="showSettings = false" />
     <ModelModal v-if="selectedModelId" :modelId="selectedModelId" @close="selectedModelId = null" @change-model="selectedModelId = $event" />
     <BulkEditModal v-if="showBulkEdit" @close="showBulkEdit = false" />
     <BulkMoveModal v-if="showBulkMove" @close="showBulkMove = false" />
@@ -206,7 +205,6 @@ import FolderSidebar from '../components/layout/FolderSidebar.vue';
 import BulkToolbar from '../components/layout/BulkToolbar.vue';
 import GridView from '../components/models/GridView.vue';
 import TableView from '../components/models/TableView.vue';
-import SettingsModal from '../components/layout/SettingsModal.vue';
 import ModelModal from '../components/models/ModelModal.vue';
 import BulkEditModal from '../components/models/BulkEditModal.vue';
 import BulkMoveModal from '../components/models/BulkMoveModal.vue';
@@ -217,7 +215,6 @@ const models = useModelsStore();
 const settings = useSettingsStore();
 const bulkStore = useBulkStore();
 
-const showSettings = ref(false);
 const showBulkEdit = ref(false);
 const showBulkMove = ref(false);
 const showBulkRename = ref(false);
@@ -318,6 +315,8 @@ watch(() => models.sortBy, (newSort) => {
 }
 
 .controls-bar {
+  position: relative;
+  z-index: 50;
   padding: 15px 20px;
   background-color: var(--color-header-bg, var(--color-bg-secondary));
   border-bottom: 1px solid var(--color-border);
@@ -573,6 +572,7 @@ watch(() => models.sortBy, (newSort) => {
   position: relative;
   min-width: 180px;
   user-select: none;
+  z-index: 60;
 }
 
 .dropdown-header {

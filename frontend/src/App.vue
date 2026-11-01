@@ -1,11 +1,13 @@
 <template>
   <router-view></router-view>
+  <SettingsModal v-if="settingsStore.isSettingsOpen" @close="settingsStore.closeSettings" />
   <ToastContainer />
 </template>
 
 <script setup>
 import { onMounted } from 'vue';
 import ToastContainer from './components/shared/ToastContainer.vue';
+import SettingsModal from './components/layout/SettingsModal.vue';
 import { useSettingsStore } from './stores/settings';
 
 const settingsStore = useSettingsStore();

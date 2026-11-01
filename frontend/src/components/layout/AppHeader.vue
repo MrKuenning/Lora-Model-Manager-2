@@ -5,7 +5,29 @@
         <i class="fas fa-cube"></i>
         <span>Lora Model Manager <small>v{{ appVersion }}</small></span>
       </div>
-      <div class="view-toggles">
+
+      <!-- Top-Level Navigation Switch: Models vs Manage Library -->
+      <nav class="nav-tabs" aria-label="Main Navigation">
+        <button 
+          class="nav-tab" 
+          :class="{ active: !isScanPage }"
+          @click="router.push('/')"
+          title="Browse & Manage Models"
+        >
+          <i class="fas fa-cubes"></i> Models
+        </button>
+        <button 
+          class="nav-tab" 
+          :class="{ active: isScanPage }"
+          @click="router.push('/scan')"
+          title="Metadata & Library Scans"
+        >
+          <i class="fas fa-radar"></i> Manage Library
+        </button>
+      </nav>
+
+      <!-- View toggles: Grid/Table (Manager view only) -->
+      <div v-if="!isScanPage" class="view-toggles">
         <button 
           class="btn btn-icon" 
           :class="{ active: settings.defaultView === 'grid' }"
@@ -24,6 +46,7 @@
         </button>
       </div>
       
+      <!-- Location toggle: LoRAs vs Checkpoints -->
       <div class="location-toggle">
         <button 
           class="location-tab" 
@@ -43,28 +66,25 @@
     </div>
 
     <div class="header-right">
-      <button 
-        class="btn" 
-        :class="bulkStore.isBulkMode ? 'btn-primary' : 'btn-secondary'"
-        @click="bulkStore.toggleBulkMode()"
-      >
-        <i class="fas fa-layer-group"></i> Bulk Edit
-      </button>
-      
-      <button 
-        class="btn btn-secondary" 
-        @click="router.push('/scan')"
-      >
-        <i class="fas fa-magic"></i> Civitai Scan
-      </button>
-      
-      <button 
-        class="btn btn-secondary" 
-        @click="emit('open-duplicates')"
-      >
-        <i class="fas fa-copy"></i> Duplicates
-      </button>
+      <!-- Manager-Only Controls -->
+      <template v-if="!isScanPage">
+        <button 
+          class="btn" 
+          :class="bulkStore.isBulkMode ? 'btn-primary' : 'btn-secondary'"
+          @click="bulkStore.toggleBulkMode()"
+        >
+          <i class="fas fa-layer-group"></i> Bulk Edit
+        </button>
+        
+        <button 
+          class="btn btn-secondary" 
+          @click="emit('open-duplicates')"
+        >
+          <i class="fas fa-copy"></i> Duplicates
+        </button>
+      </template>
 
+      <!-- Common Controls -->
       <button class="btn btn-secondary" @click="models.fetchModels(true)" title="Force Refresh from Disk">
         <i class="fas" :class="models.refreshing ? 'fa-spinner fa-spin' : 'fa-sync-alt'"></i> {{ models.refreshing ? 'Refreshing...' : 'Refresh' }}
       </button>
@@ -77,7 +97,7 @@
         </label>
       </div>
 
-      <button class="settings-gear" @click="emit('open-settings')" title="Settings">
+      <button class="settings-gear" @click="openSettings" title="Settings">
         <i class="fas fa-cog"></i>
       </button>
     </div>
@@ -85,7 +105,8 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
+import { computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useSettingsStore } from '../../stores/settings';
 import { useModelsStore } from '../../stores/models';
 import { useBulkStore } from '../../stores/bulk';
@@ -93,13 +114,23 @@ import { version as appVersion } from '../../../package.json';
 
 const emit = defineEmits(['open-settings', 'open-duplicates']);
 const router = useRouter();
+const route = useRoute();
 const settings = useSettingsStore();
 const models = useModelsStore();
 const bulkStore = useBulkStore();
+
+const isScanPage = computed(() => route.path === '/scan');
+
+function openSettings() {
+  settings.openSettings();
+  emit('open-settings');
+}
 </script>
 
 <style scoped>
 .app-header {
+  position: relative;
+  z-index: 70;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -136,6 +167,47 @@ const bulkStore = useBulkStore();
   background: rgba(52, 152, 219, 0.2);
   padding: 2px 6px;
   border-radius: 4px;
+}
+
+.nav-tabs {
+  display: flex;
+  background-color: var(--color-bg-tertiary);
+  border-radius: 20px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.nav-tab {
+  padding: 6px 14px;
+  border-radius: 16px;
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  font-size: 0.88em;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.nav-tab:hover {
+  color: var(--color-text);
+  background: var(--color-bg-hover);
+}
+
+[data-theme="midnight"] .nav-tab:not(.active):hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #f1f5f9;
+}
+
+.nav-tab.active {
+  background: var(--tab-active-bg, var(--color-btn-primary));
+  color: white;
+  border-color: var(--tab-active-border, transparent);
+  box-shadow: var(--tab-active-shadow, 0 2px 5px rgba(0,0,0,0.2));
 }
 
 .view-toggles {

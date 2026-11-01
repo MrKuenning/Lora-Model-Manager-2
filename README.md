@@ -107,10 +107,10 @@ Streamline your model ingestion workflow with automated one-click folder transfe
 - **Complete Sidecar Bundling**: Automatically detects and moves all associated sidecar files alongside the model (`.json` metadata, preview images `.png`, `.jpg`, `.webp`, `.mp4` video clips, and `.civitai.info`).
 - **Zero Manual File Dragging**: Eliminates tedious manual file management, keeping your incoming downloads organized and ready for Civitai scanning.
 
-### 🌐 Civitai Integration
+### 🌐 Manage Library & Metadata Integration
 <img src="https://github.com/user-attachments/assets/595bb0fe-6229-4adc-bf4b-af2a7150e4eb" width="500" />
 
-Dedicated Civitai Scan page with powerful tools:
+Dedicated **Manage Library** dashboard (accessible directly via top-level header navigation) with powerful tools:
 
 - **Get Civitai Data**: Fetch model info using SHA256 hash lookup (creates JSON directly)
 - **All-In-One Scan**: Automate matching, metadata JSON creation, and thumbnail downloads in a single click
