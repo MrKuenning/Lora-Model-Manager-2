@@ -135,6 +135,24 @@ body.dark {
     --scrollbar-track: #1e1e1e;
     --scrollbar-thumb: #3d3d3d;
     --scrollbar-thumb-hover: #4d4d4d;
+
+    /* Slider & Weight Visualization (Slate: Neutral Inset Track with Clean Blue to Violet Gradient) */
+    --slider-track-bg: linear-gradient(180deg, #181818 0%, #222222 100%);
+    --slider-track-border: #444444;
+    --slider-track-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.55);
+    --slider-gradient: linear-gradient(90deg, #3498db 0%, #9b59b6 100%);
+    --slider-thumb-color: #3498db;
+    --slider-thumb-shadow: 0 0 6px rgba(52, 152, 219, 0.75);
+    --slider-zero-marker: rgba(255, 255, 255, 0.45);
+    --slider-endpoint-min-bg: rgba(52, 152, 219, 0.16);
+    --slider-endpoint-min-color: #3498db;
+    --slider-endpoint-min-border: rgba(52, 152, 219, 0.35);
+    --slider-endpoint-max-bg: rgba(155, 89, 182, 0.16);
+    --slider-endpoint-max-color: #bb6bd9;
+    --slider-endpoint-max-border: rgba(155, 89, 182, 0.35);
+    --slider-toggle-active-bg: rgba(155, 89, 182, 0.16);
+    --slider-toggle-active-color: #d291e4;
+    --slider-toggle-active-border: rgba(155, 89, 182, 0.45);
 }
 
 /* ==========================================================================
@@ -230,4 +248,22 @@ body.theme-midnight {
     --scrollbar-track: #0a0e17;
     --scrollbar-thumb: #1e293b;
     --scrollbar-thumb-hover: #334155;
+
+    /* Slider & Weight Visualization (Midnight: Oceanic Deep Obsidian with Cyan to Electric Violet Glow) */
+    --slider-track-bg: linear-gradient(180deg, #090e17 0%, #131c2d 100%);
+    --slider-track-border: rgba(56, 189, 248, 0.18);
+    --slider-track-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7);
+    --slider-gradient: linear-gradient(90deg, #00f0ff 0%, #a855f7 100%);
+    --slider-thumb-color: #38bdf8;
+    --slider-thumb-shadow: 0 0 8px rgba(56, 189, 248, 0.9);
+    --slider-zero-marker: rgba(255, 255, 255, 0.55);
+    --slider-endpoint-min-bg: rgba(14, 165, 233, 0.18);
+    --slider-endpoint-min-color: #38bdf8;
+    --slider-endpoint-min-border: rgba(56, 189, 248, 0.35);
+    --slider-endpoint-max-bg: rgba(168, 85, 247, 0.18);
+    --slider-endpoint-max-color: #c084fc;
+    --slider-endpoint-max-border: rgba(168, 85, 247, 0.35);
+    --slider-toggle-active-bg: rgba(168, 85, 247, 0.18);
+    --slider-toggle-active-color: #f3e8ff;
+    --slider-toggle-active-border: rgba(168, 85, 247, 0.55);
 }

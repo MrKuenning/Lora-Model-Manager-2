@@ -5,15 +5,203 @@
     <div class="scan-container">
       <div class="scan-header-wrapper">
         <div class="scan-header">
-          <h2><i class="fas fa-radar"></i> Manage Library &mdash; {{ isLoras ? 'LoRAs' : 'Checkpoints' }}</h2>
-          <p class="subtitle">Scan, download missing metadata, and inspect library analytics for your local {{ isLoras ? 'LoRA' : 'Checkpoint' }} collection.</p>
-          <div class="header-path-pill" :title="activeDirectoryPath">
-            <i class="fas fa-folder-open"></i>
-            <span>{{ activeDirectoryPath || 'No directory configured' }}</span>
+          <div class="scan-header-top-row">
+            <h2><i class="fas fa-radar"></i> Manage Library &mdash; {{ isLoras ? 'LoRAs' : 'Checkpoints' }}</h2>
+            <div class="header-path-pill" :title="activeDirectoryPath">
+              <i class="fas fa-folder-open"></i>
+              <span>{{ activeDirectoryPath || 'No directory configured' }}</span>
+            </div>
           </div>
+          <p class="subtitle">Scan, download missing metadata, and inspect library analytics for your local {{ isLoras ? 'LoRA' : 'Checkpoint' }} collection.</p>
         </div>
       </div>
       
+      <!-- Unresolved Items Assistant Section (Positioned ABOVE console & buttons) -->
+      <div 
+        class="resolution-section" 
+        v-if="!isScanning && (failedModels.length > 0 || failedThumbnailModels.length > 0) && !isResolutionDismissed"
+      >
+        <div class="resolution-header">
+          <div class="resolution-title-area">
+            <h3>
+              <i class="fas fa-wrench text-warning"></i>
+              <span>Unresolved Items Assistant</span>
+            </h3>
+            <p class="resolution-subtitle">
+              Some items could not be matched automatically. Provide an override or mark them to stop future lookups.
+            </p>
+          </div>
+
+          <div class="resolution-header-controls">
+            <!-- Tabs -->
+            <div class="resolution-tabs">
+              <button 
+                class="resolution-tab-btn" 
+                :class="{ active: activeResolutionTab === 'metadata' }"
+                @click="activeResolutionTab = 'metadata'"
+                v-if="failedModels.length > 0"
+              >
+                <i class="fas fa-file-alt"></i>
+                Missing Metadata
+                <span class="tab-badge">{{ failedModels.length }}</span>
+              </button>
+
+              <button 
+                class="resolution-tab-btn" 
+                :class="{ active: activeResolutionTab === 'thumbnails' }"
+                @click="activeResolutionTab = 'thumbnails'"
+                v-if="failedThumbnailModels.length > 0"
+              >
+                <i class="fas fa-image"></i>
+                Missing Thumbnails
+                <span class="tab-badge">{{ failedThumbnailModels.length }}</span>
+              </button>
+            </div>
+
+            <!-- Bulk actions & Dismiss -->
+            <div class="resolution-global-actions">
+              <button 
+                v-if="activeResolutionTab === 'metadata' && failedModels.length > 1" 
+                class="btn-bulk btn-bulk-meta" 
+                @click="ignoreAllModels"
+                title="Mark all unresolved metadata models as unmatchable"
+              >
+                <i class="fas fa-ban"></i>
+                Mark All Unmatchable
+              </button>
+
+              <button 
+                v-if="activeResolutionTab === 'thumbnails' && failedThumbnailModels.length > 1" 
+                class="btn-bulk btn-bulk-thumb" 
+                @click="ignoreAllThumbnails"
+                title="Mark all unresolved models as having no thumbnail"
+              >
+                <i class="fas fa-eye-slash"></i>
+                Mark All as No Thumbnail
+              </button>
+
+              <button 
+                class="btn-icon-close" 
+                @click="isResolutionDismissed = true" 
+                title="Dismiss resolution panel"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metadata Resolution Tab Content -->
+        <div class="resolution-tab-content" v-if="activeResolutionTab === 'metadata' && failedModels.length > 0">
+          <div class="resolution-items-list">
+            <div class="resolution-row" v-for="model in failedModels" :key="model.path">
+              <div class="row-left">
+                <span class="model-filename" :title="model.filename">{{ model.filename }}</span>
+                <span class="model-folder-pill" v-if="model.folder" :title="model.folder">
+                  <i class="fas fa-folder"></i> {{ model.folder }}
+                </span>
+                <span class="row-badge badge-meta-warning">
+                  <i class="fas fa-exclamation-triangle"></i> No Metadata Match
+                </span>
+              </div>
+
+              <div class="row-right">
+                <div class="row-input-wrap">
+                  <i class="fas fa-link row-input-icon"></i>
+                  <input 
+                    type="text" 
+                    class="row-input" 
+                    v-model="fallbackUrlMap[model.path]" 
+                    placeholder="Civitai / CivArchive URL..."
+                    @keyup.enter="resolveManualUrl(model)"
+                  />
+                </div>
+
+                <button 
+                  class="btn-row-action btn-fetch" 
+                  @click="resolveManualUrl(model)" 
+                  :disabled="!fallbackUrlMap[model.path]"
+                  title="Fetch metadata from manual URL"
+                >
+                  <i class="fas fa-cloud-download-alt"></i> Fetch
+                </button>
+
+                <button 
+                  class="btn-row-action btn-unmatchable" 
+                  @click="ignoreModel(model)"
+                  title="Mark model as unmatchable so it won't be scanned again"
+                >
+                  <i class="fas fa-ban"></i> Mark Unmatchable
+                </button>
+
+                <button 
+                  class="btn-row-dismiss" 
+                  @click="dismissMetadataModel(model)"
+                  title="Dismiss from list"
+                >
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thumbnails Resolution Tab Content -->
+        <div class="resolution-tab-content" v-if="activeResolutionTab === 'thumbnails' && failedThumbnailModels.length > 0">
+          <div class="resolution-items-list">
+            <div class="resolution-row" v-for="model in failedThumbnailModels" :key="model.path">
+              <div class="row-left">
+                <span class="model-filename" :title="model.filename">{{ model.filename }}</span>
+                <span class="model-folder-pill" v-if="model.folder" :title="model.folder">
+                  <i class="fas fa-folder"></i> {{ model.folder }}
+                </span>
+                <span class="row-badge badge-thumb-warning">
+                  <i class="fas fa-image"></i> No Preview Online
+                </span>
+              </div>
+
+              <div class="row-right">
+                <div class="row-input-wrap">
+                  <i class="fas fa-image row-input-icon"></i>
+                  <input 
+                    type="text" 
+                    class="row-input" 
+                    v-model="fallbackImageUrlMap[model.path]" 
+                    placeholder="Optional: Direct image URL..."
+                    @keyup.enter="downloadCustomThumbnail(model)"
+                  />
+                </div>
+
+                <button 
+                  v-if="fallbackImageUrlMap[model.path]"
+                  class="btn-row-action btn-save-image" 
+                  @click="downloadCustomThumbnail(model)"
+                  title="Download and save preview image from URL"
+                >
+                  <i class="fas fa-download"></i> Save
+                </button>
+
+                <button 
+                  class="btn-row-action btn-no-thumb" 
+                  @click="ignoreThumbnail(model)"
+                  title="Mark this model as having no thumbnail available"
+                >
+                  <i class="fas fa-eye-slash"></i> No Thumbnail Available
+                </button>
+
+                <button 
+                  class="btn-row-dismiss" 
+                  @click="dismissThumbnailModel(model)"
+                  title="Dismiss from list"
+                >
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="scan-main-layout">
         <!-- Left Column: Controls -->
         <div class="scan-controls-col">
@@ -50,17 +238,58 @@
               </div>
               <div class="stat-value" :class="missingHashes > 0 ? 'text-danger' : 'text-muted'">{{ missingHashes }}</div>
             </div>
+
+            <div class="stat-box stat-box-unchecked" :class="{ 'has-missing': uncheckedOnlineCount > 0 }">
+              <div class="stat-top">
+                <i class="fas fa-globe stat-icon"></i>
+                <span class="stat-label">Unchecked Status</span>
+              </div>
+              <div class="stat-value" :class="uncheckedOnlineCount > 0 ? 'text-warning' : 'text-muted'">{{ uncheckedOnlineCount }}</div>
+            </div>
           </div>
 
-          <div class="scan-actions" v-if="!isScanning && !(scanComplete && failedModels.length > 0)">
+          <div class="scan-actions" v-if="!isScanning && !isMovingDownloads">
+            <!-- 1. Import from Downloads (Top Position, above All-in-One Scan) -->
+            <div class="action-group import-downloads">
+              <div class="action-group-header">
+                <i class="fas fa-exchange-alt group-header-icon text-info"></i>
+                <div class="group-title-wrap">
+                  <h3>Import from Downloads</h3>
+                  <span class="dir-hint" v-if="downloadDirName">
+                    <span :title="settingsStore.defaultDownloadDirectory">{{ downloadDirName }}</span>
+                    <i class="fas fa-arrow-right dir-arrow"></i>
+                    <span :title="settingsStore.defaultSortingDirectory">{{ sortingDirName }}</span>
+                  </span>
+                </div>
+              </div>
+              <p class="action-desc">
+                Look for Safetensor models and their associated files and move them from the Download Directory to the Sorting Directory.
+              </p>
+              <button 
+                class="btn btn-action btn-import-scan" 
+                :class="{ 'has-pending': pendingDownloadsCount > 0 }"
+                :disabled="isMovingDownloads" 
+                @click="sortDownloadedModels"
+              >
+                <i class="fas" :class="isMovingDownloads ? 'fa-spinner fa-spin' : 'fa-exchange-alt text-info'"></i>
+                <span>{{ isMovingDownloads ? 'Moving Files...' : `Move Files (${pendingDownloadsCount})` }}</span>
+              </button>
+            </div>
+
+            <!-- 2. All-in-One Scan -->
             <div class="action-group all-in-one">
               <div class="action-group-header">
-                <i class="fas fa-bolt group-header-icon"></i>
-                <h3>All-in-One Scan</h3>
+                <i class="fas fa-bolt group-header-icon text-warning"></i>
+                <div class="group-title-wrap">
+                  <h3>All-in-One Comprehensive Scan</h3>
+                  <span class="all-in-one-tag">Executes Steps 1 &ndash; 4 In One Pass</span>
+                </div>
               </div>
-              <p class="action-desc">Perform all steps automatically: Generate missing hashes, Fetch missing metadata, and Download preview thumbnails.</p>
+              <p class="action-desc">
+                Runs all four steps below in sequence (Check Online Availability &rarr; Generate SHA256 Hashes &rarr; Scrape Metadata &rarr; Download Thumbnails) in a single unified command.
+              </p>
               <button class="btn btn-primary-scan btn-large" @click="runAllInOne">
-                <i class="fas fa-bolt"></i> Run All-in-One Scan ({{ allInOneTargetsCount }})
+                <i class="fas fa-bolt"></i> Run All-in-One Scan (All 4 Steps) &bull; {{ allInOneTargetsCount }} Items
               </button>
             </div>
             
@@ -68,52 +297,36 @@
 
             
             <div class="action-columns">
+              <!-- Step 1: Check Online Availability -->
               <div class="action-col">
                 <div class="card-header-bar">
                   <span class="step-badge">1</span>
-                  <h3>Scrape Metadata</h3>
+                  <i class="fas fa-globe header-icon text-success"></i>
+                  <h3>Check Online Availability</h3>
                 </div>
-                <p class="action-desc">Fetch model info from Civitai or CivArchive using file hashes.</p>
-                <div class="btn-row">
-                  <button class="btn btn-action" @click="fetchMissingData('civitai')">
-                    <i class="fas fa-cloud-download-alt text-info"></i> Fetch Missing Metadata ({{ missingMetadata }})
+                <p class="action-desc">Audit whether models are still live on Civitai or preserved on CivArchive.</p>
+                <div class="availability-btn-grid">
+                  <button class="btn btn-action btn-availability btn-availability-unchecked" @click="checkUncheckedAvailability" :disabled="uncheckedOnlineCount === 0" title="Check models that have not been audited for online availability yet">
+                    <i class="fas fa-question-circle text-warning"></i> Check Unchecked ({{ uncheckedOnlineCount }})
+                  </button>
+                  <button class="btn btn-action btn-availability" @click="checkCivitaiAvailability" :disabled="onlineCivitaiCount === 0" title="Check availability of models currently marked as active on Civitai">
+                    <i class="fas fa-check-circle text-info"></i> Civitai ({{ onlineCivitaiCount }})
+                  </button>
+                  <button class="btn btn-action btn-availability" @click="checkCivArchiveAvailability" :disabled="onlineCivArchiveCount === 0" title="Check availability of models currently on CivArchive">
+                    <i class="fas fa-archive text-purple"></i> Archive ({{ onlineCivArchiveCount }})
+                  </button>
+                  <button class="btn btn-action btn-availability btn-availability-primary" @click="checkOnlineAvailability" title="Scan all eligible models (skips models already verified offline on both platforms)">
+                    <i class="fas fa-globe text-success"></i> Check All Eligible ({{ availabilityScanTargetsCount }})
                   </button>
                 </div>
               </div>
-              
+
+              <!-- Step 2: Generate Hashes -->
               <div class="action-col">
                 <div class="card-header-bar">
                   <span class="step-badge">2</span>
-                  <h3>Download Thumbnails</h3>
-                </div>
-                <p class="action-desc">Download preview images from Civitai and standardize thumbnail filenames for compatibility.</p>
-                <div class="btn-row">
-                  <button class="btn btn-action" @click="getMissingThumbnails">
-                    <i class="fas fa-image text-warning"></i> Get Missing ({{ missingThumbnails }})
-                  </button>
-                  <button class="btn btn-action" @click="getAllThumbnails">
-                    <i class="fas fa-images text-info"></i> Get All ({{ totalModels.toLocaleString() }})
-                  </button>
-                </div>
-              </div>
-
-              <div class="action-col">
-                <div class="card-header-bar">
-                  <i class="fas fa-exchange-alt header-icon text-info"></i>
-                  <h3>Import from Downloads</h3>
-                </div>
-                <p class="action-desc">Move incoming models and their associated sidecars from Download Directory to Sorting Directory.</p>
-                <div class="btn-row">
-                  <button class="btn btn-action" @click="sortDownloadedModels">
-                    <i class="fas fa-exchange-alt text-info"></i> Move Files
-                  </button>
-                </div>
-              </div>
-
-              <div class="action-col">
-                <div class="card-header-bar">
                   <i class="fas fa-hashtag header-icon text-purple"></i>
-                  <h3>Generate Hashes</h3>
+                  <h3>Generate SHA256 Hashes</h3>
                 </div>
                 <p class="action-desc">Generate SHA256 checksums used for exact Civitai lookups and duplicate detection.</p>
                 <div class="btn-row">
@@ -126,50 +339,67 @@
                 </div>
               </div>
 
-              <div class="action-col full-width-card">
+              <!-- Step 3: Scrape Metadata -->
+              <div class="action-col">
                 <div class="card-header-bar">
-                  <i class="fas fa-globe header-icon text-success"></i>
-                  <h3>Check Online Availability</h3>
+                  <span class="step-badge">3</span>
+                  <i class="fas fa-cloud-download-alt header-icon text-info"></i>
+                  <h3>Scrape Metadata</h3>
                 </div>
-                <p class="action-desc">Audit whether models are still live on Civitai or preserved on CivArchive. Choose a targeted check or scan all eligible models.</p>
-                <div class="availability-btn-grid">
-                  <button class="btn btn-action btn-availability btn-availability-primary" @click="checkOnlineAvailability" title="Scan all eligible models (skips models already verified offline on both platforms)">
-                    <i class="fas fa-globe text-success"></i> Check All Eligible ({{ availabilityScanTargetsCount }})
+                <p class="action-desc">Fetch model info from Civitai or CivArchive using file hashes.</p>
+                <div class="btn-row">
+                  <button class="btn btn-action" @click="fetchMissingData('civitai')">
+                    <i class="fas fa-cloud-download-alt text-info"></i> Fetch Missing Metadata ({{ missingMetadata }})
                   </button>
-                  <button class="btn btn-action btn-availability" @click="checkCivitaiAvailability" :disabled="onlineCivitaiCount === 0" title="Check availability of models currently marked as active on Civitai">
-                    <i class="fas fa-check-circle text-info"></i> Check Civitai Models ({{ onlineCivitaiCount }})
+                </div>
+              </div>
+              
+              <!-- Step 4: Download Thumbnails -->
+              <div class="action-col">
+                <div class="card-header-bar">
+                  <span class="step-badge">4</span>
+                  <i class="fas fa-image header-icon text-warning"></i>
+                  <h3>Download Thumbnails</h3>
+                </div>
+                <p class="action-desc">Download preview images from Civitai and standardize thumbnail filenames for compatibility.</p>
+                <div class="btn-row">
+                  <button class="btn btn-action" @click="getMissingThumbnails">
+                    <i class="fas fa-image text-warning"></i> Get Missing ({{ missingThumbnails }})
                   </button>
-                  <button class="btn btn-action btn-availability" @click="checkCivArchiveAvailability" :disabled="onlineCivArchiveCount === 0" title="Check availability of models currently on CivArchive">
-                    <i class="fas fa-archive text-purple"></i> Check CivArchive Models ({{ onlineCivArchiveCount }})
-                  </button>
-                  <button class="btn btn-action btn-availability" @click="checkUncheckedAvailability" :disabled="uncheckedOnlineCount === 0" title="Check models that have not been audited for online availability yet">
-                    <i class="fas fa-question-circle text-warning"></i> Check Unchecked Models ({{ uncheckedOnlineCount }})
+                  <button class="btn btn-action" @click="getAllThumbnails">
+                    <i class="fas fa-images text-info"></i> Get All ({{ totalModels.toLocaleString() }})
                   </button>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="active-scan-box" v-else>
+          <div class="active-scan-box" v-else-if="isScanning">
             <h3 style="margin-top: 0;">Scanning in progress...</h3>
             <button class="btn btn-danger btn-large" @click="stopScan">
               <i class="fas fa-stop"></i> Stop Scan
             </button>
           </div>
+
+          <div class="active-scan-box" v-else-if="isMovingDownloads">
+            <h3 style="margin-top: 0;"><i class="fas fa-spinner fa-spin text-info"></i> Moving Downloaded Models...</h3>
+            <p class="subtitle" style="margin-top: 5px;">Transferring incoming models and sidecars to sorting directory.</p>
+          </div>
           
-          <div class="progress-section" v-if="isScanning || scanComplete">
+          <div class="progress-section" v-if="isScanning || scanComplete || isMovingDownloads">
             <div class="progress-bar">
               <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
             </div>
             <div class="progress-text">
-              Processed {{ currentIndex }} of {{ currentQueueLength }} items ({{ progressPercentage }}%)
+              <span v-if="isMovingDownloads">Moving {{ currentIndex }} of {{ currentQueueLength }} models ({{ progressPercentage }}%)</span>
+              <span v-else>Processed {{ currentIndex }} of {{ currentQueueLength }} items ({{ progressPercentage }}%)</span>
             </div>
           </div>
         </div>
       
         <!-- Right Column: Logs -->
         <div class="scan-log-col">
-          <div class="log-section" :style="scanComplete && failedModels.length > 0 ? 'height: 320px; max-height: 320px;' : ''">
+          <div class="log-section">
             <div class="log-header-bar">
               <div class="log-header-left">
                 <i class="fas fa-terminal terminal-icon"></i>
@@ -193,22 +423,6 @@
                 <div class="empty-title">Ready to scan</div>
                 <div class="empty-sub">Select an action on the left to begin scanning.</div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="resolution-section mt-20" v-if="!isScanning && scanComplete && failedModels.length > 0">
-        <h3><i class="fas fa-exclamation-triangle text-warning"></i> Unresolved Models</h3>
-        <p>The following models could not be found on Civitai or CivArchive. You can provide a manual URL or mark them to be ignored in future scans.</p>
-        
-        <div class="failed-models-list">
-          <div class="failed-model-card" v-for="model in failedModels" :key="model.path">
-            <div class="failed-model-name">{{ model.filename }}</div>
-            <div class="failed-model-actions">
-              <input type="text" class="form-control" v-model="fallbackUrlMap[model.path]" placeholder="Enter URL (e.g., https://civitai.com/models/1234)">
-              <button class="btn btn-primary" @click="resolveManualUrl(model)">Fetch</button>
-              <button class="btn btn-secondary" @click="ignoreModel(model)">Mark not matchable</button>
             </div>
           </div>
         </div>
@@ -622,6 +836,39 @@ const logs = ref([]);
 const logContainer = ref(null);
 const failedModels = ref([]);
 const fallbackUrlMap = ref({});
+const failedThumbnailModels = ref([]);
+const fallbackImageUrlMap = ref({});
+const activeResolutionTab = ref('metadata');
+const isResolutionDismissed = ref(false);
+
+// Download Import State
+const pendingDownloadsCount = ref(0);
+const isMovingDownloads = ref(false);
+
+const downloadDirName = computed(() => {
+  const dir = settingsStore.defaultDownloadDirectory;
+  if (!dir) return '';
+  const parts = dir.replace(/\\/g, '/').split('/').filter(Boolean);
+  return parts.slice(-2).join('/') || dir;
+});
+
+const sortingDirName = computed(() => {
+  const dir = settingsStore.defaultSortingDirectory;
+  if (!dir) return '';
+  const parts = dir.replace(/\\/g, '/').split('/').filter(Boolean);
+  return parts.slice(-2).join('/') || dir;
+});
+
+const checkDownloadCandidates = async () => {
+  try {
+    const res = await api.getDownloadCandidates();
+    if (res && res.status === 'success') {
+      pendingDownloadsCount.value = res.count || 0;
+    }
+  } catch (e) {
+    // Ignore background check failure
+  }
+};
 
 // State & Location
 const isLoras = computed(() => modelsStore.currentLocation === 'loras');
@@ -641,8 +888,12 @@ const totalLibraryBytes = computed(() => modelsStore.models.reduce((acc, m) => a
 const avgModelSizeBytes = computed(() => totalModels.value > 0 ? totalLibraryBytes.value / totalModels.value : 0);
 const largestModelSize = computed(() => Math.max(0, ...modelsStore.models.map(m => Number(m.size) || 0)));
 
-const getMissingMetadataModels = () => modelsStore.models.filter(m => !m.civitaiUrl && !m.civitai_url);
-const getMissingThumbnailModels = () => modelsStore.models.filter(m => !m.previewUrl || m.previewUrl.includes('placeholder'));
+const getMissingMetadataModels = () => modelsStore.models.filter(m => 
+  !m.civitaiUrl && !m.civitai_url && !m.unmatchable && !m.ignored && !m.no_metadata
+);
+const getMissingThumbnailModels = () => modelsStore.models.filter(m => 
+  (!m.previewUrl || m.previewUrl.includes('placeholder')) && !m.noThumbnail && !m.no_thumbnail
+);
 const getMissingHashModels = () => modelsStore.models.filter(m => !m.sha256);
 
 const missingMetadata = computed(() => getMissingMetadataModels().length);
@@ -929,6 +1180,7 @@ const progressPercentage = computed(() => {
 
 onMounted(async () => {
   await settingsStore.fetchSettings();
+  await checkDownloadCandidates();
   if (modelsStore.models.length === 0) {
     await modelsStore.fetchModels();
   }
@@ -960,10 +1212,10 @@ const runScanQueue = async (tasks) => {
   isScanning.value = true;
   scanComplete.value = false;
   shouldStop.value = false;
+  isResolutionDismissed.value = false;
   currentIndex.value = 0;
   currentQueueLength.value = tasks.length;
   logs.value = [];
-  failedModels.value = [];
   
   let successCount = 0;
   let errorCount = 0;
@@ -992,9 +1244,14 @@ const runScanQueue = async (tasks) => {
       addLog(`ERROR: ${task.actionName} failed for ${task.model.filename}${detail ? ` (${detail})` : ''}.`, 'error');
       
       // Track metadata failures specifically
-      if (task.actionName === 'Fetch Metadata') {
+      if (task.actionName === 'Fetch Metadata' || task.actionName === 'Fetch from CivArchive' || task.actionName === 'Process Metadata & Thumbnails') {
         if (!failedModels.value.some(m => m.path === task.model.path)) {
           failedModels.value.push(task.model);
+        }
+      }
+      if (task.actionName === 'Download Thumbnail') {
+        if (!failedThumbnailModels.value.some(m => m.path === task.model.path)) {
+          failedThumbnailModels.value.push(task.model);
         }
       }
     }
@@ -1007,6 +1264,12 @@ const runScanQueue = async (tasks) => {
   isScanning.value = false;
   scanComplete.value = true;
   addLog(`Queue complete! Success: ${successCount}, Failed: ${errorCount}`, 'info');
+
+  if (failedModels.value.length > 0) {
+    activeResolutionTab.value = 'metadata';
+  } else if (failedThumbnailModels.value.length > 0) {
+    activeResolutionTab.value = 'thumbnails';
+  }
   
   // Refresh store
   await modelsStore.fetchModels();
@@ -1015,6 +1278,13 @@ const runScanQueue = async (tasks) => {
 // Queue Builders
 const fetchMissingData = (source = 'civitai') => {
   const targets = getMissingMetadataModels();
+  if (targets.length === 0) {
+    addLog('No missing metadata found. All models have metadata or are marked as unmatchable!', 'success');
+    return;
+  }
+  failedModels.value = [];
+  activeResolutionTab.value = 'metadata';
+
   const tasks = targets.map(model => ({
     model,
     actionName: source === 'civarchive' ? 'Fetch from CivArchive' : 'Fetch Metadata',
@@ -1039,8 +1309,15 @@ const fetchMissingData = (source = 'civitai') => {
 
 const getMissingThumbnails = () => {
   const targets = getMissingThumbnailModels();
+  if (targets.length === 0) {
+    addLog('No missing thumbnails found. All models have thumbnails or are marked as unavailable!', 'success');
+    return;
+  }
+
   const skipNsfw = settingsStore.scanSettings?.skipNsfwPreviews === true;
   const maxSize = settingsStore.scanSettings?.downloadMaxSize === true;
+  failedThumbnailModels.value = [];
+  activeResolutionTab.value = 'thumbnails';
   
   const tasks = targets.map(model => ({
     model,
@@ -1057,6 +1334,9 @@ const getMissingThumbnails = () => {
       if (res && res.status === 'error') throw new Error(res.message);
       if (res && res.status === 'skipped') {
         addLog(`SKIPPED: ${m.filename} (${res.message || 'No thumbnail found'})`, 'warning');
+        if (!failedThumbnailModels.value.some(f => f.path === m.path)) {
+          failedThumbnailModels.value.push(m);
+        }
       }
     }
   }));
@@ -1232,6 +1512,9 @@ const checkUncheckedAvailability = () => {
 };
 
 const runAllInOne = () => {
+  failedModels.value = [];
+  failedThumbnailModels.value = [];
+  
   // Step 1: Missing metadata targets (fetch metadata & auto-download thumbnails)
   const metadataTargets = getMissingMetadataModels();
   const tasks = [];
@@ -1251,6 +1534,13 @@ const runAllInOne = () => {
         }
         if (res && res.status === 'not_found') throw new Error('not found');
         if (res && res.status === 'error') throw new Error(res.message);
+        
+        // If metadata saved but preview skipped / missing
+        if (res && res.status === 'success' && res.previewSuccess === false) {
+          if (!failedThumbnailModels.value.some(f => f.path === m.path)) {
+            failedThumbnailModels.value.push(m);
+          }
+        }
       }
     });
   });
@@ -1277,10 +1567,18 @@ const runAllInOne = () => {
         if (res && res.status === 'error') throw new Error(res.message);
         if (res && res.status === 'skipped') {
           addLog(`SKIPPED: ${m.filename} (${res.message || 'No thumbnail found'})`, 'warning');
+          if (!failedThumbnailModels.value.some(f => f.path === m.path)) {
+            failedThumbnailModels.value.push(m);
+          }
         }
       }
     });
   });
+
+  if (tasks.length === 0) {
+    addLog('No missing metadata or thumbnails to process!', 'success');
+    return;
+  }
   
   runScanQueue(tasks);
 };
@@ -1298,6 +1596,7 @@ const resolveManualUrl = async (model) => {
     if (res && res.status === 'error') throw new Error(res.message);
     
     addLog(`SUCCESS: Manual fetch for ${model.filename}`, 'success');
+    toast.showToast(`Fetched metadata for ${model.filename}`, 'success');
     
     // Remove from failed list
     failedModels.value = failedModels.value.filter(m => m.path !== model.path);
@@ -1306,54 +1605,187 @@ const resolveManualUrl = async (model) => {
     await modelsStore.fetchModels();
   } catch (e) {
     addLog(`ERROR: Manual fetch failed for ${model.filename}`, 'error');
+    toast.showToast(`Failed to fetch metadata from URL`, 'error');
   }
 };
 
 const ignoreModel = async (model) => {
   try {
-    addLog(`Ignoring ${model.filename} in future scans...`, 'info');
-    // Using a dummy URL to prevent future missing metadata checks
+    addLog(`Marking ${model.filename} as unmatchable...`, 'info');
     const res = await api.civitaiFetchByUrl(model.path, 'https://no-match.com/ignored');
     if (res && res.status === 'error') throw new Error(res.message);
     
-    // Remove from failed list
     failedModels.value = failedModels.value.filter(m => m.path !== model.path);
-    addLog(`SUCCESS: Ignored ${model.filename}`, 'success');
+    addLog(`SUCCESS: Marked ${model.filename} as unmatchable`, 'success');
+    toast.showToast(`Marked ${model.filename} as unmatchable`, 'info');
+    await modelsStore.fetchModels();
   } catch (e) {
-    addLog(`ERROR: Failed to ignore ${model.filename}`, 'error');
+    addLog(`ERROR: Failed to mark ${model.filename} as unmatchable`, 'error');
     toast.showToast('Failed to mark model as unmatchable', 'error');
   }
 };
 
-const sortDownloadedModels = async () => {
+const ignoreAllModels = async () => {
+  if (failedModels.value.length === 0) return;
+  const paths = failedModels.value.map(m => m.path);
   try {
-    addLog('Starting to sort downloaded models...', 'info');
-    const res = await api.sortDownloads();
+    addLog(`Bulk marking ${paths.length} models as unmatchable...`, 'info');
+    const res = await api.civitaiIgnoreModelsBulk(paths);
+    if (res && res.status === 'error') throw new Error(res.message);
     
-    if (res.status === 'success') {
-      if (res.moved_count > 0) {
-        addLog(`Successfully moved ${res.moved_count} models to the sorting directory.`, 'success');
-        toast.showToast(`Sorted ${res.moved_count} models`, 'success');
-        
-        // Refresh models so the scan page detects the newly imported files
-        addLog('Refreshing local model list...', 'info');
-        await modelsStore.fetchModels(true);
-      } else {
-        addLog('No .safetensors files found in the download directory.', 'warning');
-        toast.showToast('No models found to sort', 'warning');
-      }
-      
-      if (res.errors && res.errors.length > 0) {
-        res.errors.forEach(err => addLog(err, 'error'));
-      }
-    } else {
-      addLog(`Error: ${res.message}`, 'error');
-      toast.showToast(res.message || 'Error sorting models', 'error');
+    failedModels.value = [];
+    addLog(`SUCCESS: Marked ${paths.length} models as unmatchable`, 'success');
+    toast.showToast(`Marked ${paths.length} models as unmatchable`, 'success');
+    await modelsStore.fetchModels();
+  } catch (e) {
+    addLog(`ERROR: Failed to bulk mark models as unmatchable`, 'error');
+    toast.showToast('Failed to bulk mark models as unmatchable', 'error');
+  }
+};
+
+const dismissMetadataModel = (model) => {
+  failedModels.value = failedModels.value.filter(m => m.path !== model.path);
+};
+
+// Thumbnail Resolution Methods
+const ignoreThumbnail = async (model) => {
+  try {
+    addLog(`Marking ${model.filename} as having no thumbnail...`, 'info');
+    const res = await api.civitaiIgnoreThumbnail(model.path);
+    if (res && res.status === 'error') throw new Error(res.message);
+    
+    failedThumbnailModels.value = failedThumbnailModels.value.filter(m => m.path !== model.path);
+    addLog(`SUCCESS: Marked ${model.filename} as no thumbnail available`, 'success');
+    toast.showToast(`Marked ${model.filename}: No thumbnail available`, 'info');
+    await modelsStore.fetchModels();
+  } catch (e) {
+    addLog(`ERROR: Failed to mark thumbnail for ${model.filename}`, 'error');
+    toast.showToast('Failed to mark thumbnail as unavailable', 'error');
+  }
+};
+
+const ignoreAllThumbnails = async () => {
+  if (failedThumbnailModels.value.length === 0) return;
+  const paths = failedThumbnailModels.value.map(m => m.path);
+  try {
+    addLog(`Bulk marking ${paths.length} models as having no thumbnail...`, 'info');
+    const res = await api.civitaiIgnoreThumbnailsBulk(paths);
+    if (res && res.status === 'error') throw new Error(res.message);
+    
+    failedThumbnailModels.value = [];
+    addLog(`SUCCESS: Marked ${paths.length} models as having no thumbnail`, 'success');
+    toast.showToast(`Marked ${paths.length} models: No thumbnail available`, 'success');
+    await modelsStore.fetchModels();
+  } catch (e) {
+    addLog(`ERROR: Failed to bulk ignore thumbnails`, 'error');
+    toast.showToast('Failed to bulk mark thumbnails as unavailable', 'error');
+  }
+};
+
+const downloadCustomThumbnail = async (model) => {
+  const url = fallbackImageUrlMap.value[model.path];
+  if (!url) {
+    addLog(`No image URL provided for ${model.filename}`, 'warning');
+    return;
+  }
+  
+  try {
+    addLog(`Downloading custom image for ${model.filename} from ${url}...`, 'info');
+    const res = await api.civitaiDownloadPreviewFromUrl(model.path, url);
+    if (res && res.status === 'error') throw new Error(res.message);
+    
+    addLog(`SUCCESS: Custom image downloaded for ${model.filename}`, 'success');
+    toast.showToast(`Thumbnail saved for ${model.filename}`, 'success');
+    
+    failedThumbnailModels.value = failedThumbnailModels.value.filter(m => m.path !== model.path);
+    await modelsStore.fetchModels();
+  } catch (e) {
+    addLog(`ERROR: Failed to download image from URL for ${model.filename}`, 'error');
+    toast.showToast('Failed to download image from URL', 'error');
+  }
+};
+
+const dismissThumbnailModel = (model) => {
+  failedThumbnailModels.value = failedThumbnailModels.value.filter(m => m.path !== model.path);
+};
+
+const sortDownloadedModels = async () => {
+  if (isMovingDownloads.value) return;
+  
+  try {
+    addLog('Checking Download Directory for models to import...', 'info');
+    const candidatesRes = await api.getDownloadCandidates();
+    
+    if (candidatesRes.status !== 'success' || !candidatesRes.models || candidatesRes.models.length === 0) {
+      pendingDownloadsCount.value = 0;
+      addLog('No model files found in the download directory.', 'warning');
+      toast.showToast('No models found to import', 'warning');
+      return;
     }
+    
+    const candidates = candidatesRes.models;
+    pendingDownloadsCount.value = candidates.length;
+    addLog(`Found ${candidates.length} model(s) waiting in Download Directory:`, 'info');
+    candidates.forEach((c, idx) => {
+      const sidecarInfo = c.sidecars && c.sidecars.length > 0 ? ` (+${c.sidecars.length} sidecar${c.sidecars.length > 1 ? 's' : ''})` : '';
+      addLog(`  ${idx + 1}. ${c.filename}${sidecarInfo}`, 'info');
+    });
+    
+    isMovingDownloads.value = true;
+    scanComplete.value = false;
+    currentIndex.value = 0;
+    currentQueueLength.value = candidates.length;
+    
+    let movedTotal = 0;
+    const moveErrors = [];
+    
+    for (let i = 0; i < candidates.length; i++) {
+      const candidate = candidates[i];
+      currentIndex.value = i + 1;
+      addLog(`[${i + 1}/${candidates.length}] Moving ${candidate.filename}...`, 'info');
+      
+      try {
+        const moveRes = await api.moveDownloadCandidate(candidate.filename);
+        if (moveRes.status === 'success') {
+          movedTotal++;
+          const sidecarCount = (moveRes.moved_files?.length || 1) - 1;
+          const sidecarText = sidecarCount > 0 ? ` (+${sidecarCount} sidecar file${sidecarCount > 1 ? 's' : ''})` : '';
+          addLog(`✓ [${i + 1}/${candidates.length}] Successfully moved ${candidate.filename}${sidecarText} to sorting directory.`, 'success');
+          if (moveRes.errors && moveRes.errors.length > 0) {
+            moveRes.errors.forEach(err => addLog(`  ⚠ ${err}`, 'warning'));
+          }
+        } else {
+          moveErrors.push(candidate.filename);
+          addLog(`✕ Failed to move ${candidate.filename}: ${moveRes.message || 'Unknown error'}`, 'error');
+        }
+      } catch (err) {
+        moveErrors.push(candidate.filename);
+        addLog(`✕ Failed to move ${candidate.filename}: ${err.message}`, 'error');
+      }
+    }
+    
+    pendingDownloadsCount.value = Math.max(0, candidates.length - movedTotal);
+    
+    if (movedTotal > 0) {
+      addLog(`All ${movedTotal} model(s) moved to sorting directory. Updating library data...`, 'success');
+      toast.showToast(`Sorted ${movedTotal} model(s) into library`, 'success');
+      
+      // Refresh models so the scan page detects the newly imported files
+      addLog('Refreshing local model list and scanning analytics...', 'info');
+      await modelsStore.fetchModels(true);
+      await checkDownloadCandidates();
+      addLog('✓ Library data updated successfully.', 'success');
+    } else {
+      addLog('No models were successfully moved.', 'error');
+      toast.showToast('Failed to move models', 'error');
+    }
+    
   } catch (err) {
     const errorMsg = err.response?.data?.message || err.message;
     addLog(`Error sorting models: ${errorMsg}`, 'error');
     toast.showToast('Failed to sort models', 'error');
+  } finally {
+    isMovingDownloads.value = false;
   }
 };
 </script>
@@ -1413,6 +1845,14 @@ const sortDownloadedModels = async () => {
   gap: 6px;
 }
 
+.scan-header-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .scan-header h2 {
   font-size: 2.2em;
   font-weight: 800;
@@ -1435,12 +1875,18 @@ const sortDownloadedModels = async () => {
 
 .scan-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
   width: 100%;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1200px) {
+  .scan-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
   .scan-stats {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1516,6 +1962,12 @@ const sortDownloadedModels = async () => {
   border-color: rgba(239, 68, 68, 0.35);
   background: linear-gradient(180deg, rgba(239, 68, 68, 0.12) 0%, var(--color-card-bg-subtle) 100%); 
 }
+.stat-box-unchecked { border-top-color: #475569; }
+.stat-box-unchecked.has-missing { 
+  border-top-color: #f59e0b; 
+  border-color: rgba(245, 158, 11, 0.35);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.12) 0%, var(--color-card-bg-subtle) 100%); 
+}
 .stat-box-online { border-top-color: #10b981; }
 .stat-box-offline.has-offline { border-top-color: #ef4444; }
 .stat-box-types { border-top-color: #a855f7; }
@@ -1540,6 +1992,8 @@ const sortDownloadedModels = async () => {
 .stat-box-thumbs.has-missing .stat-icon { color: #f59e0b; }
 .stat-box-hashes .stat-icon { color: #94a3b8; }
 .stat-box-hashes.has-missing .stat-icon { color: #ef4444; }
+.stat-box-unchecked .stat-icon { color: #94a3b8; }
+.stat-box-unchecked.has-missing .stat-icon { color: #f59e0b; }
 .stat-box-online .stat-icon { color: #10b981; }
 .stat-box-offline .stat-icon { color: #ef4444; }
 .stat-box-types .stat-icon { color: #a855f7; }
@@ -1587,7 +2041,20 @@ const sortDownloadedModels = async () => {
   text-overflow: ellipsis;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
   transition: all 0.2s ease;
-  margin-top: 4px;
+  margin-top: 0;
+}
+
+.all-in-one-tag {
+  font-size: 0.72em;
+  font-weight: 700;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 10px;
 }
 
 .header-path-pill i {
@@ -2167,6 +2634,71 @@ const sortDownloadedModels = async () => {
   gap: 16px;
 }
 
+.action-group.import-downloads {
+  background: var(--color-card-bg);
+  padding: 20px 24px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.action-group.import-downloads .action-group-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.group-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.group-title-wrap h3 {
+  margin: 0;
+  font-size: 1.3em;
+  color: var(--color-text);
+}
+
+.dir-hint {
+  font-size: 0.82em;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-tertiary);
+  padding: 3px 10px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dir-hint .dir-arrow {
+  font-size: 0.8em;
+  color: var(--color-btn-primary);
+}
+
+.btn-import-scan {
+  padding: 12px 24px;
+  font-size: 1.05em;
+  font-weight: 700;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.btn-import-scan.has-pending {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+[data-theme="midnight"] .btn-import-scan.has-pending {
+  border-color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+}
+
 .action-group.all-in-one {
   background: var(--color-card-bg);
   padding: 22px 25px;
@@ -2341,17 +2873,25 @@ const sortDownloadedModels = async () => {
 
 .availability-btn-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
   margin-top: 4px;
 }
 
 .btn-availability-primary {
   grid-column: 1 / -1;
-  padding: 11px 20px;
-  font-size: 0.95em;
+  padding: 10px 16px;
+  font-size: 0.92em;
+  font-weight: 700;
   background: var(--color-btn-action-bg);
   border: 1px solid var(--color-btn-action-border, transparent);
+}
+
+.btn-availability-unchecked {
+  grid-column: 1 / -1;
+  padding: 10px 16px;
+  font-size: 0.92em;
+  font-weight: 700;
 }
 
 .btn-availability-primary:hover:not(:disabled) {
@@ -2426,76 +2966,6 @@ const sortDownloadedModels = async () => {
   font-size: 0.88em;
   font-weight: 600;
   color: #94a3b8;
-}
-
-/* Resolution Section */
-.resolution-section {
-  background: var(--color-card-bg);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  border-radius: 12px;
-  padding: 22px;
-  box-shadow: var(--shadow-card);
-}
-
-.resolution-section h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.25em;
-  color: var(--color-text);
-}
-
-.resolution-section p {
-  color: var(--color-text-secondary);
-  font-size: 0.9em;
-  margin: 0 0 16px 0;
-}
-
-.failed-models-list {
-  max-height: 400px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.failed-model-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--color-card-bg-subtle);
-  padding: 14px 18px;
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-}
-
-.failed-model-name {
-  font-weight: 600;
-  color: var(--color-text);
-  flex: 1;
-  word-break: break-all;
-  margin-right: 20px;
-}
-
-.failed-model-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.failed-model-actions input {
-  width: 320px;
-  background: var(--color-console-bg);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  border-radius: 6px;
-  padding: 8px 12px;
-  outline: none;
-  font-size: 0.9em;
-  transition: border-color 0.2s ease;
-}
-
-.failed-model-actions input:focus {
-  border-color: var(--color-text-link);
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
 }
 
 /* Log Section */
@@ -2668,5 +3138,383 @@ const sortDownloadedModels = async () => {
 .empty-log .empty-sub {
   font-size: 0.82em;
   color: #64748b;
+}
+
+/* ==========================================================================
+   Unresolved Items Assistant Section (Metadata & Thumbnails)
+   ========================================================================== */
+.resolution-section {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-top: 3px solid #f59e0b;
+  border-radius: 10px;
+  padding: 14px 20px 16px 20px;
+  box-shadow: var(--shadow-card), 0 4px 18px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.resolution-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.resolution-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.resolution-title-area h3 {
+  margin: 0;
+  font-size: 1.1em;
+  font-weight: 700;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.resolution-subtitle {
+  margin: 0;
+  font-size: 0.82em;
+  color: var(--color-text-secondary);
+}
+
+.resolution-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.resolution-tabs {
+  display: inline-flex;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 3px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border-subtle);
+}
+
+.resolution-tab-btn {
+  background: transparent;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 0.82em;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.resolution-tab-btn:hover {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.resolution-tab-btn.active {
+  background: var(--color-btn-action-bg);
+  color: #ffffff;
+  border: 1px solid var(--color-btn-action-border, transparent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.tab-badge {
+  background: rgba(245, 158, 11, 0.22);
+  color: #fbbf24;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 0.78em;
+  font-weight: 700;
+}
+
+.resolution-global-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-bulk {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.8em;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-bulk-thumb {
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.btn-bulk-thumb:hover {
+  background: #f59e0b;
+  color: #0f172a;
+  border-color: #f59e0b;
+  font-weight: 700;
+  transform: translateY(-1px);
+}
+
+.btn-bulk-meta {
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.btn-bulk-meta:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+  font-weight: 700;
+  transform: translateY(-1px);
+}
+
+.btn-icon-close {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 1.05em;
+  cursor: pointer;
+  padding: 5px 8px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-icon-close:hover {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.resolution-tab-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.resolution-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.resolution-items-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.resolution-items-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+.resolution-items-list::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+.resolution-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  padding: 7px 12px;
+  min-height: 44px;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.resolution-row:hover {
+  background: rgba(0, 0, 0, 0.38);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.row-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.model-filename {
+  font-weight: 600;
+  font-size: 0.88em;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.model-folder-pill {
+  font-size: 0.74em;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-secondary);
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.row-badge {
+  font-size: 0.74em;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.badge-thumb-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+}
+
+.badge-meta-warning {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.28);
+}
+
+.row-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.row-input-wrap {
+  position: relative;
+  width: 240px;
+  display: flex;
+  align-items: center;
+}
+
+.row-input {
+  width: 100%;
+  height: 30px;
+  background: var(--color-console-bg, #0b1120);
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  color: var(--color-text);
+  font-size: 0.82em;
+  padding: 2px 8px 2px 26px;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.row-input:focus {
+  border-color: var(--color-text-link, #38bdf8);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+.row-input-icon {
+  position: absolute;
+  left: 8px;
+  font-size: 0.76em;
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.btn-row-action {
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 5px;
+  font-size: 0.81em;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-no-thumb {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.38);
+  color: #fbbf24;
+}
+
+.btn-no-thumb:hover {
+  background: #f59e0b;
+  color: #0f172a;
+  border-color: #f59e0b;
+  font-weight: 700;
+  transform: translateY(-1px);
+}
+
+.btn-save-image,
+.btn-fetch {
+  background: var(--color-btn-primary, #3b82f6);
+  border: 1px solid transparent;
+  color: #ffffff;
+}
+
+.btn-save-image:hover,
+.btn-fetch:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-unmatchable {
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.38);
+  color: #f87171;
+}
+
+.btn-unmatchable:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+  transform: translateY(-1px);
+}
+
+.btn-row-dismiss {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.82em;
+  transition: all 0.15s ease;
+}
+
+.btn-row-dismiss:hover {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.15);
 }
 </style>

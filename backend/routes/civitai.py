@@ -306,6 +306,96 @@ def download_preview():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
+@civitai_bp.route('/api/civitai/ignore-thumbnail', methods=['POST'])
+def ignore_thumbnail():
+    """Mark a model so it no longer looks for a thumbnail."""
+    try:
+        data = request.get_json() or {}
+        model_path = data.get('modelPath')
+        if not model_path:
+            return jsonify({'status': 'error', 'message': 'Missing modelPath'}), 400
+
+        success = civitai_handler.save_no_thumbnail_to_json(model_path, True)
+        if success:
+            _sync_model_path_to_db(model_path)
+            return jsonify({'status': 'success', 'message': 'Marked as no thumbnail available'})
+        return jsonify({'status': 'error', 'message': 'Failed to save to model JSON'}), 500
+    except Exception as e:
+        print(f"Error in ignore_thumbnail: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@civitai_bp.route('/api/civitai/ignore-thumbnails-bulk', methods=['POST'])
+def ignore_thumbnails_bulk():
+    """Bulk mark multiple models as having no thumbnail available."""
+    try:
+        data = request.get_json() or {}
+        model_paths = data.get('modelPaths', [])
+        if not model_paths:
+            return jsonify({'status': 'error', 'message': 'Missing modelPaths'}), 400
+
+        updated_count = 0
+        for model_path in model_paths:
+            try:
+                if civitai_handler.save_no_thumbnail_to_json(model_path, True):
+                    _sync_model_path_to_db(model_path)
+                    updated_count += 1
+            except Exception as e:
+                print(f"Error in ignore_thumbnails_bulk for {model_path}: {e}")
+
+        return jsonify({'status': 'success', 'count': updated_count, 'message': f'Marked {updated_count} models as no thumbnail available'})
+    except Exception as e:
+        print(f"Error in ignore_thumbnails_bulk: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@civitai_bp.route('/api/civitai/download-preview-from-url', methods=['POST'])
+def download_preview_from_url():
+    """Download preview image directly from a user-specified URL."""
+    try:
+        data = request.get_json() or {}
+        model_path = data.get('modelPath')
+        image_url = data.get('imageUrl')
+
+        if not model_path or not image_url:
+            return jsonify({'status': 'error', 'message': 'Missing modelPath or imageUrl'}), 400
+
+        success = civitai_handler.download_preview_from_url(model_path, image_url)
+        if success:
+            _sync_model_path_to_db(model_path)
+            return jsonify({'status': 'success', 'message': 'Preview downloaded and saved'})
+        return jsonify({'status': 'error', 'message': 'Could not download or convert image from URL'}), 400
+    except Exception as e:
+        print(f"Error in download_preview_from_url: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@civitai_bp.route('/api/civitai/ignore-models-bulk', methods=['POST'])
+def ignore_models_bulk():
+    """Bulk mark multiple models as unmatchable for metadata."""
+    try:
+        data = request.get_json() or {}
+        model_paths = data.get('modelPaths', [])
+        if not model_paths:
+            return jsonify({'status': 'error', 'message': 'Missing modelPaths'}), 400
+
+        updated_count = 0
+        for model_path in model_paths:
+            try:
+                filename = os.path.basename(model_path)
+                model_info = {"ignored": True, "unmatchable": True, "url": "https://no-match.com/ignored", "name": filename}
+                if civitai_handler.save_civitai_info(model_path, model_info):
+                    _sync_model_path_to_db(model_path)
+                    updated_count += 1
+            except Exception as e:
+                print(f"Error ignoring model {model_path}: {e}")
+
+        return jsonify({'status': 'success', 'count': updated_count, 'message': f'Marked {updated_count} models as unmatchable'})
+    except Exception as e:
+        print(f"Error in ignore_models_bulk: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
 @civitai_bp.route('/api/civitai/convert', methods=['POST'])
 def convert_to_json():
     """Convert civitai.info to JSON format."""

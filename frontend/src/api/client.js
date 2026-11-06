@@ -31,6 +31,8 @@ export const api = {
   deleteFolder: (folderPath, location) => apiClient.delete('/folders', { data: { folderPath, location } }).then(res => res.data),
   checkFolder: (folderPath, location) => apiClient.get(`/folders/check?folderPath=${encodeURIComponent(folderPath)}&location=${location}`).then(res => res.data),
   sortDownloads: () => apiClient.post('/files/sort-downloads').then(res => res.data),
+  getDownloadCandidates: () => apiClient.get('/files/download-candidates').then(res => res.data),
+  moveDownloadCandidate: (filename) => apiClient.post('/files/move-download-candidate', { filename }).then(res => res.data),
   
   // Associated Files
   getAssociatedFiles: (modelPath) => apiClient.get(`/files/associated?modelPath=${encodeURIComponent(modelPath)}`).then(res => res.data.files),
@@ -73,6 +75,10 @@ export const api = {
   civitaiGenerateHash: (modelPath, skipIfExists = false) => apiClient.post('/civitai/generate-hash', { modelPath, skipIfExists }).then(res => res.data),
   civitaiFindDuplicates: (location) => apiClient.post('/civitai/find-duplicates', { location }).then(res => res.data),
   civitaiCheckAvailability: (modelPath, forceAll = false) => apiClient.post('/civitai/check-availability', { modelPath, forceAll }).then(res => res.data),
+  civitaiIgnoreThumbnail: (modelPath) => apiClient.post('/civitai/ignore-thumbnail', { modelPath }).then(res => res.data),
+  civitaiIgnoreThumbnailsBulk: (modelPaths) => apiClient.post('/civitai/ignore-thumbnails-bulk', { modelPaths }).then(res => res.data),
+  civitaiDownloadPreviewFromUrl: (modelPath, imageUrl) => apiClient.post('/civitai/download-preview-from-url', { modelPath, imageUrl }).then(res => res.data),
+  civitaiIgnoreModelsBulk: (modelPaths) => apiClient.post('/civitai/ignore-models-bulk', { modelPaths }).then(res => res.data),
   
   // Helper for generating local asset URLs
   getAssetUrl: (path, cacheBuster = '') => {

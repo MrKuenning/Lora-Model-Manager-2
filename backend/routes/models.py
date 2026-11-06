@@ -134,6 +134,11 @@ def save_model(model_id):
         if 'sdVersion' in data: json_data['sd version'] = data['sdVersion']
         if 'category' in data: json_data['category'] = data['category']
         if 'subcategory' in data: json_data['subcategory'] = data['subcategory']
+        if 'tags' in data:
+            if isinstance(data['tags'], list):
+                json_data['tags'] = ', '.join(str(t).strip() for t in data['tags'] if str(t).strip())
+            else:
+                json_data['tags'] = str(data['tags']) if data['tags'] is not None else ''
         if 'highLow' in data: json_data['high low'] = data['highLow']
         if 'nsfw' in data: json_data['nsfw'] = str(data['nsfw']).lower()
         if 'preferredWeight' in data: json_data['preferred weight'] = data['preferredWeight']
@@ -160,13 +165,16 @@ def save_model(model_id):
         if 'sliderMaxDesc' in data: json_data['slider max description'] = data['sliderMaxDesc']
 
         # Nested Civitai Data
-        if 'creator' in data or 'civitaiName' in data or 'civitaiUrl' in data or 'all_trigger_words' in data:
+        if 'creator' in data or 'civitaiName' in data or 'civitaiUrl' in data or 'all_trigger_words' in data or 'original_filename' in data or 'originalFilename' in data:
             if 'web_civitai_data' not in json_data:
                 json_data['web_civitai_data'] = {}
             if 'creator' in data: json_data['web_civitai_data']['creator'] = data['creator']
             if 'civitaiName' in data: json_data['web_civitai_data']['civitai name'] = data['civitaiName']
             if 'civitaiUrl' in data: json_data['web_civitai_data']['url'] = data['civitaiUrl']
             if 'all_trigger_words' in data: json_data['web_civitai_data']['civitai text'] = data['all_trigger_words']
+            orig_fn = data.get('original_filename', data.get('originalFilename'))
+            if orig_fn is not None:
+                json_data['web_civitai_data']['original_filename'] = orig_fn
 
         # Online Availability fields
         if 'civitaiAvailable' in data or 'civitai_available' in data:
@@ -179,7 +187,7 @@ def save_model(model_id):
                 json_data['civarchive_available'] = val
 
         # Write to JSON file
-        with open(json_path, 'w') as f:
+        with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(json_data, f, indent=4)
 
         # Re-sync this model in SQLite

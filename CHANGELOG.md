@@ -1,5 +1,59 @@
 # Lora Model Manager - Changelog
 
+### 11/05/2026 - v2.3.3
+
+**Added & Refined**
+- **Dynamic Civitai Domain Resolution**:
+  - Dynamically routes Civitai download links between `civitai.com` and `civitai.red` based on content flags.
+  - Automatically updates the domain label and indicators in real time without altering canonical sidecar metadata.
+- **Model Details Layout & Modernization**:
+  - Promoted the modern layout to the canonical primary **Details** tab and fully retired the legacy Classic tab, reducing bundle size and streamlining the editing experience.
+  - Relocated **Local File Tools** (Move Model to Folder and Delete Model) from the Scrape Metadata tab to the **Files** tab.
+  - Added one-click **Auto** button above Model Name to execute Clean → Trim → Clean → Version in sequence.
+  - Added **Clear** button to Model Version actions to quickly reset the version field.
+  - Added **Auto + Recommended** filename button to format model identity and generate standardized filename in a single click.
+  - Renamed the Model Name action button from **Civitai** to **Original** for clarity and consistency with the Original Name field.
+  - Refined section and field iconography: updated section and field title icons across Details (Modern Preview) to muted grey (`text-muted`) to reduce visual noise while preserving vibrant action button accents.
+  - **Harmonized Action Button Iconography**:
+    - Established an intuitive, consistent semantic color palette across all action buttons in Details (Modern Preview):
+      - ⚡ **Gold / Amber (`text-warning`)**: Automated actions (`Auto` in Name & Filename, `Guess Version`, `Recommended` in Filename).
+      - 🧹 **Emerald Green (`text-success`)**: Cleaning and formatting text (`Clean` in Model Name, `Clean` in Model Version, `Clean` in Filename).
+      - ✂️ **Coral Red (`text-danger`)**: Trimming keywords (`Trim` in Model Name) and resetting (`Clear` in Model Version).
+      - 🌐 / ✏️ / 📋 **Cyan / Blue (`text-info`)**: Civitai source (`Original`), file editing (`Rename`), metadata addition (`Creator`), and clipboard copying (`Copy` across all trigger words and example prompts).
+      - 🎚️ / 🏷️ / ↔️ **Purple (`text-purple`)**: Slider tools (`Slider` in Model Name, `Slider: ON/OFF` toggle in Preferred Weight), folder tools (`Move`), and `Model Name` tag insertion.
+  - **Compact Slider Endpoint Controls**:
+    - Replaced the large multi-line configuration box with a single, slim 30px row directly below the slider track.
+    - Integrated inline `[-]` and `[+]` steppers (`step 0.5`) alongside the direct numeric inputs for Min and Max values.
+    - Symmetrically paired each stepper with its endpoint description input (`e.g. Dark`, `e.g. Light`).
+    - Added clean accent indicators (cyan for Min, purple for Max) and active glowing toggle pill without unnecessary presets or duplicate buttons.
+  - **Theme-Harmonized Slider & Weight Visualization**:
+    - Replaced hardcoded blue-navy track styling with dynamic CSS theme variables (`--slider-track-bg`, `--slider-track-border`, `--slider-gradient`, `--slider-thumb-color`).
+    - **Slate Theme**: Uses an inset neutral charcoal track (`#181818` to `#222222`) that sinks into the card background, a refined Slate blue-to-violet gradient (`#3498db` to `#9b59b6`), and matching Slate accent pins and endpoint badges.
+    - **Midnight Theme**: Uses a deep oceanic obsidian track (`#090e17` to `#131c2d`), luminous cyan-to-electric-violet gradient (`#00f0ff` to `#a855f7`), and vivid cyan/violet neon glowing accents.
+    - Symmetrically styled the compact endpoint controls with theme-adaptive input backgrounds and borders.
+  - Streamlined Details view with single-line categorization and standardized tag input controls.
+  - Precision alignment for the Preferred Weight slider handle and track markers.
+  - Modernized left column card styling for Model Info and File Info sections with inline title icons and balanced contrast.
+  - Enhanced file path container with dedicated quick-launch folder button.
+  - Added read-only Original Filename display with one-click clipboard copying.
+- **Manage Library & File Workflow**:
+  - Added download candidates inspection and granular move API to transfer selected models and sidecars from download folders to sorting directories.
+  - Added support for preview image retrieval via custom URL and thumbnail availability toggles.
+
+**Fixed**
+- **Version Detection Accuracy**:
+  - Expanded `guessVersion` to reliably detect versions with underscore delimiters and diverse formatting (e.g. `Scar_v1`, `Scar_v1_lora`, `Scar-v2.0`, `ScarV2`).
+  - Added original filename to version search sources in addition to model name, filename, and Civitai name.
+  - Sanitized base model names (e.g. `Krea 2`, `SD 1.5`, `Wan 2.1`), parameter sizes (e.g. `14B`), and resolutions in `guessVersion` prior to fallback number matching, preventing base model suffix numbers from being mistakenly identified as the model version.
+- **Text Cleaning & Formatting Refinements**:
+  - Added automatic normalization of em dashes (`—`), en dashes (`–`), and unicode dashes into standard hyphens (`-`) during clean passes.
+  - Fixed an issue where apostrophes in title casing improperly capitalized the subsequent letter (e.g. `cat's` becoming `Cat'S`).
+  - Resolved `trimName` eating the closing parenthesis of preceding words (e.g. `POV (clothed) - Krea 2` losing its closing bracket).
+  - Added stack-based bracket balancing in `cleanText`, `trimName`, and `cleanFilename` to detect and remove unmatched/open-ended brackets (`()`, `[]`, `{}`) while preserving correctly paired tags.
+- **Tag Persistence**:
+  - Resolved an issue where newly entered tags were not saved to sidecar JSON files.
+  - Ensured UTF-8 encoding and synchronized tag persistence across database and in-memory caches.
+
 ### 11/01/2026 - v2.3.1
 
 **Added & Refined**

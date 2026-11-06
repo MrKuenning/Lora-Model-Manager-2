@@ -256,6 +256,10 @@ def _parse_model_from_filesystem(model_name, root, file, models_dir):
     example_prompt = json_data.get('example prompt 1', json_data.get('example prompt', ''))
     example_prompt_2 = json_data.get('example prompt 2', '')
     tags = json_data.get('tags', '')
+    if isinstance(tags, list):
+        tags = ', '.join(str(t).strip() for t in tags if str(t).strip())
+    elif not isinstance(tags, str):
+        tags = str(tags) if tags is not None else ''
     parsed_name = json_data.get('name', model_name)
     sha256 = json_data.get('sha256', '')
     model_version = json_data.get('model version', json_data.get('modelVersion', json_data.get('model_version', '')))
@@ -706,6 +710,12 @@ def _row_to_api_dict(row):
         'associatedFiles': d.get('associated_files', []),
         'folder': d.get('folder', ''),
         'sha256': d.get('sha256', ''),
+        'noThumbnail': bool(json_obj.get('no_thumbnail', json_obj.get('noThumbnail', False))),
+        'no_thumbnail': bool(json_obj.get('no_thumbnail', json_obj.get('noThumbnail', False))),
+        'unmatchable': bool(json_obj.get('unmatchable', json_obj.get('ignored', False))),
+        'ignored': bool(json_obj.get('ignored', False)),
+        'original_filename': d.get('json_data', {}).get('web_civitai_data', {}).get('original_filename', '') or d.get('json_data', {}).get('original_filename', '') or d.get('json_data', {}).get('original filename', ''),
+        'originalFilename': d.get('json_data', {}).get('web_civitai_data', {}).get('original_filename', '') or d.get('json_data', {}).get('original_filename', '') or d.get('json_data', {}).get('original filename', ''),
     }
 
 

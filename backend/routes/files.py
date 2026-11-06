@@ -156,6 +156,155 @@ def reorder(model_id):
     return jsonify(result)
 
 
+@files_bp.route('/api/files/download-candidates', methods=['GET'])
+def get_download_candidates():
+    """Inspect download directory to return list of models and their associated files waiting to be moved."""
+    from ..routes.settings import _load_settings
+    import glob
+    
+    settings = _load_settings()
+    download_dir = settings.get('defaultDownloadDirectory')
+    sorting_dir = settings.get('defaultSortingDirectory')
+    
+    if not download_dir or not os.path.exists(download_dir):
+        return jsonify({
+            'status': 'error',
+            'configured': False,
+            'message': 'Download directory is not set or does not exist.',
+            'count': 0,
+            'models': []
+        }), 200
+        
+    if not sorting_dir or not os.path.exists(sorting_dir):
+        return jsonify({
+            'status': 'error',
+            'configured': False,
+            'message': 'Sorting directory is not set or does not exist.',
+            'count': 0,
+            'models': []
+        }), 200
+        
+    if os.path.normpath(download_dir) == os.path.normpath(sorting_dir):
+        return jsonify({
+            'status': 'error',
+            'configured': False,
+            'message': 'Download and Sorting directories are identical.',
+            'count': 0,
+            'models': []
+        }), 200
+
+    extensions = list(MODEL_EXTENSIONS) + [
+        ".json", ".civitai.info", ".txt",
+        ".preview.png", ".preview2.png", ".preview3.png", ".preview4.png",
+        ".png", ".jpg", ".jpeg", ".webp", ".mp4", ".gif"
+    ]
+    
+    model_files = []
+    for ext in MODEL_EXTENSIONS:
+        model_files.extend(glob.glob(os.path.join(glob.escape(download_dir), f'*{ext}')))
+        
+    candidates = []
+    for file_path in model_files:
+        base_name = os.path.splitext(os.path.basename(file_path))[0]
+        model_filename = os.path.basename(file_path)
+        size_bytes = 0
+        try:
+            size_bytes = os.path.getsize(file_path)
+        except Exception:
+            pass
+            
+        sidecars = []
+        for ext in extensions:
+            if ext in MODEL_EXTENSIONS and (base_name + ext).lower() == model_filename.lower():
+                continue
+            src = os.path.join(download_dir, base_name + ext)
+            if os.path.exists(src):
+                sidecars.append(base_name + ext)
+                
+        candidates.append({
+            'filename': model_filename,
+            'baseName': base_name,
+            'sizeBytes': size_bytes,
+            'sidecars': sidecars,
+            'sidecarCount': len(sidecars)
+        })
+        
+    return jsonify({
+        'status': 'success',
+        'configured': True,
+        'count': len(candidates),
+        'downloadDir': download_dir,
+        'sortingDir': sorting_dir,
+        'models': candidates
+    })
+
+
+@files_bp.route('/api/files/move-download-candidate', methods=['POST'])
+def move_download_candidate():
+    """Move a single model and its associated sidecar files from download directory to sorting directory."""
+    from ..routes.settings import _load_settings
+    import shutil
+    
+    data = request.get_json() or {}
+    filename = data.get('filename')
+    
+    if not filename:
+        return jsonify({'status': 'error', 'message': 'Missing filename'}), 400
+        
+    settings = _load_settings()
+    download_dir = settings.get('defaultDownloadDirectory')
+    sorting_dir = settings.get('defaultSortingDirectory')
+    
+    if not download_dir or not os.path.exists(download_dir):
+        return jsonify({'status': 'error', 'message': 'Download directory is not set or does not exist.'}), 400
+        
+    if not sorting_dir or not os.path.exists(sorting_dir):
+        return jsonify({'status': 'error', 'message': 'Sorting directory is not set or does not exist.'}), 400
+
+    src_model_path = os.path.join(download_dir, filename)
+    if not os.path.exists(src_model_path):
+        return jsonify({'status': 'error', 'message': f'File not found: {filename}'}), 404
+        
+    base_name = os.path.splitext(filename)[0]
+    extensions = list(MODEL_EXTENSIONS) + [
+        ".json", ".civitai.info", ".txt",
+        ".preview.png", ".preview2.png", ".preview3.png", ".preview4.png",
+        ".png", ".jpg", ".jpeg", ".webp", ".mp4", ".gif"
+    ]
+    
+    moved_files = []
+    errors = []
+    
+    # Move model file first
+    try:
+        dst_model_path = os.path.join(sorting_dir, filename)
+        shutil.move(src_model_path, dst_model_path)
+        moved_files.append(filename)
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'Failed to move {filename}: {str(e)}'}), 500
+        
+    # Move associated sidecar files
+    for ext in extensions:
+        sidecar_name = base_name + ext
+        if sidecar_name.lower() == filename.lower():
+            continue
+        src = os.path.join(download_dir, sidecar_name)
+        if os.path.exists(src):
+            try:
+                dst = os.path.join(sorting_dir, sidecar_name)
+                shutil.move(src, dst)
+                moved_files.append(sidecar_name)
+            except Exception as e:
+                errors.append(f"Failed to move sidecar {sidecar_name}: {str(e)}")
+                
+    return jsonify({
+        'status': 'success',
+        'filename': filename,
+        'moved_files': moved_files,
+        'errors': errors
+    })
+
+
 @files_bp.route('/api/files/sort-downloads', methods=['POST'])
 def sort_downloads():
     """Move all models from download directory to sorting directory."""

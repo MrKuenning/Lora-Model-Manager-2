@@ -896,6 +896,37 @@ def save_availability_to_json(model_path, civitai_avail=None, civarchive_avail=N
         return False
 
 
+def save_no_thumbnail_to_json(model_path, no_thumbnail=True):
+    """
+    Mark or unmark model as having no thumbnail available in JSON sidecar.
+    Only stores the standard 'no_thumbnail' key and removes any redundant keys.
+    """
+    try:
+        base_path = os.path.splitext(model_path)[0]
+        json_path = f"{base_path}.json"
+
+        existing_data = load_json_robust(json_path)
+        if existing_data is None:
+            existing_data = {}
+
+        # Remove redundant camelCase key if present
+        existing_data.pop('noThumbnail', None)
+
+        if no_thumbnail:
+            existing_data['no_thumbnail'] = True
+        else:
+            existing_data.pop('no_thumbnail', None)
+
+        sorted_data = {k: existing_data[k] for k in sorted(existing_data.keys())}
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(sorted_data, f, indent=4)
+
+        return True
+    except Exception as e:
+        print(f"Error saving no_thumbnail to JSON: {e}")
+        return False
+
+
 def check_model_online_availability(model_path, force_all=False):
     """
     Check if a model is still available online on Civitai (primary) and CivArchive (fallback).
@@ -1277,6 +1308,32 @@ def _save_pil_image(image_bytes, target_path):
         except Exception as ex:
             print(f"Error writing image fallback to {target_path}: {ex}")
             return False
+
+
+def download_preview_from_url(model_path, image_url):
+    """
+    Download preview image directly from a provided URL and save as .preview.png.
+    Clears any no_thumbnail flag if successful.
+    """
+    try:
+        if not image_url or not model_path:
+            return False
+        base_path = os.path.splitext(model_path)[0]
+        preview_path = f"{base_path}.preview.png"
+
+        session = get_http_session()
+        headers = get_image_headers() if 'civitai.com' in image_url else get_civitai_headers()
+
+        resp = session.get(image_url, headers=headers, timeout=20)
+        if resp.status_code == 200 and resp.content:
+            success = _save_pil_image(resp.content, preview_path)
+            if success:
+                save_no_thumbnail_to_json(model_path, False)
+                return True
+        return False
+    except Exception as e:
+        print(f"Error downloading preview from URL {image_url}: {e}")
+        return False
 
 
 def download_preview_image(model_path, max_size=False, skip_nsfw=False, force_additional=False):
